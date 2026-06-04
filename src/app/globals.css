@@ -23,3 +23,279 @@ body {
     text-wrap: balance;
   }
 }
+
+/* ===== 水墨开场动画 ===== */
+
+/* 水墨滴落动画 */
+@keyframes inkDrop {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(0.3);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(0.6);
+  }
+  60% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  80% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+/* 水墨晕染动画 */
+@keyframes inkSpread {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(0deg);
+  }
+  30% {
+    opacity: 0.8;
+    transform: scale(0.5) rotate(5deg);
+  }
+  60% {
+    opacity: 0.6;
+    transform: scale(1) rotate(-3deg);
+  }
+  100% {
+    opacity: 0.3;
+    transform: scale(1.5) rotate(0deg);
+  }
+}
+
+/* 文字浮现动画 */
+@keyframes textReveal {
+  0% {
+    opacity: 0;
+    filter: blur(10px);
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 0.5;
+    filter: blur(5px);
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+}
+
+/* 按钮淡入动画 */
+@keyframes buttonFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 水墨滴落元素 */
+.ink-drop {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, rgba(44, 44, 44, 0.8) 0%, rgba(44, 44, 44, 0.4) 40%, transparent 70%);
+  border-radius: 50%;
+  animation: inkDrop 2s ease-out forwards;
+}
+
+.ink-drop-1 {
+  top: 30%;
+  left: 45%;
+  animation-delay: 0s;
+}
+
+.ink-drop-2 {
+  top: 35%;
+  left: 50%;
+  animation-delay: 0.3s;
+}
+
+.ink-drop-3 {
+  top: 40%;
+  left: 48%;
+  animation-delay: 0.6s;
+}
+
+/* 水墨晕染元素 */
+.ink-spread {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(ellipse, rgba(44, 44, 44, 0.3) 0%, rgba(44, 44, 44, 0.1) 50%, transparent 80%);
+  border-radius: 50%;
+  animation: inkSpread 3s ease-out forwards;
+}
+
+.ink-spread-1 {
+  top: 25%;
+  left: 40%;
+  animation-delay: 0.5s;
+}
+
+.ink-spread-2 {
+  top: 30%;
+  left: 50%;
+  animation-delay: 1s;
+}
+
+/* 文字浮现 */
+.text-reveal {
+  animation: textReveal 1.5s ease-out 2s forwards;
+  opacity: 0;
+}
+
+/* 按钮淡入 */
+.button-fade-in {
+  animation: buttonFadeIn 0.8s ease-out 3s forwards;
+  opacity: 0;
+}
+
+/* ===== 原有禅意动画 ===== */
+
+/* 禅意淡入动画 */
+@keyframes zenFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.zen-fade-in {
+  animation: zenFadeIn 2s ease-out forwards;
+}
+
+.zen-fade-in-delay-1 {
+  animation: zenFadeIn 2s ease-out 0.3s forwards;
+  opacity: 0;
+}
+
+.zen-fade-in-delay-2 {
+  animation: zenFadeIn 2s ease-out 0.6s forwards;
+  opacity: 0;
+}
+
+/* 毛笔笔触分隔线 */
+.ink-brush-line {
+  position: relative;
+  width: 120px;
+  height: 4px;
+  margin: 0 auto;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgb(44, 44, 44) 20%,
+    rgb(44, 44, 44) 80%,
+    transparent
+  );
+  border-radius: 2px;
+}
+
+.ink-brush-line::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 8px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgb(44, 44, 44) 50%,
+    transparent
+  );
+  border-radius: 4px;
+  opacity: 0.6;
+}
+
+.ink-brush-line::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 8px;
+  background: linear-gradient(
+    to left,
+    transparent,
+    rgb(44, 44, 44) 50%,
+    transparent
+  );
+  border-radius: 4px;
+  opacity: 0.6;
+}
+
+/* 禅意卡片效果 */
+.zen-card {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(232, 228, 224, 0.8);
+  box-shadow: 
+    0 4px 6px rgba(44, 44, 44, 0.05),
+    0 10px 20px rgba(44, 44, 44, 0.08);
+  transition: all 0.3s ease;
+}
+
+.zen-card:hover {
+  box-shadow: 
+    0 6px 12px rgba(44, 44, 44, 0.08),
+    0 15px 30px rgba(44, 44, 44, 0.12);
+}
+
+/* AI 引路人动画 */
+@keyframes slideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out forwards;
+}
+
+/* 悬浮按钮脉冲效果 */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2s ease-in-out infinite;
+}

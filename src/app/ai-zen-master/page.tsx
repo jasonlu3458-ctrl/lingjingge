@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, FormEvent } from 'react';
-import Navbar from '@/components/Navbar';
 
 interface Message {
   id: number;
@@ -140,7 +139,6 @@ export default function AiZenMaster() {
 
   return (
     <div className="min-h-screen bg-zen-beige">
-      <Navbar />
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-zen-ink mb-2">AI 禅师</h1>
