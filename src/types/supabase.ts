@@ -74,39 +74,85 @@ export interface Database {
         }
       }
       articles: {
-        Row: {
-          id: number
-          title: string
-          slug: string
-          excerpt: string
-          content: string
-          author: string
-          published_at: string
-          status: string
+          Row: {
+            id: number
+            title: string
+            slug: string
+            excerpt: string
+            content: string
+            summary: string
+            author: string
+            published_at: string
+            status: string
+          }
+          Insert: {
+            id?: number
+            title: string
+            slug: string
+            excerpt: string
+            content: string
+            summary?: string
+            author: string
+            published_at?: string
+            status?: string
+          }
+          Update: {
+            id?: number
+            title?: string
+            slug?: string
+            excerpt?: string
+            content?: string
+            summary?: string
+            author?: string
+            published_at?: string
+            status?: string
+          }
         }
-        Insert: {
-          id?: number
-          title: string
-          slug: string
-          excerpt: string
-          content: string
-          author: string
-          published_at?: string
-          status?: string
+        topics: {
+          Row: {
+            id: number
+            user_id: string
+            title: string
+            content: string
+            created_at: string
+          }
+          Insert: {
+            id?: number
+            user_id: string
+            title: string
+            content: string
+            created_at?: string
+          }
+          Update: {
+            id?: number
+            user_id?: string
+            title?: string
+            content?: string
+            created_at?: string
+          }
         }
-        Update: {
-          id?: number
-          title?: string
-          slug?: string
-          excerpt?: string
-          content?: string
-          author?: string
-          published_at?: string
-          status?: string
+        checkins: {
+          Row: {
+            id: number
+            user_id: string
+            type: string
+            created_at: string
+          }
+          Insert: {
+            id?: number
+            user_id: string
+            type: string
+            created_at?: string
+          }
+          Update: {
+            id?: number
+            user_id?: string
+            type?: string
+            created_at?: string
+          }
         }
       }
-    }
-    Views: {
+      Views: {
       [_ in never]: never
     }
     Functions: {

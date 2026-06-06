@@ -16,7 +16,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-zen-beige">
-      
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* 每日参悟 */}
         <section className="text-center mb-16">
@@ -38,7 +37,7 @@ export default function HomePage() {
         {/* 功能入口 */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* AI 禅师 */}
-          <Link href="/ai-zen-master" className="group">
+          <Link href="/wen/ai-zen-master" className="group">
             <div className="zen-card rounded-lg p-8 hover:-translate-y-1">
               <div className="text-5xl mb-4 text-center">🧘</div>
               <h2 className="text-2xl font-bold text-zen-ink text-center mb-3">
@@ -51,7 +50,7 @@ export default function HomePage() {
           </Link>
 
           {/* AI 疗愈师 */}
-          <Link href="/mind" className="group">
+          <Link href="/wen/mind" className="group">
             <div className="zen-card rounded-lg p-8 hover:-translate-y-1">
               <div className="text-5xl mb-4 text-center">💚</div>
               <h2 className="text-2xl font-bold text-zen-ink text-center mb-3">
@@ -64,7 +63,7 @@ export default function HomePage() {
           </Link>
 
           {/* 体质观察 */}
-          <Link href="/health" className="group">
+          <Link href="/guan/health" className="group">
             <div className="zen-card rounded-lg p-8 hover:-translate-y-1">
               <div className="text-5xl mb-4 text-center">🌿</div>
               <h2 className="text-2xl font-bold text-zen-ink text-center mb-3">
@@ -77,7 +76,7 @@ export default function HomePage() {
           </Link>
 
           {/* 取名轩 */}
-          <Link href="/name" className="group">
+          <Link href="/guan/name" className="group">
             <div className="zen-card rounded-lg p-8 hover:-translate-y-1">
               <div className="text-5xl mb-4 text-center">📜</div>
               <h2 className="text-2xl font-bold text-zen-ink text-center mb-3">

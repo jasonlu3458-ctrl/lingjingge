@@ -35,7 +35,7 @@ export const supabase = createSupabaseClient<Database>(supabaseUrl, supabaseAnon
   },
 });
 
-export function createClient(): SupabaseClient<Database> {
+export function createClient() {
   return createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey);
 }
 
