@@ -32,7 +32,7 @@ export default function SignupPage() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/login`
+          emailRedirectTo: `${window.location.origin}/tong/login`
         }
       });
 
@@ -89,7 +89,7 @@ export default function SignupPage() {
               重新发送验证邮件
             </button>
             <a 
-              href="/login" 
+              href="/tong/login" 
               className="block w-full py-3 border border-zen-gray text-zen-ink rounded-lg hover:bg-zen-beige transition-colors font-semibold"
             >
               返回登录页面
@@ -159,7 +159,7 @@ export default function SignupPage() {
 
         <p className="text-center text-zen-ink/60 mt-6">
           已有账户？{' '}
-          <a href="/login" className="text-zen-ink hover:underline">
+          <a href="/tong/login" className="text-zen-ink hover:underline">
             立即登录
           </a>
         </p>

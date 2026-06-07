@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import SplashCard from '@/components/SplashCard';
+import { FadeIn, SlideIn, StaggerContainer, StaggerItem, HoverScale } from '@/components/Animations';
 
 export default function SplashPage() {
   const [mounted, setMounted] = useState(false);
@@ -11,8 +13,8 @@ export default function SplashPage() {
 
   useEffect(() => {
     setMounted(true);
-    const timer1 = setTimeout(() => setShowText(true), 1800);
-    const timer2 = setTimeout(() => setShowButton(true), 3200);
+    const timer1 = setTimeout(() => setShowText(true), 1200);
+    const timer2 = setTimeout(() => setShowButton(true), 2200);
     
     return () => {
       clearTimeout(timer1);
@@ -44,9 +46,8 @@ export default function SplashPage() {
 
         {/* 水墨滴落动画层 */}
         <div className="absolute inset-0 pointer-events-none">
-          {/* 主墨滴 - 从中心滴落 */}
+          {/* 主墨滴 - 扩散涟漪 */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gradient-to-br from-[#2c2c2c] to-[#1a1a1a] animate-[coreForm_1s_ease-out_forwards] opacity-0" />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[rgba(44,44,44,0.3)] bg-gradient-to-br from-[rgba(44,44,44,0.08)] via-[rgba(44,44,44,0.03)] to-transparent animate-[rippleExpand1_2.5s_ease-out_forwards]" />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[rgba(44,44,44,0.3)] bg-gradient-to-br from-[rgba(44,44,44,0.08)] via-[rgba(44,44,44,0.03)] to-transparent animate-[rippleExpand2_3s_ease-out_forwards_0.3s]" />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[rgba(44,44,44,0.3)] bg-gradient-to-br from-[rgba(44,44,44,0.08)] via-[rgba(44,44,44,0.03)] to-transparent animate-[rippleExpand3_3.5s_ease-out_forwards_0.6s]" />
@@ -68,6 +69,17 @@ export default function SplashPage() {
 
         {/* 内容层 */}
         <div className="relative z-10 flex flex-col items-center justify-center">
+          {/* LOGO */}
+          <div className={`mb-4 ${showText ? 'opacity-100' : 'opacity-0'} transition-opacity duration-[1.5s]`}>
+            <Image 
+              src="/images/logo.png" 
+              alt="灵境阁" 
+              width={100} 
+              height={100} 
+              className="rounded-full opacity-90 hover:opacity-100 transition-opacity"
+            />
+          </div>
+          
           <div className="flex flex-col items-center">
             <h1 className={`font-serif text-6xl md:text-7xl text-[#2c2c2c] tracking-[20px] mb-5 ${showText ? 'opacity-100' : 'opacity-0'} transition-opacity duration-[1.5s]`} style={{ textShadow: '2px 2px 4px rgba(44, 44, 44, 0.08)', fontFamily: '"Ma Shan Zheng", "STKaiti", "KaiTi", serif' }}>
               向内观，自有灵山
@@ -75,14 +87,14 @@ export default function SplashPage() {
             <div className={`w-[150px] h-[2px] bg-gradient-to-r from-transparent via-[#2c2c2c] to-transparent ${showText ? 'opacity-50 scale-x-100' : 'opacity-0 scale-x-0'} transition-all duration-1000 delay-500`} />
           </div>
           
-          <p className={`text-base md:text-lg text-[#5a5a5a] max-w-md mt-8 mb-10 leading-relaxed tracking-[10px] ${showText ? 'opacity-100' : 'opacity-0'} transition-opacity duration-[1.5s] delay-800`}>
+          <p className={`text-base md:text-lg text-[#3a3a3a] max-w-md mt-8 mb-10 leading-relaxed tracking-[10px] ${showText ? 'opacity-100' : 'opacity-0'} transition-opacity duration-[1.5s] delay-800`}>
             你的AI心智伙伴，陪你在喧嚣中，找到内心的清净道场。
           </p>
           
           {showButton && (
             <button
               onClick={scrollToCards}
-              className="px-14 py-3.5 bg-[#2c2c2c] text-[#f5f0eb] rounded-full text-lg tracking-[10px] shadow-[0_6px_24px_rgba(44,44,44,0.18)] hover:scale-[1.03] hover:shadow-[0_8px_32px_rgba(44,44,44,0.28)] transition-all duration-300 animate-[btnFadeIn_0.8s_ease-out_forwards]"
+              className="px-14 py-3.5 bg-[#2c2c2c] text-[#f5f0eb] rounded-full text-lg tracking-[10px] shadow-[0_6px_24px_rgba(44,44,44,0.18)] hover:bg-[#3a3a3a] hover:shadow-lg hover:scale-105 transition-all duration-300 animate-[btnFadeIn_0.8s_ease-out_forwards]"
             >
               开启心智之旅
             </button>
@@ -167,38 +179,54 @@ export default function SplashPage() {
       {/* ===== 第二屏：三引导卡片 ===== */}
       <section id="card-section" className="min-h-screen bg-[#faf8f5] py-20 flex flex-col justify-center">
         <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-center text-3xl md:text-4xl text-[#2c2c2c] mb-12 font-serif">
-            {(() => {
-              const hour = new Date().getHours();
-              if (hour < 6) return "夜深人静，AI陪你静修";
-              if (hour < 12) return "晨光初照，AI陪你问道";
-              if (hour < 18) return "日间纷扰，AI陪你澄心";
-              return "暮色四合，AI陪你内观";
-            })()}
-          </h2>
-          <div className="flex flex-col md:flex-row gap-6">
-            <SplashCard
-              icon="☯️"
-              title="澄心问道"
-              description="AI陪你静心，共同问道"
-              buttonText="去体验 →"
-              href="/wen/ai-zen-master"
-            />
-            <SplashCard
-              icon="🔮"
-              title="鉴己观我"
-              description="AI帮你照见，鉴己求真"
-              buttonText="去体验 →"
-              href="/guan/mingli"
-            />
-            <SplashCard
-              icon="📜"
-              title="阅藏解惑"
-              description="AI为你解惑，阅藏明心"
-              buttonText="去体验 →"
-              href="/zang/library"
-            />
-          </div>
+          <FadeIn>
+            <h2 className="text-center text-3xl md:text-4xl text-[#2c2c2c] mb-12 font-serif">
+              {(() => {
+                const hour = new Date().getHours();
+                if (hour < 6) return "夜深人静，AI陪你静修";
+                if (hour < 12) return "晨光初照，AI陪你问道";
+                if (hour < 18) return "日间纷扰，AI陪你澄心";
+                return "暮色四合，AI陪你内观";
+              })()}
+            </h2>
+          </FadeIn>
+          <StaggerContainer>
+            <div className="flex flex-col md:flex-row gap-6">
+              <StaggerItem>
+                <HoverScale>
+                  <SplashCard
+                    icon="☯️"
+                    title="澄心问道"
+                    description="AI陪你静心，共同问道"
+                    buttonText="去体验 →"
+                    href="/wen/chan/ai-zen-master"
+                  />
+                </HoverScale>
+              </StaggerItem>
+              <StaggerItem>
+                <HoverScale>
+                  <SplashCard
+                    icon="🔮"
+                    title="鉴己观我"
+                    description="AI帮你照见，鉴己求真"
+                    buttonText="去体验 →"
+                    href="/guan/mingli"
+                  />
+                </HoverScale>
+              </StaggerItem>
+              <StaggerItem>
+                <HoverScale>
+                  <SplashCard
+                    icon="📜"
+                    title="阅藏解惑"
+                    description="AI为你解惑，阅藏明心"
+                    buttonText="去体验 →"
+                    href="/zang/library"
+                  />
+                </HoverScale>
+              </StaggerItem>
+            </div>
+          </StaggerContainer>
         </div>
       </section>
     </div>

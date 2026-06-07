@@ -58,11 +58,11 @@ export default function UserStatus() {
 
   return (
     <div className="flex items-center space-x-4">
-      <a href="/login" className="text-zen-ink hover:text-zen-ink/80 transition-colors font-medium">
+      <a href="/tong/login" className="text-zen-ink hover:text-zen-ink/80 transition-colors font-medium">
         登录
       </a>
       <a 
-        href="/signup" 
+        href="/tong/signup" 
         className="px-4 py-2 bg-zen-ink text-white rounded-lg hover:bg-zen-ink/80 transition-colors text-sm font-semibold"
       >
         注册

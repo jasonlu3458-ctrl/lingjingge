@@ -1,4 +1,8 @@
+'use client';
+
+import { useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import FloatingLandscape from '@/components/FloatingLandscape';
 
 const dailyZenQuotes = [
@@ -13,15 +17,59 @@ const dailyZenQuotes = [
 
 export default function HomePage() {
   const todayQuote = dailyZenQuotes[new Date().getDate() % dailyZenQuotes.length];
+  const cardsRef = useRef<HTMLDivElement>(null);
+
+  const scrollToCards = () => {
+    cardsRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
     <div className="min-h-screen bg-zen-beige">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Hero 区域 */}
+        <section className="flex flex-col items-center justify-center min-h-[60vh] mb-16">
+          {/* LOGO */}
+          <div className="mb-6">
+            <Image 
+              src="/images/logo.png" 
+              alt="灵境阁" 
+              width={80} 
+              height={80} 
+              className="rounded-full opacity-90 hover:opacity-100 transition-opacity"
+            />
+          </div>
+          
+          {/* 主标题 */}
+          <h1 
+            className="text-5xl md:text-7xl text-[#2c2c2c] mb-6 tracking-wider zen-fade-in"
+            style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}
+          >
+            向内观，自有灵山
+          </h1>
+          
+          {/* 副标题 */}
+          <p 
+            className="text-lg md:text-xl text-[#5a5a5a] max-w-md mb-10 leading-relaxed text-center zen-fade-in-delay-1"
+            style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}
+          >
+            你的AI心智伙伴，陪你在喧嚣中，找到内心的清净道场。
+          </p>
+          
+          {/* 按钮 */}
+          <button 
+            onClick={scrollToCards}
+            className="px-8 py-4 bg-[#2c2c2c] text-white rounded-full hover:bg-[#4a4a4a] transition-all duration-300 hover:scale-105 hover:shadow-lg zen-fade-in-delay-2"
+            style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", letterSpacing: '2px' }}
+          >
+            开启心智之旅
+          </button>
+        </section>
+
         {/* 每日参悟 */}
         <section className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-zen-ink mb-6 zen-fade-in">
+          <h2 className="text-4xl md:text-5xl font-bold text-zen-ink mb-6 zen-fade-in">
             每日参悟
-          </h1>
+          </h2>
           
           {/* 毛笔笔触分隔线 */}
           <div className="ink-brush-line mb-8 zen-fade-in-delay-1"></div>
@@ -35,9 +83,9 @@ export default function HomePage() {
         </section>
 
         {/* 功能入口 */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <section ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 gap-8 scroll-mt-12">
           {/* AI 禅师 */}
-          <Link href="/wen/ai-zen-master" className="group">
+          <Link href="/wen/chan/ai-zen-master" className="group">
             <div className="zen-card rounded-lg p-8 hover:-translate-y-1">
               <div className="text-5xl mb-4 text-center">🧘</div>
               <h2 className="text-2xl font-bold text-zen-ink text-center mb-3">
@@ -50,7 +98,7 @@ export default function HomePage() {
           </Link>
 
           {/* AI 疗愈师 */}
-          <Link href="/wen/mind" className="group">
+          <Link href="/wen/liao/mind" className="group">
             <div className="zen-card rounded-lg p-8 hover:-translate-y-1">
               <div className="text-5xl mb-4 text-center">💚</div>
               <h2 className="text-2xl font-bold text-zen-ink text-center mb-3">
@@ -89,13 +137,18 @@ export default function HomePage() {
           </Link>
         </section>
 
-        {/* 底部装饰 */}
-        <div className="mt-20 text-center">
-          <div className="w-16 h-1 bg-zen-ink mx-auto opacity-30"></div>
-          <p className="mt-4 text-gray-500 text-sm">
-            灵境阁 · 东方智慧 AI 导引平台
-          </p>
-        </div>
+        {/* Footer */}
+        <footer className="py-8 bg-[#f5f0eb] border-t border-gray-200 mt-20">
+          <div className="max-w-6xl mx-auto px-4 flex flex-col items-center">
+            <div className="flex items-center gap-2 mb-2">
+              <Image src="/images/logo.png" alt="灵境阁" width={24} height={24} />
+              <span className="text-sm font-serif text-[#2c2c2c]" style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}>
+                灵境阁
+              </span>
+            </div>
+            <p className="text-xs text-gray-400">向内观，自有灵山</p>
+          </div>
+        </footer>
       </main>
 
       {/* AI 引路人 - 水墨仙岛 */}

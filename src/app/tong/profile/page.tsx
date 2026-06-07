@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import ActivityStats from '@/components/ActivityStats'
 
 interface UserProfile {
   id: string
@@ -116,7 +117,7 @@ export default async function ProfilePage() {
   const profile = await getUserProfile()
 
   if (!profile) {
-    redirect('/login?redirect=/profile')
+    redirect('/tong/login?redirect=/tong/profile')
   }
 
   const role = roleInfo[profile.role] || roleInfo.free
@@ -129,6 +130,9 @@ export default async function ProfilePage() {
           <h1 className="text-4xl font-bold text-zen-ink mb-4">个人中心</h1>
           <p className="text-zen-ink/70">管理您的账户和会员权益</p>
         </div>
+
+        {/* 修行统计 */}
+        <ActivityStats />
 
         <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">
@@ -146,7 +150,7 @@ export default async function ProfilePage() {
             </div>
             {profile.role === 'free' && (
               <Link
-                href="/pricing"
+                href="/tong/pricing"
                 className="px-6 py-3 bg-zen-ink text-white rounded-lg hover:bg-zen-ink/80 transition-colors font-semibold"
               >
                 升级会员
@@ -164,7 +168,7 @@ export default async function ProfilePage() {
                   </p>
                 </div>
                 <Link
-                  href="/profile/subscriptions"
+                  href="/tong/profile/subscriptions"
                   className="text-zen-ink hover:text-zen-ink/80 text-sm font-medium"
                 >
                   查看详情 →
@@ -214,6 +218,15 @@ export default async function ProfilePage() {
                         专属客服支持
                       </h4>
                       <p className="text-sm text-purple-600">获得专属客服一对一服务</p>
+                    </div>
+                    <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
+                      <h4 className="font-semibold text-purple-800 mb-2 flex items-center">
+                        <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        全站深度报告解锁
+                      </h4>
+                      <p className="text-sm text-purple-600">所有AI服务的完整报告均可直接查看</p>
                     </div>
                   </>
                 )}
@@ -290,7 +303,7 @@ export default async function ProfilePage() {
               )}
             </div>
             <Link
-              href="/profile/subscriptions"
+              href="/tong/profile/subscriptions"
               className="inline-flex items-center px-6 py-3 bg-zen-gray text-zen-ink rounded-lg hover:bg-zen-gray/80 transition-colors font-semibold"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

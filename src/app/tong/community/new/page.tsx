@@ -11,6 +11,26 @@ export default function NewTopicPage() {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [predictedTag, setPredictedTag] = useState<string | null>(null);
+
+  // 调用分类API
+  const classifyPost = async (content: string): Promise<string> => {
+    try {
+      const response = await fetch('/api/dify/community', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'classify',
+          content: content
+        })
+      });
+      const data = await response.json();
+      return data.result || '心得';
+    } catch (error) {
+      console.error('分类失败:', error);
+      return '心得'; // 默认分类
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,19 +46,25 @@ export default function NewTopicPage() {
         return;
       }
 
+      // 1. 调用分类API获取标签
+      const tag = await classifyPost(content);
+      setPredictedTag(tag);
+
+      // 2. 将标签与帖子内容一并提交到Supabase
       const { error: insertError } = await supabase
         .from('topics')
         .insert({
           user_id: user.id as string,
           title: title as string,
           content: content as string,
+          tag: tag,
           created_at: new Date().toISOString()
         } as any);
 
       if (insertError) {
         setError(`发布失败: ${insertError.message}`);
       } else {
-        router.push('/community');
+        router.push('/tong/community');
       }
     } catch (err) {
       setError(`发布异常: ${err instanceof Error ? err.message : '未知错误'}`);
@@ -102,6 +128,15 @@ export default function NewTopicPage() {
                 }}
               />
             </div>
+
+            {/* 显示预测的分类标签 */}
+            {predictedTag && (
+              <div style={{ marginBottom: '24px', padding: '12px', background: '#f0f9f0', borderRadius: '8px', border: '1px solid #c8e6c8' }}>
+                <span style={{ fontSize: '14px', color: '#2c2c2c' }}>
+                  🏷️ AI识别分类：<strong style={{ color: '#4a7c4a' }}>{predictedTag}</strong>
+                </span>
+              </div>
+            )}
 
             <div style={{ display: 'flex', gap: '12px' }}>
               <button

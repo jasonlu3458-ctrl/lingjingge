@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
+  <!-- 背景 -->
+  <rect width="600" height="600" fill="#F5F0EB"/>
+  
+  <!-- 墨圈 - 水墨笔触效果 -->
+  <path d="M300 80 Q450 150 480 300 Q510 450 360 520 Q210 590 150 440 Q90 290 240 220 Q390 150 300 80" 
+        fill="none" stroke="#2C2C2C" stroke-width="18" stroke-linecap="round" opacity="0.85"/>
+  <path d="M300 95 Q440 160 470 300 Q500 440 350 510 Q200 580 160 430 Q120 280 250 225 Q380 170 300 95" 
+        fill="none" stroke="#3C3C3C" stroke-width="8" stroke-linecap="round" opacity="0.5"/>
+  
+  <!-- 远山 -->
+  <path d="M150 380 Q200 340 250 370 Q300 400 350 360 Q400 320 450 370" 
+        fill="none" stroke="#A0A0A0" stroke-width="2" opacity="0.3"/>
+  <path d="M180 375 Q230 335 280 365 Q330 395 380 355" 
+        fill="none" stroke="#8A8A8A" stroke-width="1.5" opacity="0.25"/>
+  
+  <!-- 近山 -->
+  <path d="M200 400 Q260 340 320 375 Q380 410 440 370" 
+        fill="#2C2C2C" opacity="0.7"/>
+  <path d="M220 395 Q280 335 340 370 Q400 405 430 365" 
+        fill="#1A1A1A" opacity="0.4"/>
+  
+  <!-- 水面倒影 -->
+  <ellipse cx="300" cy="450" rx="160" ry="50" fill="#2C2C2C" opacity="0.08"/>
+  <path d="M180 440 Q240 450 300 440 Q360 430 420 440" fill="none" stroke="#2C2C2C" stroke-width="1" opacity="0.15"/>
+  <path d="M190 455 Q250 465 310 455 Q370 445 430 455" fill="none" stroke="#2C2C2C" stroke-width="1" opacity="0.1"/>
+  
+  <!-- 亭子 -->
+  <!-- 屋顶 -->
+  <path d="M180 220 L300 140 L420 220" fill="none" stroke="#2C2C2C" stroke-width="3"/>
+  <path d="M190 225 L300 150 L410 225" fill="#2C2C2C" opacity="0.85"/>
+  
+  <!-- 屋檐角 -->
+  <path d="M180 220 L150 190 Q140 180 135 185" fill="none" stroke="#2C2C2C" stroke-width="2"/>
+  <path d="M180 220 L145 200" fill="none" stroke="#2C2C2C" stroke-width="1.5"/>
+  <path d="M420 220 L450 190 Q460 180 465 185" fill="none" stroke="#2C2C2C" stroke-width="2"/>
+  <path d="M420 220 L455 200" fill="none" stroke="#2C2C2C" stroke-width="1.5"/>
+  
+  <!-- 屋顶第二层 -->
+  <path d="M220 260 L300 220 L380 260" fill="none" stroke="#2C2C2C" stroke-width="2"/>
+  <path d="M225 265 L300 225 L375 265" fill="#3C3C3C" opacity="0.7"/>
+  
+  <!-- 柱子 -->
+  <line x1="230" y1="260" x2="230" y2="380" stroke="#2C2C2C" stroke-width="5" opacity="0.75"/>
+  <line x1="370" y1="260" x2="370" y2="380" stroke="#2C2C2C" stroke-width="5" opacity="0.75"/>
+  <line x1="270" y1="260" x2="270" y2="365" stroke="#2C2C2C" stroke-width="3" opacity="0.6"/>
+  <line x1="330" y1="260" x2="330" y2="365" stroke="#2C2C2C" stroke-width="3" opacity="0.6"/>
+  
+  <!-- 横梁 -->
+  <line x1="230" y1="260" x2="370" y2="260" stroke="#2C2C2C" stroke-width="3"/>
+  <line x1="240" y1="280" x2="360" y2="280" stroke="#2C2C2C" stroke-width="2" opacity="0.6"/>
+  <line x1="250" y1="295" x2="350" y2="295" stroke="#2C2C2C" stroke-width="1.5" opacity="0.5"/>
+  
+  <!-- 书法"灵"字 -->
+  <text x="300" y="160" font-family="Ma Shan Zheng, STKaiti, Kaiti, serif" font-size="80" fill="#2C2C2C" text-anchor="middle" style="font-weight:bold;">灵</text>
+  
+  <!-- 金色点缀 -->
+  <circle cx="250" cy="340" r="3" fill="#D4A574" opacity="0.7"/>
+  <circle cx="300" cy="320" r="3.5" fill="#D4A574" opacity="0.8"/>
+  <circle cx="350" cy="345" r="3" fill="#D4A574" opacity="0.6"/>
+  <circle cx="220" cy="360" r="2" fill="#D4A574" opacity="0.5"/>
+  <circle cx="280" cy="355" r="2" fill="#D4A574" opacity="0.6"/>
+  <circle cx="320" cy="350" r="2.5" fill="#D4A574" opacity="0.7"/>
+  <circle cx="380" cy="365" r="2" fill="#D4A574" opacity="0.5"/>
+  <circle cx="300" cy="380" r="2.5" fill="#D4A574" opacity="0.7"/>
+  <circle cx="310" cy="395" r="2" fill="#D4A574" opacity="0.6"/>
+  <circle cx="290" cy="410" r="1.5" fill="#D4A574" opacity="0.5"/>
+  <circle cx="300" cy="425" r="2" fill="#D4A574" opacity="0.6"/>
+  <circle cx="305" cy="440" r="1.5" fill="#D4A574" opacity="0.5"/>
+  <circle cx="295" cy="455" r="1.5" fill="#D4A574" opacity="0.4"/>
+  
+  <!-- 底座 -->
+  <path d="M220 480 Q300 495 Q380 480" fill="#2C2C2C" opacity="0.85"/>
+  <path d="M230 490 Q300 505 Q370 490" fill="#1A1A1A" opacity="0.6"/>
+  
+</svg>
