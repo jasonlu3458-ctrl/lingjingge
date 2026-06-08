@@ -3,24 +3,69 @@
 import { createClient as createSupabaseClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// 获取环境变量
+function getSupabaseUrl(): string | undefined {
+  return process.env.NEXT_PUBLIC_SUPABASE_URL;
+}
 
-// 创建 Supabase 客户端（简化配置，移除复杂的存储设置）
-export const supabase = createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-  },
+function getSupabaseAnonKey(): string | undefined {
+  return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+}
+
+// 延迟初始化 Supabase 客户端
+let supabaseInstance: ReturnType<typeof createSupabaseClient<Database>> | null = null;
+
+export function getSupabaseClient(): ReturnType<typeof createSupabaseClient<Database>> | null {
+  if (typeof window === 'undefined') {
+    // 服务端渲染时返回 null，避免在构建时初始化
+    return null;
+  }
+  
+  if (!supabaseInstance) {
+    const url = getSupabaseUrl();
+    const key = getSupabaseAnonKey();
+    
+    if (!url || !key) {
+      console.warn('Supabase 环境变量未配置');
+      return null;
+    }
+    
+    supabaseInstance = createSupabaseClient<Database>(url, key, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+      },
+    });
+  }
+  
+  return supabaseInstance;
+}
+
+// 为了向后兼容，导出一个代理对象
+export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient<Database>>, {
+  get(target, prop) {
+    const client = getSupabaseClient();
+    if (!client) {
+      throw new Error('Supabase 客户端未初始化，请检查环境变量配置');
+    }
+    return (client as any)[prop];
+  }
 });
 
 export function createClient() {
-  return createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey);
+  const url = getSupabaseUrl();
+  const key = getSupabaseAnonKey();
+  
+  if (!url || !key) {
+    throw new Error('Supabase 环境变量未配置');
+  }
+  
+  return createSupabaseClient<Database>(url, key);
 }
 
 export function isSupabaseConfigured(): boolean {
-  return Boolean(supabaseUrl && supabaseAnonKey);
+  return Boolean(getSupabaseUrl() && getSupabaseAnonKey());
 }
 
 /**
@@ -38,7 +83,10 @@ export async function testSupabaseConnection(): Promise<boolean> {
 
   const testPromise = (async () => {
     try {
-      await supabase
+      const client = getSupabaseClient();
+      if (!client) return false;
+      
+      await client
         .from('articles')
         .select('id')
         .limit(1);

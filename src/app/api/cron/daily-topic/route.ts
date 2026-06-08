@@ -13,11 +13,17 @@ import { createClient } from '@supabase/supabase-js';
  * - 或手动触发：POST /api/cron/daily-topic
  */
 
-// 初始化Supabase客户端（使用service role key以绕过RLS）
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // 需要在环境变量中配置
-);
+// 延迟初始化Supabase客户端
+function getSupabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!url || !key) {
+    return null;
+  }
+  
+  return createClient(url, key);
+}
 
 // 生成每日话题
 async function generateDailyTopic(): Promise<{ title: string; content: string }> {
@@ -98,6 +104,13 @@ function getDefaultTopic(date: string): { title: string; content: string } {
 
 // 创建置顶帖子
 async function createPinnedPost(topic: { title: string; content: string }) {
+  const supabase = getSupabaseClient();
+  
+  if (!supabase) {
+    console.error('Supabase 未配置，跳过创建帖子');
+    return null;
+  }
+  
   try {
     const { data, error } = await supabase
       .from('topics')
