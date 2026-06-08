@@ -19,6 +19,7 @@ const dailyZenQuotes = [
 export default function HomePage() {
   const todayQuote = dailyZenQuotes[new Date().getDate() % dailyZenQuotes.length];
   const cardsRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [showZen, setShowZen] = useState(false);
   const [dailyZen, setDailyZen] = useState('');
   const [zenSource, setZenSource] = useState('');
@@ -53,8 +54,18 @@ export default function HomePage() {
       });
   }, []);
 
+  // 当禅机浮窗弹出时，播放音效
+  useEffect(() => {
+    if (showZen && audioRef.current) {
+      audioRef.current.play().catch(() => {});
+    }
+  }, [showZen]);
+
   return (
     <div className="min-h-screen bg-zen-beige">
+      {/* 音频元素 */}
+      <audio ref={audioRef} src="/music/bell.mp3" preload="auto" />
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Hero 区域 */}
         <section className="flex flex-col items-center justify-center min-h-[60vh] mb-16">
