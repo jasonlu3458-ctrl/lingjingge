@@ -83,10 +83,15 @@ export default function HomePage() {
         </section>
 
         {/* 功能入口 */}
-        <section ref={cardsRef} className="grid grid-cols-1 md:grid-cols-2 gap-8 scroll-mt-12">
-          {/* AI 禅师 */}
-          <Link href="/wen/chan/ai-zen-master" className="group">
-            <div className="zen-card rounded-lg p-8 hover:-translate-y-1">
+        <section ref={cardsRef} className="max-w-3xl mx-auto scroll-mt-12">
+          <div className="flex flex-col md:flex-row gap-6">
+            <h2 className="text-center text-2xl md:text-4xl text-[#2c2c2c] mb-8 font-serif w-full">
+              AI陪你，修心问道
+            </h2>
+            
+            {/* AI 禅师 */}
+          <Link href="/wen/chan/ai-zen-master" className="group w-full md:w-1/2">
+            <div className="w-full bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
               <div className="text-5xl mb-4 text-center">🧘</div>
               <h2 className="text-2xl font-bold text-zen-ink text-center mb-3">
                 AI 禅师
@@ -98,8 +103,8 @@ export default function HomePage() {
           </Link>
 
           {/* AI 疗愈师 */}
-          <Link href="/wen/liao/mind" className="group">
-            <div className="zen-card rounded-lg p-8 hover:-translate-y-1">
+          <Link href="/wen/liao/mind" className="group w-full md:w-1/2">
+            <div className="w-full bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
               <div className="text-5xl mb-4 text-center">💚</div>
               <h2 className="text-2xl font-bold text-zen-ink text-center mb-3">
                 AI 疗愈师
@@ -111,8 +116,8 @@ export default function HomePage() {
           </Link>
 
           {/* 体质观察 */}
-          <Link href="/guan/health" className="group">
-            <div className="zen-card rounded-lg p-8 hover:-translate-y-1">
+          <Link href="/guan/health" className="group w-full md:w-1/2">
+            <div className="w-full bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
               <div className="text-5xl mb-4 text-center">🌿</div>
               <h2 className="text-2xl font-bold text-zen-ink text-center mb-3">
                 体质观察
@@ -123,18 +128,19 @@ export default function HomePage() {
             </div>
           </Link>
 
-          {/* 取名轩 */}
-          <Link href="/guan/name" className="group">
-            <div className="zen-card rounded-lg p-8 hover:-translate-y-1">
-              <div className="text-5xl mb-4 text-center">📜</div>
-              <h2 className="text-2xl font-bold text-zen-ink text-center mb-3">
-                取名轩
-              </h2>
-              <p className="text-gray-600 text-center">
-                融合传统文化与现代美学，为宝宝取一个好名字
-              </p>
-            </div>
-          </Link>
+            {/* 取名轩 */}
+            <Link href="/guan/name" className="group w-full md:w-1/2">
+              <div className="w-full bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
+                <div className="text-5xl mb-4 text-center">📜</div>
+                <h2 className="text-2xl font-bold text-zen-ink text-center mb-3">
+                  取名轩
+                </h2>
+                <p className="text-gray-600 text-center">
+                  融合传统文化与现代美学，为宝宝取一个好名字
+                </p>
+              </div>
+            </Link>
+          </div>
         </section>
 
         {/* Footer */}
