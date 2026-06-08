@@ -210,6 +210,17 @@ export default function HomePage() {
         )}
       </AnimatePresence>
 
+      {/* 固定"禅"字按钮 */}
+      {!showZen && (
+        <button
+          onClick={() => setShowZen(true)}
+          className="fixed bottom-4 right-4 w-12 h-12 bg-white/80 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center text-2xl hover:scale-105 transition-transform z-50"
+          style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}
+        >
+          禅
+        </button>
+      )}
+
       {/* AI 引路人 - 水墨仙岛 */}
       <FloatingLandscape />
     </div>
