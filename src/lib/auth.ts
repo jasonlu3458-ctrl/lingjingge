@@ -1,11 +1,13 @@
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 
+export type UserRole = 'free' | 'member' | 'admin';
+
 /**
  * 获取当前用户的角色
  * @returns 用户角色 ('free' | 'member' | 'admin')
  */
-export async function getUserRole(): Promise<string> {
+export async function getUserRole(): Promise<UserRole> {
   const cookieStore = cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

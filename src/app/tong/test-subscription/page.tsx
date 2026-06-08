@@ -33,7 +33,7 @@ export default function SubscriptionTestPage() {
       addResult(testName, result);
       console.log(`✅ 测试完成: ${testName}`, result);
     } catch (error) {
-      addResult(testName, { error: error.message });
+      addResult(testName, { error: error instanceof Error ? error.message : 'Unknown error' });
       console.error(`❌ 测试失败: ${testName}`, error);
     } finally {
       setRunning(false);

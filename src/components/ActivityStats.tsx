@@ -2,6 +2,11 @@
 
 import { useState, useEffect } from 'react';
 
+interface ActivityItem {
+  activity_type: string;
+  duration_minutes?: number;
+}
+
 interface ActivityStats {
   meditationMinutes: number;
   chatSessions: number;
@@ -23,11 +28,12 @@ export default function ActivityStats() {
       .then(res => res.json())
       .then(data => {
         if (data.activity) {
+          const activities = data.activity as ActivityItem[];
           // 计算统计数据
-          const meditation = data.activity.filter(a => a.activity_type === 'meditation');
-          const chats = data.activity.filter(a => a.activity_type === 'chat');
-          const reports = data.activity.filter(a => a.activity_type === 'report');
-          const gongans = data.activity.filter(a => a.activity_type === 'gongan');
+          const meditation = activities.filter((a: ActivityItem) => a.activity_type === 'meditation');
+          const chats = activities.filter((a: ActivityItem) => a.activity_type === 'chat');
+          const reports = activities.filter((a: ActivityItem) => a.activity_type === 'report');
+          const gongans = activities.filter((a: ActivityItem) => a.activity_type === 'gongan');
           
           setStats({
             meditationMinutes: meditation.reduce((sum, a) => sum + (a.duration_minutes || 0), 0),

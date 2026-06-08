@@ -129,10 +129,17 @@ export function getMockAlreadySubscribedResponse() {
 // Mock 函数
 // ========================================
 
+interface CreateCheckoutSessionParams {
+  priceId?: string;
+  userId?: string | null;
+  email?: string;
+  plan?: string;
+}
+
 /**
  * 模拟创建 Checkout Session
  */
-export async function mockCreateCheckoutSession(params) {
+export async function mockCreateCheckoutSession(params: CreateCheckoutSessionParams) {
   console.log('🧪 Mock: 创建 Checkout Session', params);
   
   // 模拟网络延迟
@@ -153,7 +160,7 @@ export async function mockCreateCheckoutSession(params) {
 /**
  * 模拟 Webhook 事件处理
  */
-export async function mockHandleWebhook(eventType, data = {}) {
+export async function mockHandleWebhook(eventType: string, data: Record<string, unknown> = {}) {
   console.log('🧪 Mock: 处理 Webhook 事件', { eventType, data });
   
   // 模拟网络延迟
@@ -216,6 +223,12 @@ export async function testSubscriptionFlow(plan = 'monthly') {
       email: MOCK_USER.email,
       plan: plan,
     });
+    
+    if ('error' in checkoutResult) {
+      console.log('❌ Checkout Session 创建失败:', checkoutResult.error);
+      return { success: false, error: checkoutResult.error };
+    }
+    
     console.log('✅ Checkout Session 创建成功:', checkoutResult.sessionId);
     console.log('🔗 支付链接:', checkoutResult.url);
     console.log('');
@@ -257,7 +270,7 @@ export async function testSubscriptionFlow(plan = 'monthly') {
     console.error('❌ 测试失败:', error);
     return {
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }

@@ -19,13 +19,8 @@ export default function CommunityApiTest() {
     setError(null);
     
     try {
-      const response = await callCommunityAssistant(testType, input);
-      
-      if (response.success) {
-        setResult(response.result);
-      } else {
-        setError(response.error || '未知错误');
-      }
+      const { result } = await callCommunityAssistant(testType, input);
+      setResult(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : '请求失败');
     } finally {

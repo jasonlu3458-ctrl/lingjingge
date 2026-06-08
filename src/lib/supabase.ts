@@ -13,15 +13,6 @@ export const supabase = createSupabaseClient<Database>(supabaseUrl, supabaseAnon
     persistSession: true,
     detectSessionInUrl: true,
   },
-  // 添加超时配置
-  global: {
-    fetch: (url, options) => {
-      return fetch(url, {
-        ...options,
-        signal: AbortController.timeout(5000).signal, // 5秒超时
-      });
-    },
-  },
 });
 
 export function createClient() {
@@ -45,12 +36,17 @@ export async function testSupabaseConnection(): Promise<boolean> {
     setTimeout(() => reject(new Error('连接超时')), 5000);
   });
 
-  const testPromise = supabase
-    .from('articles')
-    .select('id')
-    .limit(1)
-    .then(() => true)
-    .catch(() => false);
+  const testPromise = (async () => {
+    try {
+      await supabase
+        .from('articles')
+        .select('id')
+        .limit(1);
+      return true;
+    } catch {
+      return false;
+    }
+  })();
 
   try {
     return await Promise.race([testPromise, timeoutPromise]);
