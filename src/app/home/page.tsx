@@ -41,7 +41,7 @@ export default function HomePage() {
           
           {/* 主标题 */}
           <h1 
-            className="text-5xl md:text-7xl text-[#2c2c2c] mb-6 tracking-wider zen-fade-in"
+            className="text-3xl md:text-7xl text-[#2c2c2c] mb-6 tracking-wider zen-fade-in"
             style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}
           >
             向内观，自有灵山
@@ -49,7 +49,7 @@ export default function HomePage() {
           
           {/* 副标题 */}
           <p 
-            className="text-lg md:text-xl text-[#5a5a5a] max-w-md mb-10 leading-relaxed text-center zen-fade-in-delay-1"
+            className="text-sm md:text-xl text-[#5a5a5a] max-w-md mb-10 leading-relaxed text-center px-4 zen-fade-in-delay-1"
             style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}
           >
             你的AI心智伙伴，陪你在喧嚣中，找到内心的清净道场。
