@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, testSupabaseConnection } from '@/lib/supabase';
 
 interface Article {
   id: string;
@@ -22,7 +22,7 @@ const mockArticles: Article[] = [
   { id: '4', slug: 'jin-gang-jing-chapter-1', title: '金刚经·第一品', content: '如是我闻，一时佛在舍卫国祇树给孤独园，与大比丘众千二百五十人俱。尔时世尊食时，著衣持钵，入舍卫大城乞食。', source: '释迦牟尼', category: 'classics', created_at: '2024-01-04T00:00:00Z' },
 ];
 
-const mockTerms: Article[] = [
+const mockTermsArray: Article[] = [
   { id: 't1', slug: 'jian-xing', title: '见性', content: '禅宗术语，指彻见自心本性。即通过修行，破除妄想执着，直接体认自己本来具有的佛性。见性是禅宗修行的核心目标，也是悟道的标志。', source: null, category: 'treasure', created_at: '2024-01-01T00:00:00Z' },
   { id: 't2', slug: 'wu-ming', title: '无明', content: '佛教术语，指众生心中无有智慧，处于黑暗状态。无明是烦恼的根源，是生死轮回的根本原因。破除无明是修行的首要任务。', source: null, category: 'treasure', created_at: '2024-01-02T00:00:00Z' },
   { id: 't3', slug: 'bo-re', title: '般若', content: '梵语，意为智慧，特指超越世俗的智慧。般若智慧不同于普通的知识，它是能够洞察诸法实相、破除执着的根本智慧。', source: null, category: 'treasure', created_at: '2024-01-03T00:00:00Z' },
@@ -41,19 +41,46 @@ export default function LibraryPage() {
 
   // 从 Supabase 获取数据
   useEffect(() => {
+    let mounted = true;
+    let isFetched = false; // 防止重复调用
+
     async function fetchData() {
+      // 防止重复调用
+      if (isFetched) return;
+      isFetched = true;
+
       try {
+        if (!mounted) return;
         setLoading(true);
         setError(null);
 
         // 检查 Supabase 是否配置
         if (!isSupabaseConfigured()) {
           console.log('Supabase 未配置，使用模拟数据');
-          setArticles(mockArticles);
-          setTerms(mockTerms);
-          setLoading(false);
+          if (mounted) {
+            setArticles(mockArticles);
+            setTerms(mockTermsArray);
+            setLoading(false);
+          }
           return;
         }
+
+        // 先测试数据库连接
+        console.log('正在测试数据库连接...');
+        const connectionOk = await testSupabaseConnection();
+        
+        if (!connectionOk) {
+          console.log('数据库连接失败，使用模拟数据');
+          if (mounted) {
+            setArticles(mockArticles);
+            setTerms(mockTermsArray);
+            setError('数据库连接失败，已切换到演示模式');
+            setLoading(false);
+          }
+          return;
+        }
+
+        console.log('数据库连接成功，开始获取数据...');
 
         // 获取典籍文章 (classics)
         const { data: classicsData, error: classicsError } = await supabase
@@ -62,14 +89,14 @@ export default function LibraryPage() {
           .eq('category', 'classics')
           .order('created_at', { ascending: false });
 
-        if (classicsError) throw classicsError;
-        const articlesData = classicsData || [];
-        
-        // 如果数据库中没有数据，使用模拟数据
-        if (articlesData.length === 0) {
+        if (!mounted) return;
+
+        if (classicsError) {
+          console.error('获取典籍数据失败:', classicsError);
           setArticles(mockArticles);
         } else {
-          setArticles(articlesData);
+          const articlesData = classicsData || [];
+          setArticles(articlesData.length === 0 ? mockArticles : articlesData);
         }
 
         // 获取术语 (treasure)
@@ -79,28 +106,36 @@ export default function LibraryPage() {
           .eq('category', 'treasure')
           .order('created_at', { ascending: false });
 
-        if (treasureError) throw treasureError;
-        const termsData = treasureData || [];
-        
-        // 如果数据库中没有数据，使用模拟数据
-        if (termsData.length === 0) {
-          setTerms(mockTerms);
+        if (!mounted) return;
+
+        if (treasureError) {
+          console.error('获取术语数据失败:', treasureError);
+          setTerms(mockTermsArray);
         } else {
-          setTerms(termsData);
+          const termsData = treasureData || [];
+          setTerms(termsData.length === 0 ? mockTermsArray : termsData);
         }
 
       } catch (err) {
         console.error('获取数据失败:', err);
         // 使用模拟数据作为后备
-        setArticles(mockArticles);
-        setTerms(mockTerms);
-        setError('加载数据失败，已切换到演示模式');
+        if (mounted) {
+          setArticles(mockArticles);
+          setTerms(mockTermsArray);
+          setError(err instanceof Error ? err.message : '加载数据失败，已切换到演示模式');
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     }
 
     fetchData();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   // 过滤文章
