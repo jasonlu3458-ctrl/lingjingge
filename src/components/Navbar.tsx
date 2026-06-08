@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import UserStatus from './UserStatus';
@@ -70,19 +70,63 @@ const menuItems = [
     href: '/tong/community',
     items: [
       {
-            label: '社区系列',
-            subItems: [
-              { label: '同修社区', href: '/tong/community', icon: '🤝' },
-              { label: '个人中心', href: '/tong/profile', icon: '🏠' },
-              { label: '会员订阅', href: '/tong/pricing', icon: '💎' },
-            ]
-          },
+        label: '社区系列',
+        subItems: [
+          { label: '同修社区', href: '/tong/community', icon: '🤝' },
+          { label: '个人中心', href: '/tong/profile', icon: '🏠' },
+          { label: '会员订阅', href: '/tong/pricing', icon: '💎' },
+        ]
+      },
     ]
   },
 ];
 
 export default function Navbar() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // 缓存菜单切换函数
+  const handleMenuEnter = useCallback((label: string) => {
+    setActiveMenu(label);
+  }, []);
+
+  const handleMenuLeave = useCallback(() => {
+    setActiveMenu(null);
+  }, []);
+
+  const toggleMobileMenu = useCallback(() => {
+    setMobileMenuOpen(prev => !prev);
+  }, []);
+
+  const closeMobileMenu = useCallback(() => {
+    setMobileMenuOpen(false);
+  }, []);
+
+  // 点击外部关闭菜单
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('nav')) {
+        setActiveMenu(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // ESC键关闭移动端菜单
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobileMenuOpen(false);
+        setActiveMenu(null);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <nav className="bg-zen-beige border-b border-zen-gray sticky top-0 z-50">
@@ -110,8 +154,10 @@ export default function Navbar() {
               <div
                 key={menu.label}
                 className="relative h-16 flex items-center"
-                onMouseEnter={() => setActiveMenu(menu.label)}
-                onMouseLeave={() => setActiveMenu(null)}
+                onMouseEnter={() => handleMenuEnter(menu.label)}
+                onMouseLeave={handleMenuLeave}
+                onFocus={() => handleMenuEnter(menu.label)}
+                onBlur={handleMenuLeave}
               >
                 {/* 主菜单按钮 */}
                 <Link
@@ -127,10 +173,8 @@ export default function Navbar() {
                   }}
                 >
                   {menu.label}
-                  <span style={{
+                  <span className="transition-transform duration-300 text-xs" style={{
                     transform: activeMenu === menu.label ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.3s',
-                    fontSize: '10px',
                   }}>
                     ▼
                   </span>
@@ -139,9 +183,9 @@ export default function Navbar() {
                 {/* 下拉子菜单 */}
                 {activeMenu === menu.label && (
                   <div
-                    className="absolute top-full left-0 mt-0 bg-white rounded-lg shadow-lg border border-gray-200 py-4"
+                    className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 py-4 z-50"
                     style={{
-                      animation: 'fadeIn 0.2s ease-in-out',
+                      animation: 'fadeInDown 0.2s ease-out',
                       minWidth: '280px',
                     }}
                   >
@@ -160,12 +204,15 @@ export default function Navbar() {
                           <Link
                             key={item.href}
                             href={item.href}
-                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200 mx-2 rounded"
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-amber-50 transition-all duration-200 mx-2 rounded-lg"
                             style={{
                               fontFamily: "'Ma Shan Zheng', cursive, serif",
                               letterSpacing: '1px',
                             }}
-                            onClick={() => setActiveMenu(null)}
+                            onClick={() => {
+                              handleMenuLeave();
+                              closeMobileMenu();
+                            }}
                           >
                             <span className="text-lg">{item.icon}</span>
                             <span>{item.label}</span>
@@ -197,10 +244,76 @@ export default function Navbar() {
           <div className="hidden lg:flex items-center">
             <UserStatus />
           </div>
+
+          {/* 移动端菜单按钮 */}
+          <button
+            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            onClick={toggleMobileMenu}
+            aria-label={mobileMenuOpen ? '关闭菜单' : '打开菜单'}
+          >
+            <svg className="w-6 h-6 text-[#2c2c2c]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {mobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
         </div>
+
+        {/* 移动端菜单 */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden pb-4 animate-slideDown">
+            <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+              {menuItems.map((menu) => (
+                <div key={menu.label} className="border-b border-gray-100 last:border-b-0">
+                  <button
+                    className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+                    onClick={() => setActiveMenu(activeMenu === menu.label ? null : menu.label)}
+                    style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}
+                  >
+                    <span className="text-[#2c2c2c]">{menu.label}</span>
+                    <span className={`transition-transform duration-300 ${activeMenu === menu.label ? 'rotate-180' : ''}`}>
+                      ▼
+                    </span>
+                  </button>
+                  
+                  {/* 移动端子菜单 */}
+                  {activeMenu === menu.label && (
+                    <div className="bg-gray-50 px-2 py-2 animate-fadeIn">
+                      {menu.items.map((category) => (
+                        <div key={category.label}>
+                          <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">
+                            {category.label}
+                          </div>
+                          {category.subItems.map((item) => (
+                            <Link
+                              key={item.href}
+                              href={item.href}
+                              className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-white rounded-lg transition-colors block w-full"
+                              onClick={closeMobileMenu}
+                            >
+                              <span className="text-lg">{item.icon}</span>
+                              <span>{item.label}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+              
+              {/* 移动端用户状态 */}
+              <div className="p-4 border-t border-gray-100">
+                <UserStatus />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* AI灵光脉冲动画样式 */}
+      {/* 动画样式 */}
       <style jsx>{`
         @keyframes pulse {
           0%, 100% {
@@ -212,7 +325,17 @@ export default function Navbar() {
             transform: scale(1.3);
           }
         }
-        @keyframes fadeIn {
+        @keyframes fadeInDown {
+          from {
+            opacity: 0;
+            transform: translateY(-8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes slideDown {
           from {
             opacity: 0;
             transform: translateY(-10px);
@@ -221,6 +344,10 @@ export default function Navbar() {
             opacity: 1;
             transform: translateY(0);
           }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
       `}</style>
     </nav>
