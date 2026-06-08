@@ -64,6 +64,7 @@ export default function PricingPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -76,6 +77,7 @@ export default function PricingPage() {
         } else if (user) {
           setIsLoggedIn(true);
           setUserEmail(user.email || null);
+          setUserId(user.id);
         } else {
           setIsLoggedIn(false);
         }
@@ -104,7 +106,7 @@ export default function PricingPage() {
       return;
     }
 
-    if (!isLoggedIn) {
+    if (!isLoggedIn || !userId) {
       window.location.href = '/login?redirect=/pricing';
       return;
     }
@@ -114,11 +116,13 @@ export default function PricingPage() {
     try {
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ plan }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          priceId: plan,
+          userId: userId,
+          email: userEmail,
+          plan: plan,
+        }),
       });
 
       const data = await response.json();
@@ -126,8 +130,10 @@ export default function PricingPage() {
       if (response.ok && data.url) {
         window.location.href = data.url;
       } else {
-        if (data.error === 'Not authenticated') {
+        if (data.error === 'Not authenticated' || data.error === '请先登录后再订阅') {
           window.location.href = '/login?redirect=/pricing';
+        } else if (data.alreadySubscribed) {
+          alert('您已经是付费会员，无需重复订阅');
         } else {
           alert(data.error || '订阅失败，请稍后重试');
         }

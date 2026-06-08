@@ -91,22 +91,22 @@ export async function POST(req: Request) {
 function getMockResponse(type: string, content: string): string {
   switch (type) {
     case 'classify':
-      // 根据内容关键词进行简单分类
+      // 同修论坛帖子分类逻辑
+      // 问卦 - 运气、卦、占卜
       if (content.includes('运气') || content.includes('卦') || content.includes('占卜')) {
         return '问卦';
       }
-      if (content.includes('孩子') || content.includes('教育') || content.includes('亲子')) {
+      // 心得 - 孩子、教育、亲子、禅、打坐、冥想、身体、健康、养生
+      if (content.includes('孩子') || content.includes('教育') || content.includes('亲子') ||
+          content.includes('禅') || content.includes('打坐') || content.includes('冥想') ||
+          content.includes('身体') || content.includes('健康') || content.includes('养生')) {
         return '心得';
       }
-      if (content.includes('禅') || content.includes('打坐') || content.includes('冥想')) {
-        return '分享';
-      }
-      if (content.includes('身体') || content.includes('健康') || content.includes('养生')) {
-        return '心得';
-      }
+      // 求助 - 情绪、焦虑、压力
       if (content.includes('情绪') || content.includes('焦虑') || content.includes('压力')) {
         return '求助';
       }
+      // 默认返回心得
       return '心得';
 
     case 'knowledge':

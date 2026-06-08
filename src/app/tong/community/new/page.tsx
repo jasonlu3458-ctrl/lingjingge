@@ -32,42 +32,45 @@ export default function NewTopicPage() {
     }
   };
 
+  // 保存帖子到 Supabase
+  const savePost = async ({ title, content, tag, author }: { title: string; content: string; tag: string; author: string }) => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      throw new Error('请先登录后再发布话题');
+    }
+
+    const { error: insertError } = await supabase
+      .from('topics')
+      .insert({
+        user_id: user.id as string,
+        title: title as string,
+        content: content as string,
+        tag: tag,
+        created_at: new Date().toISOString()
+      } as any);
+
+    if (insertError) {
+      throw new Error(`发布失败: ${insertError.message}`);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!title.trim() || !content.trim()) return;
+
     setLoading(true);
     setError(null);
-
     try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        setError('请先登录后再发布话题');
-        return;
-      }
-
-      // 1. 调用分类API获取标签
       const tag = await classifyPost(content);
       setPredictedTag(tag);
-
-      // 2. 将标签与帖子内容一并提交到Supabase
-      const { error: insertError } = await supabase
-        .from('topics')
-        .insert({
-          user_id: user.id as string,
-          title: title as string,
-          content: content as string,
-          tag: tag,
-          created_at: new Date().toISOString()
-        } as any);
-
-      if (insertError) {
-        setError(`发布失败: ${insertError.message}`);
-      } else {
-        router.push('/tong/community');
-      }
-    } catch (err) {
-      setError(`发布异常: ${err instanceof Error ? err.message : '未知错误'}`);
+      // 将 tag 与帖子一起保存到 Supabase
+      await savePost({ title, content, tag, author: '' });
+      router.push('/tong/community');
+    } catch (error) {
+      console.error('发帖失败:', error);
+      setError(error instanceof Error ? error.message : '发布失败，请稍后再试');
     } finally {
       setLoading(false);
     }
