@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAIChat } from '@/hooks/useAIChat';
 
 const gongans = [
@@ -20,6 +20,7 @@ export default function GonganPage() {
   const [currentGongan, setCurrentGongan] = useState('');
   const [count, setCount] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
+  const initialized = useRef(false);
 
   const loadNewGongan = useCallback(() => {
     let random = gongans[Math.floor(Math.random() * gongans.length)];
@@ -33,11 +34,15 @@ export default function GonganPage() {
   }, [currentGongan]);
 
   useEffect(() => {
-    loadNewGongan();
-    // 从 localStorage 读取参悟次数
-    const savedCount = localStorage.getItem('gongan_count');
-    if (savedCount) {
-      setCount(parseInt(savedCount, 10));
+    // 使用 ref 确保只在组件挂载时初始化一次，避免依赖变化导致的无限循环
+    if (!initialized.current) {
+      initialized.current = true;
+      loadNewGongan();
+      // 从 localStorage 读取参悟次数
+      const savedCount = localStorage.getItem('gongan_count');
+      if (savedCount) {
+        setCount(parseInt(savedCount, 10));
+      }
     }
   }, [loadNewGongan]);
 
