@@ -1,8 +1,9 @@
 'use client';
 
-import { useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { motion, AnimatePresence } from 'framer-motion';
 import FloatingLandscape from '@/components/FloatingLandscape';
 
 const dailyZenQuotes = [
@@ -18,10 +19,39 @@ const dailyZenQuotes = [
 export default function HomePage() {
   const todayQuote = dailyZenQuotes[new Date().getDate() % dailyZenQuotes.length];
   const cardsRef = useRef<HTMLDivElement>(null);
+  const [showZen, setShowZen] = useState(false);
+  const [dailyZen, setDailyZen] = useState('');
+  const [zenSource, setZenSource] = useState('');
 
   const scrollToCards = () => {
     cardsRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  // 当用户滚动到第二屏下方时，自动显示浮窗
+  useEffect(() => {
+    const handleScroll = () => {
+      const cardSection = document.getElementById('card-section');
+      if (cardSection) {
+        const rect = cardSection.getBoundingClientRect();
+        if (rect.bottom < window.innerHeight) {
+          setShowZen(true);
+        }
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // 获取每日禅机
+  useEffect(() => {
+    fetch('/api/daily-zen')
+      .then(res => res.json())
+      .then(data => {
+        const parts = data.zen.split('—');
+        setDailyZen(parts[0].trim());
+        setZenSource(parts.length > 1 ? parts[1].trim() : '');
+      });
+  }, []);
 
   return (
     <div className="min-h-screen bg-zen-beige">
@@ -83,7 +113,7 @@ export default function HomePage() {
         </section>
 
         {/* 功能入口 */}
-        <section ref={cardsRef} className="max-w-3xl mx-auto scroll-mt-12">
+        <section id="card-section" ref={cardsRef} className="max-w-3xl mx-auto scroll-mt-12">
           <div className="flex flex-col md:flex-row gap-6">
             <h2 className="text-center text-2xl md:text-4xl text-[#2c2c2c] mb-8 font-serif w-full">
               AI陪你，修心问道
@@ -156,6 +186,29 @@ export default function HomePage() {
           </div>
         </footer>
       </main>
+
+      {/* 底部浮窗 */}
+      <AnimatePresence>
+        {showZen && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 z-50"
+          >
+            <div className="flex justify-between items-start mb-2">
+              <div className="text-sm text-gray-400">每日禅机</div>
+              <button onClick={() => setShowZen(false)} className="text-gray-400 hover:text-[#2c2c2c]">✕</button>
+            </div>
+            <div className="text-lg md:text-xl font-serif text-[#2c2c2c] leading-relaxed">
+              {dailyZen}
+            </div>
+            {zenSource && (
+              <div className="mt-2 text-sm text-gray-500">—— {zenSource}</div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* AI 引路人 - 水墨仙岛 */}
       <FloatingLandscape />
