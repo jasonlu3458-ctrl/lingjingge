@@ -2,7 +2,6 @@
 /* eslint-disable react/no-unescaped-entities */
 
 import { useState } from 'react';
-import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AvatarPlaceholder } from '@/components/AvatarPlaceholder';
 import { FadeIn, StaggerContainer, StaggerItem } from '@/components/Animations';
@@ -32,7 +31,7 @@ const lineages: Record<string, Lineage> = {
         name: '释迦牟尼佛',
         era: '公元前563-483年',
         quote: '拈花一笑，教外别传',
-        image: '/images/lineage/buddha.jpg',
+        image: '/images/lineage/buddha.png',
         bio: '古印度迦毗罗卫国太子，29岁出家，35岁悟道，创立佛教，讲法49年，开启了智慧的传承。'
       },
       {
@@ -40,7 +39,7 @@ const lineages: Record<string, Lineage> = {
         name: '达摩祖师',
         era: '公元528年',
         quote: '东渡传法，开启禅宗',
-        image: '/images/lineage/bodhidharma.jpg',
+        image: '/images/lineage/bodhidharma.png',
         bio: '南天竺香至王第三子，于南朝梁时来华，在少林寺面壁九年，创立禅宗，传法慧可。'
       },
       {
@@ -48,7 +47,7 @@ const lineages: Record<string, Lineage> = {
         name: '六祖慧能',
         era: '公元638-713年',
         quote: '顿悟法门，著《坛经》',
-        image: '/images/lineage/huineng.jpg',
+        image: '/images/lineage/huineng.png',
         bio: '广东新州人，以"菩提本无树"偈子得五祖弘忍衣钵，开创南宗顿悟法门，使禅宗大兴于中国。'
       },
       {
@@ -56,7 +55,7 @@ const lineages: Record<string, Lineage> = {
         name: '临济义玄',
         era: '公元？-867年',
         quote: '创立临济宗，棒喝接人',
-        image: '/images/lineage/linji.jpg',
+        image: '/images/lineage/linji.png',
         bio: '唐代高僧，创立临济宗，以棒喝方式接引学人，机锋峻烈，是中国禅宗最盛的宗派之一。'
       },
       {
@@ -64,7 +63,7 @@ const lineages: Record<string, Lineage> = {
         name: '虚云老和尚',
         era: '公元1840-1959年',
         quote: '中兴禅宗，传承法脉',
-        image: '/images/lineage/xuyun.jpg',
+        image: '/images/lineage/xuyun.png',
         bio: '中国近代禅宗泰斗，一身兼挑五宗法脉，重兴祖师道场，为禅宗传承做出巨大贡献。'
       },
     ]
@@ -78,7 +77,7 @@ const lineages: Record<string, Lineage> = {
         name: '伏羲氏',
         era: '上古',
         quote: '创八卦，开易学之源',
-        image: '/images/lineage/fuxi.jpg',
+        image: '/images/lineage/fuxi.png',
         bio: '中国古圣先王，画八卦，结网罟，教民渔猎，开启了易学的源头。'
       },
       {
@@ -86,7 +85,7 @@ const lineages: Record<string, Lineage> = {
         name: '周文王',
         era: '商末',
         quote: '演六十四卦，作卦辞',
-        image: '/images/lineage/wenwang.jpg',
+        image: '/images/lineage/wenwang.png',
         bio: '商末周族领袖，被纣王囚禁于羑里时，将八卦演绎为六十四卦，为《周易》奠定基础。'
       },
       {
@@ -94,7 +93,7 @@ const lineages: Record<string, Lineage> = {
         name: '孔子',
         era: '公元前551-479年',
         quote: '作《十翼》，传易学',
-        image: '/images/lineage/confucius.jpg',
+        image: '/images/lineage/confucius.png',
         bio: '春秋时期伟大的思想家和教育家，晚年整理《周易》，作《十翼》，使易学得以发扬光大。'
       },
       {
@@ -102,7 +101,7 @@ const lineages: Record<string, Lineage> = {
         name: '王弼',
         era: '公元226-249年',
         quote: '注《周易》，开玄学',
-        image: '/images/lineage/wangbi.jpg',
+        image: '/images/lineage/wangbi.png',
         bio: '曹魏时期玄学家，少年天才，以道家思想解《易》，得意忘象，开魏晋玄学之风。'
       },
       {
@@ -110,7 +109,7 @@ const lineages: Record<string, Lineage> = {
         name: '邵雍',
         era: '公元1011-1077年',
         quote: '创先天易学，影响深远',
-        image: '/images/lineage/shaoyong.jpg',
+        image: '/images/lineage/shaoyong.png',
         bio: '北宋理学大家，创先天象数之学，著《皇极经世》，对宋明理学影响深远。'
       },
     ]
@@ -124,7 +123,7 @@ const lineages: Record<string, Lineage> = {
         name: '老子',
         era: '春秋',
         quote: '著《道德经》，开道家之宗',
-        image: '/images/lineage/laozi.jpg',
+        image: '/images/lineage/laozi.png',
         bio: '春秋末期思想家，周王室守藏室之史，后西出函谷关，留下《道德经》五千言，为道家始祖。'
       },
       {
@@ -132,7 +131,7 @@ const lineages: Record<string, Lineage> = {
         name: '庄子',
         era: '战国',
         quote: '著《庄子》，逍遥自在',
-        image: '/images/lineage/zhuangzi.jpg',
+        image: '/images/lineage/zhuangzi.png',
         bio: '战国时期道家代表人物，作《庄子》，以寓言故事表达道的深邃，追求精神自由。'
       },
       {
@@ -140,7 +139,7 @@ const lineages: Record<string, Lineage> = {
         name: '张道陵',
         era: '东汉',
         quote: '创立天师道，传承道家',
-        image: '/images/lineage/zhangdaoling.jpg',
+        image: '/images/lineage/zhangdaoling.png',
         bio: '东汉道教创始人，在四川鹤鸣山创立天师道，尊老子为道祖，使道家有了组织形式。'
       },
       {
@@ -148,7 +147,7 @@ const lineages: Record<string, Lineage> = {
         name: '王重阳',
         era: '金代',
         quote: '创立全真教，三教合一',
-        image: '/images/lineage/wangchongyang.jpg',
+        image: '/images/lineage/wangchongyang.png',
         bio: '金代全真道创始人，主张儒释道三教合一，以"清静无为"为宗旨，使道教面貌一新。'
       },
       {
@@ -156,7 +155,7 @@ const lineages: Record<string, Lineage> = {
         name: '张三丰',
         era: '明初',
         quote: '创立武当道，内外兼修',
-        image: '/images/lineage/sanfeng.jpg',
+        image: '/images/lineage/sanfeng.png',
         bio: '明初道教宗师，创立武当道，将内丹与武术结合，成为武当派祖师，影响深远。'
       },
     ]
@@ -235,7 +234,7 @@ export default function LineagePage() {
                         whileTap={{ scale: 0.98 }}
                       >
                         {/* 左侧：画像 */}
-                        <AvatarPlaceholder name={master.name} size={128} />
+                        <AvatarPlaceholder name={master.name} size={128} image={master.image} />
 
                         {/* 中间：核心信息 */}
                         <div className="flex-1 text-center md:text-left">
@@ -285,7 +284,7 @@ export default function LineagePage() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-start gap-4 mb-4">
-                <AvatarPlaceholder name={selectedMaster.name} size={80} />
+                <AvatarPlaceholder name={selectedMaster.name} size={80} image={selectedMaster.image} />
                 <div className="flex-1">
                   <h3 className="text-xl font-serif font-bold mb-1" style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}>
                     {selectedMaster.name}

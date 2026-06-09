@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 const plans = [
   {
@@ -67,6 +67,13 @@ export default function PricingPage() {
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
+    // 如果 Supabase 未配置，直接跳过
+    if (!isSupabaseConfigured()) {
+      setIsLoggedIn(false);
+      setAuthLoading(false);
+      return;
+    }
+
     const checkAuth = async () => {
       try {
         const { data: { user }, error } = await supabase.auth.getUser();

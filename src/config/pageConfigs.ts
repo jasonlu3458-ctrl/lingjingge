@@ -224,7 +224,13 @@ export const pageConfigs: Record<string, PageConfig> = {
       submitLabel: '生成炼体方案',
       fields: [
         { name: 'age', label: '年龄', type: 'text', placeholder: '请输入年龄', required: true },
-        { name: 'body_type', label: '体质类型', type: 'select', options: [{label:'平和',value:'balanced'},{label:'气虚',value:'qi_deficiency'},{label:'阳虚',value:'yang_deficiency'},{label:'阴虚',value:'yin_deficiency'},{label:'痰湿',value:'phlegm_dampness'}], required: true },
+        { name: 'body_type', label: '体质类型', type: 'select', options: [
+          { label: '平和 (精力充沛，睡眠良好，不易生病)', value: 'balanced' },
+          { label: '气虚 (容易疲劳，说话有气无力，稍动就出汗)', value: 'qi_deficiency' },
+          { label: '阳虚 (非常怕冷，手脚冰凉，喜热食热饮)', value: 'yang_deficiency' },
+          { label: '阴虚 (口干咽燥，手心脚心发热，容易失眠)', value: 'yin_deficiency' },
+          { label: '痰湿 (体型偏胖，身体沉重，容易困倦，舌苔厚腻)', value: 'phlegm_dampness' },
+        ], required: true },
         { name: 'symptoms', label: '当前症状', type: 'textarea', placeholder: '请描述身体不适', required: false },
       ],
       reportStructure: {

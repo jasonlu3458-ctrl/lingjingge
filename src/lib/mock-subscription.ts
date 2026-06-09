@@ -342,7 +342,7 @@ export const TEST_CASES = {
 // ========================================
 // 导出所有测试工具
 // ========================================
-export default {
+const mockSubscriptionExports = {
   // Mock 数据
   MOCK_PRICE_IDS,
   MOCK_USER,
@@ -365,3 +365,5 @@ export default {
   getMockErrorResponse,
   getMockAlreadySubscribedResponse,
 };
+
+export default mockSubscriptionExports;

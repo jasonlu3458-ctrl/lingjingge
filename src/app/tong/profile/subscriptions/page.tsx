@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 interface UserProfile {
   id: string;
@@ -39,6 +39,12 @@ export default function SubscriptionPage() {
   const [showSuccess, setShowSuccess] = useState(false);
 
   const fetchData = useCallback(async () => {
+    // 如果 Supabase 未配置，直接返回
+    if (!isSupabaseConfigured()) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();

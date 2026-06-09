@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import UserStatus from './UserStatus';
@@ -84,14 +84,37 @@ const menuItems = [
 export default function Navbar() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // 用于延迟关闭菜单的定时器
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 缓存菜单切换函数
   const handleMenuEnter = useCallback((label: string) => {
+    // 清除待执行的关闭定时器（鼠标重新进入时取消关闭）
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
     setActiveMenu(label);
   }, []);
 
   const handleMenuLeave = useCallback(() => {
-    setActiveMenu(null);
+    // 延迟 150ms 关闭，给鼠标移到下拉菜单留出时间
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+    }
+    closeTimerRef.current = setTimeout(() => {
+      setActiveMenu(null);
+      closeTimerRef.current = null;
+    }, 150);
+  }, []);
+
+  // 组件卸载时清理定时器
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+      }
+    };
   }, []);
 
   const toggleMobileMenu = useCallback(() => {
@@ -180,14 +203,24 @@ export default function Navbar() {
                   </span>
                 </Link>
 
-                {/* 下拉子菜单 */}
+                {/* 不可见桥接区：覆盖按钮与下拉菜单之间的 8px 间隙，防止 onMouseLeave 误触发 */}
                 {activeMenu === menu.label && (
                   <div
-                    className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 py-4 z-50"
+                    className="absolute top-full left-0 w-full h-2"
+                    style={{ pointerEvents: 'none' }}
+                  />
+                )}
+
+                {/* 下拉子菜单 - 用 padding-top 占位形成"桥接区"，避免按钮与菜单间的间隙触发 onMouseLeave */}
+                {activeMenu === menu.label && (
+                  <div
+                    className="absolute top-full left-0 pt-2 bg-white rounded-lg shadow-xl border border-gray-200 py-4 z-50"
                     style={{
                       animation: 'fadeInDown 0.2s ease-out',
                       minWidth: '280px',
                     }}
+                    onMouseEnter={() => handleMenuEnter(menu.label)}
+                    onMouseLeave={handleMenuLeave}
                   >
                     {menu.items.map((category) => (
                       <div key={category.label} className="mb-3 last:mb-0">

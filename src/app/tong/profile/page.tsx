@@ -38,6 +38,12 @@ const roleInfo: Record<string, { name: string; description: string; color: strin
 }
 
 async function getUserProfile(): Promise<UserProfile | null> {
+  // 检查环境变量是否配置
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    console.warn('Supabase 环境变量未配置')
+    return null
+  }
+
   const cookieStore = cookies()
   
   const supabase = createServerClient(

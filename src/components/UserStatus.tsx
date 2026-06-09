@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
 
 export default function UserStatus() {
@@ -12,10 +12,21 @@ export default function UserStatus() {
   const router = useRouter();
 
   useEffect(() => {
-    const fetchSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
+    // 如果 Supabase 未配置，直接跳过
+    if (!isSupabaseConfigured()) {
       setLoading(false);
+      return;
+    }
+
+    const fetchSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+      } catch (error) {
+        console.error('获取 session 失败:', error);
+      } finally {
+        setLoading(false);
+      }
     }
 
     fetchSession();
@@ -30,7 +41,9 @@ export default function UserStatus() {
   }, [router]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    if (isSupabaseConfigured()) {
+      await supabase.auth.signOut();
+    }
     router.push('/');
   }
 

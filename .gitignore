@@ -37,3 +37,11 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# dev server logs
+/devlog*.txt
+/dev.log
+
+# build logs
+/build_out.txt
+/build_err.txt

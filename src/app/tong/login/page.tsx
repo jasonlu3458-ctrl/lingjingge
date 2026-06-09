@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +28,12 @@ export default function LoginPage() {
     
     if (!email || !password) {
       setError('请填写邮箱和密码');
+      return;
+    }
+
+    // 检查 Supabase 是否配置
+    if (!isSupabaseConfigured()) {
+      setError('Supabase 未配置，无法登录');
       return;
     }
 
@@ -68,6 +74,11 @@ export default function LoginPage() {
   const handleResendEmail = async () => {
     if (!email) {
       setError('请先输入邮箱地址');
+      return;
+    }
+
+    if (!isSupabaseConfigured()) {
+      setError('Supabase 未配置，无法发送验证邮件');
       return;
     }
 

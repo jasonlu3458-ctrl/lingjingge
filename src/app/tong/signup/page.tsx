@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -24,11 +24,17 @@ export default function SignupPage() {
       return;
     }
 
+    // 检查 Supabase 是否配置
+    if (!isSupabaseConfigured()) {
+      setError('Supabase 未配置，无法注册');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
-      const { error: signupError } = await supabase.auth.signUp({
+      const { data, error: signupError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -41,14 +47,30 @@ export default function SignupPage() {
           setError('邮件发送过于频繁，请稍后再试');
         } else if (signupError.message.includes('User already registered')) {
           setError('该邮箱已被注册，请直接登录');
+        } else if (signupError.message.toLowerCase().includes('failed to fetch')) {
+          setError('无法连接 Supabase 服务，请检查网络或稍后再试');
         } else {
           setError(signupError.message);
         }
+      } else if (data?.user?.identities?.length === 0) {
+        // Supabase 静默成功但 identities 为空 = 邮箱已注册
+        setError('该邮箱已被注册，请直接登录');
       } else {
         setSignupSuccess(true);
       }
     } catch (err: any) {
-      setError(err.message || '注册失败，请稍后再试');
+      // err 可能是字符串、TypeError 或非标准对象
+      const msg =
+        err?.message ||
+        (typeof err === 'string' ? err : '') ||
+        (err?.toString && err.toString() !== '[object Object]' ? err.toString() : '') ||
+        '注册失败，请稍后再试';
+      if (msg.toLowerCase().includes('failed to fetch')) {
+        setError('无法连接 Supabase 服务（请检查 NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY 是否正确）');
+      } else {
+        setError(msg);
+      }
+      console.error('Signup error:', err);
     }
 
     setLoading(false);

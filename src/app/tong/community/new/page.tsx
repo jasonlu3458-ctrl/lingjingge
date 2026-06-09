@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase';
+import { createClient, isSupabaseConfigured } from '@/lib/supabase';
 
 export default function NewTopicPage() {
   const router = useRouter();
@@ -59,6 +59,13 @@ export default function NewTopicPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) return;
+
+    // 检查 Supabase 是否配置
+    if (!isSupabaseConfigured()) {
+      setError('Supabase 未配置，无法发布话题');
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     setError(null);

@@ -75,37 +75,31 @@ export interface Database {
       }
       articles: {
           Row: {
-            id: number
-            title: string
+            id: string
             slug: string
-            excerpt: string
+            title: string
             content: string
-            summary: string
-            author: string
-            published_at: string
-            status: string
+            source: string | null
+            category: 'classics' | 'treasure' | 'essay' | null
+            created_at: string
           }
           Insert: {
-            id?: number
-            title: string
+            id?: string
             slug: string
-            excerpt: string
+            title: string
             content: string
-            summary?: string
-            author: string
-            published_at?: string
-            status?: string
+            source?: string | null
+            category?: 'classics' | 'treasure' | 'essay' | null
+            created_at?: string
           }
           Update: {
-            id?: number
-            title?: string
+            id?: string
             slug?: string
-            excerpt?: string
+            title?: string
             content?: string
-            summary?: string
-            author?: string
-            published_at?: string
-            status?: string
+            source?: string | null
+            category?: 'classics' | 'treasure' | 'essay' | null
+            created_at?: string
           }
         }
         topics: {

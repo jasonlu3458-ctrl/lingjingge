@@ -47,7 +47,12 @@ export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient<D
   get(target, prop) {
     const client = getSupabaseClient();
     if (!client) {
-      throw new Error('Supabase 客户端未初始化，请检查环境变量配置');
+      // 如果客户端未初始化，返回一个空函数避免报错
+      console.warn('Supabase 客户端未初始化，操作将被忽略');
+      return () => ({
+        data: null,
+        error: new Error('Supabase 未配置'),
+      });
     }
     return (client as any)[prop];
   }

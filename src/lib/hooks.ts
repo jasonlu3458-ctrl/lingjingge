@@ -144,6 +144,7 @@ export function useUpdateEffect(callback: () => void, dependencies: any[]) {
       return;
     }
     callbackRef.current();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...dependencies]);
 }
 

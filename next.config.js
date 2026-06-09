@@ -11,6 +11,14 @@ const nextConfig = {
   poweredByHeader: false,
   generateEtags: true,
   async headers() {
+    // dev 模式禁用 _next/static 强缓存
+    // 因为 NEXT_PUBLIC_* 变量会随 .env.local 变化而变化，
+    // 但 chunk 文件名 hash 不会变，会导致浏览器持有旧 env 值
+    const staticCacheControl =
+      process.env.NODE_ENV === 'development'
+        ? 'no-store, must-revalidate'
+        : 'public, max-age=31536000, immutable';
+
     return [
       {
         source: '/:path*',
@@ -35,7 +43,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            value: staticCacheControl,
           },
         ],
       },
