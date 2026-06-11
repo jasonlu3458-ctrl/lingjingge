@@ -58,16 +58,19 @@ function readEnv() {
   for (const k of keys) {
     const v = vars[k];
     const isPublic = k.startsWith('NEXT_PUBLIC_');
-    const targets = isPublic ? ['production', 'preview', 'development'] : ['production', 'preview'];
+    // sensitive 类型的变量不能有 development 目标
+    const targets = isPublic ? ['production', 'preview'] : ['production', 'preview'];
 
     if (existing[k]) {
       console.log(`PATCH  ${k}`);
       const r = await api('PATCH', `/v10/projects/${PROJ}/env/${existing[k].id}`, { value: v, target: targets });
-      console.log(`       → ${r.status} ${r.body?.error?.message || 'ok'}`);
+      if (r.status === 200 || r.status === 201) console.log(`       → ${r.status} ok`);
+      else { console.log(`       → ❌ ${r.status} ${r.body?.error?.message || r.raw}`); }
     } else {
       console.log(`POST   ${k}`);
       const r = await api('POST', `/v10/projects/${PROJ}/env`, { key: k, value: v, type: 'sensitive', target: targets });
-      console.log(`       → ${r.status} ${r.body?.error?.message || 'ok'}`);
+      if (r.status === 200 || r.status === 201) console.log(`       → ${r.status} ok`);
+      else { console.log(`       → ❌ ${r.status} ${r.body?.error?.message || r.raw}`); }
     }
   }
   console.log('\n=== 验证 ===');
