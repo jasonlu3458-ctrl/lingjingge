@@ -54,7 +54,9 @@ function resolveApiKey(type: string): string | undefined {
 }
 
 // —— Mock 文本（按 type + query 动态生成，至少回应用户输入）——
-function buildMockText(type: string, query: string): string {
+//   关键：mock 路径必须对前端明确告知「这是占位回复，不是 AI 真在运行」
+//   否则生产环境一旦 Dify 密钥丢失，用户看到的固定话术会被误认为 AI 正常运行。
+function buildMockText(type: string, query: string): { text: string; isMock: true; reason: string } {
   const q = (query || '').trim();
   const echo = q ? `关于「${q.slice(0, 24)}${q.length > 24 ? '…' : ''}」，` : '';
   const templates: Record<string, string> = {
@@ -74,21 +76,27 @@ function buildMockText(type: string, query: string): string {
     'library_classics':  `${echo}经典像一面镜子，你读的当下，它照见的正是此刻的你。`,
     'library_treasure':  `${echo}秘藏是行者的脚注。读懂它的前提，是先走一段路。`,
   };
-  return templates[type] || `${echo}这是一个模拟回复（未配置 Dify API Key）。请在 .env.local 设置 ${type.toUpperCase()}_API_KEY 或全局 DIFY_API_KEY。`;
+  const fallbackText = templates[type]
+    || `${echo}这是一个占位回复（未配置 Dify API Key）。请联系管理员在 Vercel Dashboard → Settings → Environment Variables 中设置 ${type.toUpperCase()}_API_KEY 或全局 DIFY_API_KEY。`;
+  return { text: fallbackText, isMock: true, reason: 'dify_not_configured' };
 }
 
-// —— 把一段完整文本包成与 Dify 协议兼容的 SSE 流 ——
-function wrapAsSseStream(fullText: string, conversationId: string): ReadableStream<Uint8Array> {
+// —— 把一段文本包成与 Dify 协议兼容的 SSE 流（可附带 metadata）——
+function wrapAsSseStream(
+  fullText: string,
+  conversationId: string,
+  meta: Record<string, any> = {},
+): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
   return new ReadableStream({
     start(controller) {
       const messageId = `msg_${Date.now()}`;
       // 起始事件
-      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ event: 'message_start', message_id: messageId })}\n\n`));
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ event: 'message_start', message_id: messageId, metadata: meta })}\n\n`));
       // 一次性把文本作为 message 事件发出去（前端 useAIChat 兼容 event=message / agent_message）
-      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ event: 'message', answer: fullText, conversation_id: conversationId })}\n\n`));
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ event: 'message', answer: fullText, conversation_id: conversationId, metadata: meta })}\n\n`));
       // 结束
-      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ event: 'message_end', message_id: messageId, conversation_id: conversationId })}\n\n`));
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ event: 'message_end', message_id: messageId, conversation_id: conversationId, metadata: meta })}\n\n`));
       controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
       controller.close();
     },
@@ -160,7 +168,7 @@ export async function POST(request: NextRequest) {
       const cacheKey = generateCacheKey(type, query);
       const hit = cache.get(cacheKey);
       if (hit && isCacheValid(hit.timestamp)) {
-        const stream = wrapAsSseStream(hit.text, `cached_${Date.now()}`);
+        const stream = wrapAsSseStream(hit.text, `cached_${Date.now()}`, { source: 'cache' });
         return new Response(stream, {
           headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
         });
@@ -173,18 +181,22 @@ export async function POST(request: NextRequest) {
         return await proxyToDify(apiKey, type, query, convId, inputs, user);
       } catch (err) {
         console.warn(`[dify] ${type} 代理失败，降级到 mock:`, err);
-        // 降级不抛错
+        // 降级不抛错，继续走 mock
       }
     } else {
       console.warn(`[dify] ${type} 未配置 DIFY_*_API_KEY 且无全局 DIFY_API_KEY，使用 mock 响应`);
     }
 
-    // —— 3) Mock 路径：生成文本 → 缓存 → 包成 SSE ——
-    const mockText = buildMockText(type, query);
+    // —— 3) Mock 路径：生成文本 → 缓存 → 包成 SSE（明确标注是占位回复）——
+    const mockPayload = buildMockText(type, query);
     if (isNewConversation) {
-      cache.set(generateCacheKey(type, query), { text: mockText, timestamp: Date.now() });
+      cache.set(generateCacheKey(type, query), { text: mockPayload.text, timestamp: Date.now() });
     }
-    const stream = wrapAsSseStream(mockText, `mock_${Date.now()}`);
+    const stream = wrapAsSseStream(mockPayload.text, `mock_${Date.now()}`, {
+      source: 'mock',
+      isMock: mockPayload.isMock,
+      mockReason: mockPayload.reason,
+    });
     return new Response(stream, {
       headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
     });
