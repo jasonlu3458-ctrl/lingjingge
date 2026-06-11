@@ -1,6 +1,11 @@
 import { getUserRole } from '@/lib/auth';
 import PageRenderer from '@/components/PageRenderer';
 
+export const metadata = {
+  title: 'AI 体质观察 · 灵境阁',
+  description: '中医体质分析报告，了解身体现状。',
+};
+
 /**
  * AI体质观察页面 - 使用 PageRenderer 组件
  *

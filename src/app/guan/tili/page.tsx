@@ -1,6 +1,11 @@
 import { getUserRole } from '@/lib/auth';
 import TiliClient from './TiliClient';
 
+export const metadata = {
+  title: 'AI 炼体师 · 灵境阁',
+  description: '体质测评 + 定制炼体方案，动静相宜、身心同调。',
+};
+
 /**
  * AI炼体师页面
  *

@@ -15,7 +15,7 @@ export default function SplashPage() {
     setMounted(true);
     const timer1 = setTimeout(() => setShowText(true), 1200);
     const timer2 = setTimeout(() => setShowButton(true), 2200);
-    
+
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
@@ -25,6 +25,15 @@ export default function SplashPage() {
   // 平滑滚动到卡片区域
   const scrollToCards = () => {
     document.getElementById('card-section')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // 横幅「体验」按钮：滚动到第一张卡片并触发呼吸动画
+  const handleExperienceClick = () => {
+    const card = document.getElementById('first-card');
+    if (!card) return;
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.classList.add('animate-pulse');
+    setTimeout(() => card.classList.remove('animate-pulse'), 3000);
   };
 
   if (!mounted) {
@@ -190,11 +199,30 @@ export default function SplashPage() {
               })()}
             </h2>
           </FadeIn>
+          <div className="max-w-3xl mx-auto w-full mb-6 relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#2c2c2c]/5 to-transparent rounded-lg" />
+            <div className="relative flex flex-col sm:flex-row items-center justify-between gap-4 p-4 sm:p-6 bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-[#2c2c2c]/10">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🧘</span>
+                <div>
+                  <div className="text-lg font-serif text-[#2c2c2c]">先试后修 · 免费参悟</div>
+                  <div className="text-sm text-[#5a5a5a]">不付费，也能体验AI禅师、AI疗愈师</div>
+                </div>
+              </div>
+              <button
+                onClick={handleExperienceClick}
+                className="flex-shrink-0 px-6 py-2 bg-[#2c2c2c] text-white rounded-full hover:bg-[#4a4a4a] transition-colors text-sm font-medium"
+              >
+                体验 →
+              </button>
+            </div>
+          </div>
           <StaggerContainer>
             <div className="flex flex-col md:flex-row gap-6">
               <StaggerItem>
                 <HoverScale>
                   <SplashCard
+                    id="first-card"
                     icon="☯️"
                     title="澄心问道"
                     description="AI陪你静心，共同问道"

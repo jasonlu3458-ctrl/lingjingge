@@ -4,19 +4,12 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { supabase, isSupabaseConfigured, testSupabaseConnection } from '@/lib/supabase';
+import { mockDaoDeJing, type MockArticle } from '../mock-dao-de-jing';
 
-interface Article {
-  id: string;
-  slug: string;
-  title: string;
-  content: string;
-  source: string | null;
-  category: string | null;
-  created_at: string;
-}
+type Article = MockArticle;
 
-// category slug (URL) -> source 中文名 (数据库字段)
-const categoryToSource: Record<string, string> = {
+// category slug (URL) -> author 中文名 (数据库 articles.author 字段值)
+const categoryToAuthor: Record<string, string> = {
   laozi: '老子',
   huineng: '慧能',
   shijiamouni: '释迦牟尼',
@@ -30,25 +23,6 @@ const categoryMeta: Record<string, { name: string; era: string; bio: string; ico
   shijiamouni: { name: '释迦牟尼', era: '公元前6世纪', bio: '佛教创始者，乔达摩·悉达多，证悟无上正等正觉。', icon: '🪷' },
   zhouwenwang: { name: '周文王', era: '商末周初', bio: '演绎八卦为六十四卦，著《周易》，被尊为"文化始祖"。', icon: '☯️' },
 };
-
-// 兜底数据：道德经 81 章
-const mockDaoDeJing: Article[] = Array.from({ length: 81 }, (_, i) => ({
-  id: `dj${i + 1}`,
-  slug: `dao-de-jing-chapter-${i + 1}`,
-  title: `道德经·第${['一', '二', '三', '四', '五', '六', '七', '八', '九', '十',
-    '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十',
-    '二十一', '二十二', '二十三', '二十四', '二十五', '二十六', '二十七', '二十八', '二十九', '三十',
-    '三十一', '三十二', '三十三', '三十四', '三十五', '三十六', '三十七', '三十八', '三十九', '四十',
-    '四十一', '四十二', '四十三', '四十四', '四十五', '四十六', '四十七', '四十八', '四十九', '五十',
-    '五十一', '五十二', '五十三', '五十四', '五十五', '五十六', '五十七', '五十八', '五十九', '六十',
-    '六十一', '六十二', '六十三', '六十四', '六十五', '六十六', '六十七', '六十八', '六十九', '七十',
-    '七十一', '七十二', '七十三', '七十四', '七十五', '七十六', '七十七', '七十八', '七十九', '八十',
-    '八十一'][i]}章`,
-  content: `道德经第 ${i + 1} 章内容（兜底数据）。`,
-  source: '老子',
-  category: 'classics',
-  created_at: `2024-01-${String(i + 1).padStart(2, '0')}T00:00:00Z`,
-}));
 
 const mockByCategory: Record<string, Article[]> = {
   laozi: mockDaoDeJing,
@@ -66,9 +40,9 @@ export default function CategoryPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const sourceName = categoryToSource[categorySlug] || categorySlug;
+  const authorName = categoryToAuthor[categorySlug] || categorySlug;
   const meta = categoryMeta[categorySlug] || {
-    name: sourceName,
+    name: authorName,
     era: '',
     bio: '点击下方章节进入阅读。',
     icon: '📜',
@@ -89,14 +63,32 @@ export default function CategoryPage() {
           const ok = await testSupabaseConnection();
           if (ok) {
             // 数据库里的 category 字段值（如 'classics'/'treasure'）与 URL 的 category slug 含义不同
-            // 这里根据映射查 source 字段
+            // 这里根据映射查 author 字段
             const { data, error: sbErr } = await supabase
               .from('articles')
               .select('id, slug, title, content, source, category, created_at')
-              .eq('source', sourceName)
+              .eq('source', authorName)
               .order('created_at', { ascending: true });
             if (!mounted) return;
             if (!sbErr && data && data.length > 0) {
+              // 老子特殊处理：DB + mockDaoDeJing 合并（DB 优先，缺章用 mock 补足到 81）
+              if (categorySlug === 'laozi') {
+                const dbRows = data as Article[];
+                // 用 mockDaoDeJing 做模板：81 章位置稳定，DB 命中就替换
+                const merged: Article[] = mockDaoDeJing.map((mock) => {
+                  const hit = dbRows.find((d) => d.slug === mock.slug);
+                  return hit ? { ...mock, ...hit } : mock;
+                });
+                // DB 里有但 mock 里没有的（比如未来新章节）追加到末尾
+                dbRows.forEach((d) => {
+                  if (!mockDaoDeJing.some((m) => m.slug === d.slug)) {
+                    merged.push(d);
+                  }
+                });
+                setArticles(merged);
+                setLoading(false);
+                return;
+              }
               setArticles(data as Article[]);
               setLoading(false);
               return;
@@ -117,7 +109,7 @@ export default function CategoryPage() {
       }
     })();
     return () => { mounted = false; };
-  }, [categorySlug, sourceName]);
+  }, [categorySlug, authorName]);
 
   const filtered = articles.filter((a) =>
     a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||

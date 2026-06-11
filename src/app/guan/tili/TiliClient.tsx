@@ -2,9 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import BodyTypeAssessment from '@/components/BodyTypeAssessment';
+import ReportPaywall from '@/components/ReportPaywall';
+import Disclaimer from '@/components/Disclaimer';
+import type { UserRole } from '@/lib/auth';
 
 interface TiliClientProps {
-  userRole?: 'free' | 'member' | 'admin';
+  userRole?: UserRole;
 }
 
 export default function TiliClient({ userRole = 'free' }: TiliClientProps) {
@@ -218,54 +221,16 @@ export default function TiliClient({ userRole = 'free' }: TiliClientProps) {
               const parts = report.split('PREMIUM:');
               const freePart = parts[0];
               const premiumPart = parts.length > 1 ? parts[1] : '';
-              const isPaid = userRole !== 'free';
               return (
-                <>
-                  {/* 免费部分 */}
-                  <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap">
-                    {freePart}
-                  </div>
-
-                  {/* 付费部分 / 付费墙 */}
-                  {premiumPart && (
-                    <div className="mt-4">
-                      {isPaid ? (
-                        <div className="bg-white rounded border border-green-200 p-4">
-                          <div className="text-green-600 text-sm font-medium mb-2">✅ 会员专属内容</div>
-                          <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap">
-                            {premiumPart}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="p-4 border border-dashed border-gray-400 rounded bg-gray-50">
-                          <div className="text-sm text-gray-600 mb-2 font-medium">🔒 完整报告仅对会员开放</div>
-                          <div className="text-sm text-gray-500 mb-3">
-                            会员可查看：定制炼体计划、饮食建议、季节调整
-                          </div>
-                          <div className="flex flex-col sm:flex-row gap-3">
-                            <button
-                              onClick={() => {
-                                window.location.href = '/api/create-checkout-session?type=single&report=tili';
-                              }}
-                              className="flex-1 py-2 bg-white border border-[#2c2c2c] text-[#2c2c2c] rounded hover:bg-gray-50 transition-colors"
-                            >
-                              单次解锁 · ¥9.9
-                            </button>
-                            <a
-                              href="/tong/pricing"
-                              className="flex-1 py-2 bg-[#b85a4a] text-white text-center rounded hover:bg-[#9a4a3a] transition-colors"
-                            >
-                              升级会员 · 全站解锁
-                            </a>
-                          </div>
-                          <div className="text-xs text-gray-400 text-center mt-2">
-                            单次解锁仅限当前报告，会员可查看所有深度内容
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </>
+                <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap">
+                  <ReportPaywall
+                    userRole={userRole}
+                    freePart={freePart}
+                    premiumPart={premiumPart}
+                    premiumSections={['定制炼体计划', '饮食建议', '季节调整']}
+                    reportKey="tili"
+                  />
+                </div>
               );
             })()}
 

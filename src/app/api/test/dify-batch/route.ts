@@ -22,14 +22,18 @@ export async function GET(request: NextRequest) {
     { key: 'tili', name: 'AI炼体师', envKey: 'DIFY_TILI_API_KEY' },
     { key: 'name', name: 'AI取名轩', envKey: 'DIFY_NAME_API_KEY' },
     { key: 'mingli', name: 'AI生命密码', envKey: 'DIFY_MINGLI_API_KEY' },
-    
+    { key: 'pastlife', name: '照见前尘', envKey: 'DIFY_PASTLIFE_API_KEY' },
+
     // 藏经系列
     { key: 'library_classics', name: '经典', envKey: 'DIFY_LIBRARY_CLASSICS_API_KEY' },
     { key: 'library_treasure', name: '秘藏', envKey: 'DIFY_LIBRARY_TREASURE_API_KEY' },
-    
+
     // 同修系列
     { key: 'community_essence', name: '精华区', envKey: 'DIFY_COMMUNITY_ESSENCE_API_KEY' },
     { key: 'community_topics', name: '话题聚合', envKey: 'DIFY_COMMUNITY_TOPICS_API_KEY' },
+
+    // 全局兜底
+    { key: 'global_fallback', name: '全局兜底', envKey: 'DIFY_API_KEY' },
   ];
 
   const results = await Promise.all(
@@ -58,6 +62,7 @@ export async function GET(request: NextRequest) {
             query: '你好',
             user: 'test-user',
             response_mode: 'blocking',
+            inputs: {},
           }),
         });
 
@@ -65,11 +70,12 @@ export async function GET(request: NextRequest) {
 
         if (response.ok) {
           const data = await response.json();
+          const answer = data?.answer ? String(data.answer).slice(0, 60) : '';
           return {
             key: api.key,
             name: api.name,
             status: 'success',
-            message: '连接成功',
+            message: answer ? `OK · ${answer}…` : '连接成功',
             time,
           };
         } else {
@@ -78,7 +84,7 @@ export async function GET(request: NextRequest) {
             key: api.key,
             name: api.name,
             status: 'error',
-            message: `HTTP ${response.status}: ${error.slice(0, 100)}`,
+            message: `HTTP ${response.status}: ${error.slice(0, 200)}`,
             time,
           };
         }

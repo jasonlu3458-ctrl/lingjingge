@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useAIChat } from '@/hooks/useAIChat';
+import Disclaimer from '@/components/Disclaimer';
 
 export default function AISeekerPage() {
-  const { messages, sendMessage, isLoading } = useAIChat({ type: 'ai-zen-master' });
+  const { messages, sendMessage, isLoading, freeTurns } = useAIChat({ type: 'ai-zen-master' });
   const [inputValue, setInputValue] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
@@ -127,6 +128,27 @@ export default function AISeekerPage() {
 
         {/* 输入区 */}
         <form onSubmit={handleSubmit} className="mt-8">
+          {/* 免费轮次提示 */}
+          {freeTurns?.mounted && !freeTurns.isExempt && freeTurns.remaining <= 2 && freeTurns.remaining >= 0 && (
+            <div
+              className={`mb-4 text-sm ${
+                freeTurns.remaining === 0 ? 'text-red-300' : 'text-amber-300/80'
+              }`}
+              style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}
+            >
+              {freeTurns.remaining === 0
+                ? `本工具免费体验已用完（${freeTurns.used}/${freeTurns.limit}）· 注册后可继续对话`
+                : `免费体验还剩 ${freeTurns.remaining} 次（${freeTurns.used}/${freeTurns.limit}）`}
+              {freeTurns.remaining === 0 && (
+                <a
+                  href={`/tong/signup?redirect=${encodeURIComponent('/wen/chan/ai-zen-master')}`}
+                  className="ml-2 underline font-medium text-white/90 hover:text-white"
+                >
+                  立即注册
+                </a>
+              )}
+            </div>
+          )}
           <div className="relative max-w-lg mx-auto">
             <input
               type="text"

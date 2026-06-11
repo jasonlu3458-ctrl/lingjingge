@@ -16,12 +16,27 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
+  /* 防止报告内容（长 URL、长无空格中文）横向溢出，
+     避免出现“不可见”的横向滚动条占用右侧拖动热区。 */
+  overflow-x: hidden;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+/* ===== 报告淡入（替代 framer-motion） ===== */
+.report-fade-in {
+  animation: reportFadeIn 0.5s ease-out;
+}
+@keyframes reportFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .report-fade-in { animation: none; }
 }
 
 /* ===== 水墨开场动画 ===== */

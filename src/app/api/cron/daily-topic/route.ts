@@ -30,13 +30,13 @@ async function generateDailyTopic(): Promise<{ title: string; content: string }>
   const today = new Date().toISOString().split('T')[0];
   
   try {
-    const apiKey = process.env.DIFY_COMMUNITY_API_KEY;
-    
+    const apiKey = process.env.DIFY_COMMUNITY_API_KEY || process.env.DIFY_API_KEY;
+
     if (!apiKey) {
       // 没有API Key时使用默认话题
       return getDefaultTopic(today);
     }
-    
+
     const response = await fetch('https://api.dify.ai/v1/chat-messages', {
       method: 'POST',
       headers: {
@@ -54,7 +54,7 @@ async function generateDailyTopic(): Promise<{ title: string; content: string }>
 话题：[话题内容]
 引导：[引导语]`,
         user: 'cron-job',
-        stream: false,
+        response_mode: 'blocking', // ← 修复：原代码用 stream: false（Dify 协议不识别）
       }),
     });
 

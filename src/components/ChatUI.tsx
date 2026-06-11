@@ -3,6 +3,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import InkSpreadAnimation from './InkSpreadAnimation';
+import Disclaimer from './Disclaimer';
+import ReportPaywall from './ReportPaywall';
+import { useFreeTurns } from '@/hooks/useFreeTurns';
+import type { UserRole } from '@/lib/auth';
 
 export interface StateOption {
   label: string;
@@ -61,6 +65,7 @@ interface ChatUIProps {
 }
 
 export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
+  const { used, limit, remaining, isExempt, canSend, trySend, mounted } = useFreeTurns(config.difyType, userRole);
   const [messages, setMessages] = useState<Message[]>([]);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [chatInput, setChatInput] = useState<string>('');
@@ -142,6 +147,12 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
       timerRef.current = null;
     }
     charQueueRef.current = [];
+
+    // 免费轮次守卫（mounted 之前不阻塞）
+    if (mounted) {
+      const allowed = trySend();
+      if (!allowed) return; // 已跳转到 /tong/signup
+    }
 
     const userMessage: Message = {
       id: Date.now(),
@@ -749,6 +760,27 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
           </div>
         )}
 
+        {/* 免费轮次提示 - 仅未登录/免费用户，剩 ≤2 轮时显示 */}
+        {mounted && !isExempt && remaining <= 2 && remaining >= 0 && (
+          <div className={`mb-3 px-4 py-2 rounded-lg text-center text-sm ${
+            remaining === 0
+              ? 'bg-red-50 text-red-700 border border-red-200'
+              : 'bg-amber-50 text-amber-700 border border-amber-200'
+          }`} style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}>
+            {remaining === 0
+              ? `本工具免费体验已用完（${used}/${limit}）· 注册后可继续对话 →`
+              : `免费体验还剩 ${remaining} 次（${used}/${limit}）`}
+            {remaining === 0 && (
+              <Link
+                href={`/tong/signup?redirect=${encodeURIComponent(typeof window !== 'undefined' ? window.location.pathname : '/')}`}
+                className="ml-2 underline font-medium"
+              >
+                立即注册
+              </Link>
+            )}
+          </div>
+        )}
+
         {/* 纯对话模式的输入区域 */}
         {isPureChatMode && showForm && config.difyType !== 'awakening' && config.difyType !== 'healing' && (
           <form onSubmit={handleChatSubmit} className="bg-white bg-opacity-80 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 p-4 mb-6">
@@ -940,49 +972,17 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
                   const parts = msg.content.split('PREMIUM:');
                   const freePart = parts[0];
                   const premiumPart = parts.length > 1 ? parts[1] : '';
-                  const isPaid = userRole !== 'free';
 
                   return (
                     <div key={idx} className="mb-4 text-left">
                       <div className="inline-block p-3 rounded-lg bg-white/80 max-w-[85%] shadow-sm">
-                        <div className="whitespace-pre-wrap">{freePart}</div>
-                        {premiumPart && (
-                          <div className="mt-4">
-                            {isPaid ? (
-                              <div className="bg-white rounded border border-green-200 p-4">
-                                <div className="text-green-600 text-sm font-medium mb-2">✅ 会员专属内容</div>
-                                <div className="whitespace-pre-wrap">{premiumPart}</div>
-                              </div>
-                            ) : (
-                              <div className="mt-4 p-4 border border-dashed border-gray-400 rounded bg-gray-50">
-                                <div className="text-sm text-gray-400 mb-2">🔒 完整报告仅对会员开放</div>
-                                <div className="text-sm text-gray-500 mb-3">
-                                  会员可查看：{reportStructure.premium.join('、')}
-                                </div>
-                                <div className="flex flex-col sm:flex-row gap-3">
-                                  <button
-                                    onClick={() => {
-                                      // 单次解锁逻辑（需接入支付接口）
-                                      window.location.href = '/api/create-checkout-session?type=single&report=' + config.difyType;
-                                    }}
-                                    className="flex-1 py-2 bg-white border border-[#2c2c2c] text-[#2c2c2c] rounded hover:bg-gray-50 transition-colors"
-                                  >
-                                    单次解锁 · ¥9.9
-                                  </button>
-                                  <Link
-                                    href="/pricing"
-                                    className="flex-1 py-2 bg-[#b85a4a] text-white text-center rounded hover:bg-[#9a4a3a] transition-colors"
-                                  >
-                                    升级会员 · 全站解锁
-                                  </Link>
-                                </div>
-                                <div className="text-xs text-gray-400 text-center mt-2">
-                                  单次解锁仅限当前报告，会员可查看所有深度内容
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
+                        <ReportPaywall
+                          userRole={userRole}
+                          freePart={freePart}
+                          premiumPart={premiumPart}
+                          premiumSections={reportStructure.premium}
+                          reportKey={config.difyType}
+                        />
                       </div>
                     </div>
                   );
@@ -1093,6 +1093,9 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
             </button>
           </div>
         )}
+
+        {/* 页脚免责声明（所有 AI 工具页统一显示） */}
+        <Disclaimer />
       </main>
     </div>
   );

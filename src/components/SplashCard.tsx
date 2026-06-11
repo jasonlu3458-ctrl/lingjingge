@@ -8,6 +8,7 @@ interface SplashCardProps {
   description: string;
   buttonText: string;
   href: string;
+  id?: string;
 }
 
 export default function SplashCard({
@@ -16,9 +17,13 @@ export default function SplashCard({
   description,
   buttonText,
   href,
+  id,
 }: SplashCardProps) {
   return (
-    <div className="flex-1 bg-white rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow duration-300 cursor-pointer group">
+    <div
+      id={id}
+      className="flex-1 bg-white rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow duration-300 cursor-pointer group"
+    >
       <div className="text-4xl mb-4">{icon}</div>
       <h3 className="text-xl font-serif mb-2">{title}</h3>
       <p className="text-gray-600 text-sm mb-4">{description}</p>

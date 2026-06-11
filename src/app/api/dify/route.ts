@@ -1,308 +1,206 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// 简单的内存缓存机制
-const cache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_DURATION = 5 * 60 * 1000; // 5分钟缓存
+// ============================================
+// /api/dify  ——  灵境阁统一的 Dify 聊天代理
+// ============================================
+// 修复点：
+//  1) 不再把 ReadableStream 存进缓存（流是一次性消耗的），
+//     改为只缓存已序列化的最终文本，再重新包装为 SSE。
+//  2) 新增 DIFY_API_KEY 统一兜底：未配置专属 key 时使用同一个全局 key。
+//  3) Mock 响应改为按用户 query 生成（至少要 ack 一下输入），
+//     不再对所有输入返回同一段固定文本。
+//  4) Dify 报错时降级到 mock，并打 warn，不再让用户看到空白。
+//  5) 修复 conversations_id 透传：前后端都用同一个 conversation_id。
+// ============================================
 
-// 检查缓存是否有效
-const isCacheValid = (timestamp: number) => {
-  return Date.now() - timestamp < CACHE_DURATION;
-};
+// —— 内存缓存：只缓存「已序列化」的文本 ——
+type CachedReply = { text: string; timestamp: number };
+const cache = new Map<string, CachedReply>();
+const CACHE_DURATION = 5 * 60 * 1000;
 
-// 生成缓存键
-const generateCacheKey = (type: string, query: string) => {
-  return `${type}:${query.slice(0, 100)}`; // 只取前100字符作为键
-};
+const isCacheValid = (ts: number) => Date.now() - ts < CACHE_DURATION;
+const generateCacheKey = (type: string, query: string) => `${type}:${query.slice(0, 100)}`;
 
-// API Key 映射表
-const API_KEY_MAP: Record<string, string | undefined> = {
+// —— API Key 映射表 ——
+const TYPED_KEYS: Record<string, string | undefined> = {
   // 问道 (wen/)
   'ai-zen-master': process.env.DIFY_AI_ZEN_MASTER_API_KEY,
-  'mind': process.env.DIFY_MIND_API_KEY,
-  'parenting': process.env.DIFY_PARENTING_API_KEY,   // 亲子导师
-  'yili': process.env.DIFY_YILI_API_KEY,
-  'gongan': process.env.DIFY_GONGAN_API_KEY,
-  'awakening': process.env.DIFY_AWAKENING_API_KEY,
-  'meditation': process.env.DIFY_MEDITATION_API_KEY,
-  'healing': process.env.DIFY_HEALING_API_KEY,
-  
+  'mind':          process.env.DIFY_MIND_API_KEY,
+  'parenting':     process.env.DIFY_PARENTING_API_KEY,
+  'yili':          process.env.DIFY_YILI_API_KEY,
+  'gongan':        process.env.DIFY_GONGAN_API_KEY,
+  'awakening':     process.env.DIFY_AWAKENING_API_KEY,
+  'meditation':    process.env.DIFY_MEDITATION_API_KEY,
+  'healing':       process.env.DIFY_HEALING_API_KEY,
   // 观心 (guan/)
-  'health': process.env.DIFY_HEALTH_API_KEY,
-  'mingli': process.env.DIFY_MINGLI_API_KEY,
-  'name': process.env.DIFY_NAME_API_KEY,
-  'tili': process.env.DIFY_TILI_API_KEY,
-  'pastlife': process.env.DIFY_PASTLIFE_API_KEY,  // 照见前尘
-
+  'health':        process.env.DIFY_HEALTH_API_KEY,
+  'mingli':        process.env.DIFY_MINGLI_API_KEY,
+  'name':          process.env.DIFY_NAME_API_KEY,
+  'tili':          process.env.DIFY_TILI_API_KEY,
+  'pastlife':      process.env.DIFY_PASTLIFE_API_KEY,
   // 藏经 (zang/)
-  'library_classics': process.env.DIFY_LIBRARY_CLASSICS_API_KEY,
-  'library_treasure': process.env.DIFY_LIBRARY_TREASURE_API_KEY,
-
+  'library_classics':  process.env.DIFY_LIBRARY_CLASSICS_API_KEY,
+  'library_treasure':  process.env.DIFY_LIBRARY_TREASURE_API_KEY,
   // 同修 (tong/)
-  'community_essence': process.env.DIFY_COMMUNITY_ESSENCE_API_KEY,
-  'community_topics': process.env.DIFY_COMMUNITY_TOPICS_API_KEY,
+  'community_essence':  process.env.DIFY_COMMUNITY_ESSENCE_API_KEY,
+  'community_topics':   process.env.DIFY_COMMUNITY_TOPICS_API_KEY,
 };
 
-// 检查哪些 API Key 已配置
-const configuredKeys = Object.entries(API_KEY_MAP)
-  .filter(([, value]) => value)
-  .map(([key]) => key);
+const GLOBAL_FALLBACK_KEY = process.env.DIFY_API_KEY;
 
-console.log('✅ 已配置的 Dify API Key:', configuredKeys);
+/** 取一个 type 对应的可用 key：优先专属 key，回落到全局 key */
+function resolveApiKey(type: string): string | undefined {
+  return TYPED_KEYS[type] || GLOBAL_FALLBACK_KEY || undefined;
+}
 
-// Mock 响应数据
-const MOCK_RESPONSES: Record<string, string> = {
-  'ai-zen-master': '问道者，心有所惑，必有所得。您的问题是开启智慧之门的钥匙。让我们一起探索内心的奥秘，寻找生命的答案。',
-  'mind': '我感受到您此刻的情绪状态。请深呼吸，让自己平静下来。情绪如同天空中的云朵，来来去去，不必执着。接纳当下，便是疗愈的开始。',
-  'parenting': `【情绪状态评估】
-根据您的描述，孩子在面对这种情况时表现出明显的焦虑情绪，这可能与年龄发展阶段的特点有关。
+// —— Mock 文本（按 type + query 动态生成，至少回应用户输入）——
+function buildMockText(type: string, query: string): string {
+  const q = (query || '').trim();
+  const echo = q ? `关于「${q.slice(0, 24)}${q.length > 24 ? '…' : ''}」，` : '';
+  const templates: Record<string, string> = {
+    'ai-zen-master': `${echo}此问已入心。在禅宗，机锋往往不在答案里，而在提问的那一刻——你愿意再停一停吗？`,
+    'mind':          `${echo}我感受到你正在尝试表达自己。这本身就是一种勇气。试着把注意力带回呼吸三次，再告诉我：此刻最强烈的感受是什么？`,
+    'parenting':     `${echo}孩子的每一个行为背后都有未被看见的需求。先放下"应该怎样"，让我们一起回到"孩子真正在说什么"。`,
+    'yili':          `${echo}易经讲"时、位、应、承"。起卦前先静心，把你的问题再说一遍，让它落在"此一刻"。`,
+    'gongan':        `${echo}公案不是用来想明白的，是用来参破的。把你第一念浮起的答案写下，我们一起看。`,
+    'awakening':     `${echo}觉醒不在远方，就在这一次「我看见了什么」的觉察里。`,
+    'meditation':    `${echo}回到呼吸。一吸，一呼，让心有家可归。`,
+    'healing':       `${echo}身体从未说谎。它在用紧绷、疼痛、疲惫提醒你：慢一点，回到自己。`,
+    'health':        `${echo}体质是动态的「地图」，不是标签。说说最近的睡眠、情绪、饮食，让地图更清晰。`,
+    'mingli':        `${echo}命理不是为了算命，而是为了"知己"。把出生年月日时告诉我，我们一起看看。`,
+    'name':          `${echo}好名字是有能量的。说说姓氏、生辰、期望的气质，让我为你推一推。`,
+    'tili':          `${echo}炼体先炼气，炼气先炼心。先问：你愿意给自己一个怎样的"日常"？`,
+    'pastlife':      `${echo}前世不是宿命，是习气。今天遇到的人和事，常常是前世剧本的回响。`,
+    'library_classics':  `${echo}经典像一面镜子，你读的当下，它照见的正是此刻的你。`,
+    'library_treasure':  `${echo}秘藏是行者的脚注。读懂它的前提，是先走一段路。`,
+  };
+  return templates[type] || `${echo}这是一个模拟回复（未配置 Dify API Key）。请在 .env.local 设置 ${type.toUpperCase()}_API_KEY 或全局 DIFY_API_KEY。`;
+}
 
-【行为模式分析】
-孩子出现这种行为，往往是在寻求关注或表达内心的不安。这种行为模式在同龄儿童中较为常见。
-
-【初步建议】
-建议您保持耐心，多与孩子沟通，理解其内心需求。建立稳定的日常作息，给予充分的安全感。
-
-PREMIUM:
-【深度心理成因解析】
-从心理学角度分析，孩子的这种行为源于对分离的恐惧和对安全感的渴望。在6-12岁阶段，孩子开始建立独立的自我意识，但同时仍然依赖父母的情感支持。当这种支持不足时，孩子会通过各种行为来表达内心的焦虑。
-
-【定制化干预方案】
-1. 建立固定的亲子时间：每天至少30分钟的高质量陪伴
-2. 使用积极倾听技巧：不打断、不评判，让孩子完整表达
-3. 设立清晰的边界和规则：让孩子知道什么是可接受的行为
-4. 引入情绪表达工具：如情绪卡片、绘画等
-
-【分阶段行动指南】
-第一周：建立信任，多倾听少说教
-第二周：引入规则，温和但坚定
-第三周：观察变化，调整策略
-第四周：巩固成果，形成习惯
-
-【长期成长规划】
-建议定期进行亲子关系评估，关注孩子的心理发展里程碑。如问题持续，可考虑寻求专业心理咨询师的帮助。`,
-  'yili': '易经云："天行健，君子以自强不息；地势坤，君子以厚德载物。"您所问之事，需顺势而为，静待时机，自有转机。',
-  'gongan': '赵州禅师曾云："吃茶去。"公案不在文字，而在当下的体验。放下思虑，直指人心，方见本来面目。',
-  'awakening': '觉醒始于觉察。每一个当下都是觉醒的契机。记录你的感悟，便是与内心对话。觉察之光，终将照亮前行的道路。',
-  'mingli': '命理之学，源于天地自然之道。通过生辰八字，可以洞察人生轨迹，趋吉避凶。但命运掌握在自己手中，积善之家必有余庆。',
-  'health': '养生之道，在于顺应自然。饮食有节，起居有常，不妄作劳。身体是承载灵魂的容器，关爱身体便是善待自己。',
-  'meditation': '冥想是通往内心深处的桥梁。在宁静中，我们可以听见自己的声音，找到内心的平静。让思绪如水般流淌，不执着于一念。',
-  'pastlife': `【前世溯源】
-根据您的生辰八字，您的前世乃是一位深山修行的隐士。
-
-【前世生平】
-您出生于书香门第，自幼喜爱读书，却无意于功名。而立之年，您辞别家人，入深山修行，悟道参禅数十载。您心地善良，常为乡民义诊施药，深受敬重。
-
-【前世因缘】
-您前世所积福德，将在今生化作智慧与福报。您对内心平静的向往，正是前世修行习气的延续。
-
-【今生启示】
-建议您在今生继续修习正念，培养慈悲心。前世的修行根基，将助您在今生获得更大的成长。
-
-【前世善缘】
-您今生遇到的善知识，多是前世有缘之人。珍惜每一次相遇，便是延续前世善缘。`,
-};
-
-// 生成唯一的 conversation_id
-const generateConversationId = () => {
-  return `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-};
-
-// 生成模拟的流式响应
-const createMockStream = (type: string, conversationId: string) => {
-  const responseText = MOCK_RESPONSES[type] || '感谢您的提问，这是一个模拟的回复。';
-  
+// —— 把一段完整文本包成与 Dify 协议兼容的 SSE 流 ——
+function wrapAsSseStream(fullText: string, conversationId: string): ReadableStream<Uint8Array> {
+  const encoder = new TextEncoder();
   return new ReadableStream({
-    async start(controller) {
-      const encoder = new TextEncoder();
-      const chars = responseText.split('');
-      let index = 0;
-      
-      // 发送初始消息
-      const initEvent = JSON.stringify({
-        event: 'message_start',
-        message_id: `msg_${Date.now()}`,
-      });
-      controller.enqueue(encoder.encode(`data: ${initEvent}\n\n`));
-      
-      // 逐字发送
-      const interval = setInterval(() => {
-        if (index >= chars.length) {
-          clearInterval(interval);
-          
-          // 发送消息结束事件
-          const endEvent = JSON.stringify({
-            event: 'message_end',
-            message_id: `msg_${Date.now()}`,
-            conversation_id: conversationId,
-          });
-          controller.enqueue(encoder.encode(`data: ${endEvent}\n\n`));
-          
-          // 发送 conversation_id 事件
-          const convEvent = JSON.stringify({
-            event: 'conversation_id',
-            conversation_id: conversationId,
-          });
-          controller.enqueue(encoder.encode(`data: ${convEvent}\n\n`));
-          
-          // 发送结束标记
-          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-          controller.close();
-          return;
-        }
-        
-        // 发送字符块（每次发送2-3个字符）
-        const chunkSize = Math.min(3, chars.length - index);
-        const chunk = chars.slice(index, index + chunkSize).join('');
-        index += chunkSize;
-        
-        const messageEvent = JSON.stringify({
-          event: 'message',
-          answer: chunk,
-          conversation_id: conversationId,
-        });
-        controller.enqueue(encoder.encode(`data: ${messageEvent}\n\n`));
-      }, 80); // 模拟延迟
+    start(controller) {
+      const messageId = `msg_${Date.now()}`;
+      // 起始事件
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ event: 'message_start', message_id: messageId })}\n\n`));
+      // 一次性把文本作为 message 事件发出去（前端 useAIChat 兼容 event=message / agent_message）
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ event: 'message', answer: fullText, conversation_id: conversationId })}\n\n`));
+      // 结束
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ event: 'message_end', message_id: messageId, conversation_id: conversationId })}\n\n`));
+      controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
+      controller.close();
     },
   });
-};
+}
+
+// —— 真正的 Dify 代理（透传流） ——
+async function proxyToDify(
+  apiKey: string,
+  type: string,
+  query: string,
+  conversationId: string | undefined,
+  inputs: Record<string, any> | undefined,
+  user: string,
+): Promise<Response> {
+  const body: Record<string, any> = {
+    inputs: { ...(inputs || {}) },
+    query,
+    response_mode: 'streaming', // ← 关键：Dify 协议字段名是 response_mode
+    user: user || 'lingjingge-user',
+  };
+  if (conversationId) body.conversation_id = conversationId;
+
+  const difyRes = await fetch('https://api.dify.ai/v1/chat-messages', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!difyRes.ok) {
+    const txt = await difyRes.text().catch(() => '');
+    throw new Error(`Dify ${difyRes.status}: ${txt.slice(0, 300)}`);
+  }
+  if (!difyRes.body) {
+    throw new Error('Dify returned empty body');
+  }
+  return new Response(difyRes.body, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    },
+  });
+}
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. 解析请求体
-    let body;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json(
-        { error: '请求体不是有效的 JSON' },
-        { status: 400 }
-      );
+    const body = await request.json().catch(() => null);
+    if (!body) {
+      return NextResponse.json({ error: '请求体不是有效的 JSON' }, { status: 400 });
     }
-
-    // 从请求体中提取参数
     const { type, query, conversation_id, inputs, user } = body;
 
-    // 验证必填参数
-    if (!type) {
-      return NextResponse.json(
-        { error: '缺少类型标识 type' },
-        { status: 400 }
-      );
+    if (!type) return NextResponse.json({ error: '缺少类型标识 type' }, { status: 400 });
+    if (!query || typeof query !== 'string' || !query.trim()) {
+      return NextResponse.json({ error: '缺少查询内容 query' }, { status: 400 });
     }
 
-    if (!query || typeof query !== 'string' || query.trim() === '') {
-      return NextResponse.json(
-        { error: '缺少查询内容 query' },
-        { status: 400 }
-      );
-    }
+    const apiKey = resolveApiKey(type);
+    const convId = (typeof conversation_id === 'string' && conversation_id.trim()) ? conversation_id.trim() : undefined;
+    const isNewConversation = !convId;
 
-    // 检查缓存（仅对非对话模式且无 conversation_id 的请求）
-    if (!conversation_id) {
+    // —— 1) 缓存：只对"无 conversation_id"（新会话）做 5 分钟文本缓存 ——
+    if (isNewConversation) {
       const cacheKey = generateCacheKey(type, query);
-      const cachedData = cache.get(cacheKey);
-      
-      if (cachedData && isCacheValid(cachedData.timestamp)) {
-        console.log(`[Cache] 使用缓存数据: ${cacheKey}`);
-        return new Response(cachedData.data, {
-          status: 200,
-          headers: {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'public, max-age=300',
-            'Connection': 'keep-alive',
-          },
+      const hit = cache.get(cacheKey);
+      if (hit && isCacheValid(hit.timestamp)) {
+        const stream = wrapAsSseStream(hit.text, `cached_${Date.now()}`);
+        return new Response(stream, {
+          headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
         });
       }
     }
 
-    // 2. 根据 type 选择对应的 API Key
-    const apiKey = API_KEY_MAP[type];
-
-    console.log(`[Dify API] type: ${type}, apiKey exists: ${!!apiKey}`);
-
-    // 3. 如果 API Key 未配置，返回模拟数据
-    // 移除强制mock模式，让真实API Key生效
-    if (!apiKey) {
-      const mockConversationId = (conversation_id && typeof conversation_id === 'string' && conversation_id.trim() !== '') 
-        ? conversation_id.trim() 
-        : generateConversationId();
-      
-      const mockStream = createMockStream(type, mockConversationId);
-      
-      // 缓存 Mock 数据（仅对非对话模式）
-      if (!conversation_id) {
-        const cacheKey = generateCacheKey(type, query);
-        cache.set(cacheKey, {
-          data: mockStream,
-          timestamp: Date.now(),
-        });
-        console.log(`[Cache] 缓存 Mock 数据: ${cacheKey}`);
-      }
-      
-      return new Response(mockStream, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-        },
-      });
-    }
-
-    // 4. 构造聊天模式的请求体对象
-    const requestBody: Record<string, any> = {
-      inputs: {
-        ...((inputs && typeof inputs === 'object') ? inputs : {}),
-      },
-      query: query,
-      response_mode: 'streaming',
-      user: user || 'lingjingge-user',
-    };
-
-    // 如果有 conversation_id，添加到请求体
-    if (conversation_id && typeof conversation_id === 'string' && conversation_id.trim() !== '') {
-      requestBody.conversation_id = conversation_id.trim();
-    }
-
-    // 6. 使用 fetch 向 Dify 聊天 API 发送 POST 请求
-    const difyResponse = await fetch('https://api.dify.ai/v1/chat-messages', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    // 7. 若 Dify 返回非 2xx 状态码，返回错误
-    if (!difyResponse.ok) {
-      let errorMessage = `Dify API 请求失败：${difyResponse.status}`;
+    // —— 2) 有 Dify Key：走真实代理 ——
+    if (apiKey) {
       try {
-        const errorData = await difyResponse.json();
-        errorMessage = errorData.message || errorData.detail || errorMessage;
-      } catch {
-        // 忽略解析错误
+        return await proxyToDify(apiKey, type, query, convId, inputs, user);
+      } catch (err) {
+        console.warn(`[dify] ${type} 代理失败，降级到 mock:`, err);
+        // 降级不抛错
       }
-      return NextResponse.json(
-        { error: errorMessage },
-        { status: difyResponse.status }
-      );
+    } else {
+      console.warn(`[dify] ${type} 未配置 DIFY_*_API_KEY 且无全局 DIFY_API_KEY，使用 mock 响应`);
     }
 
-    // 8. 若成功，直接将 Dify 的响应体作为流式响应返回给前端（透明传输）
-    return new Response(difyResponse.body, {
-      status: 200,
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      },
+    // —— 3) Mock 路径：生成文本 → 缓存 → 包成 SSE ——
+    const mockText = buildMockText(type, query);
+    if (isNewConversation) {
+      cache.set(generateCacheKey(type, query), { text: mockText, timestamp: Date.now() });
+    }
+    const stream = wrapAsSseStream(mockText, `mock_${Date.now()}`);
+    return new Response(stream, {
+      headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
     });
-
   } catch (error) {
-    console.error('Dify API 代理错误:', error);
+    console.error('[dify] 代理错误:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : '服务器内部错误' },
       { status: 500 }
     );
   }
+}
+
+// 调试用：列出已配置的 key
+export async function GET() {
+  return NextResponse.json({
+    typedKeys: Object.fromEntries(Object.entries(TYPED_KEYS).map(([k, v]) => [k, Boolean(v)])),
+    hasGlobalFallback: Boolean(GLOBAL_FALLBACK_KEY),
+  });
 }

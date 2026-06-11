@@ -127,8 +127,12 @@ export default function BodyTypeAssessment({ onResult, onClose }: BodyTypeAssess
 
   // 模态框打开时锁定 body 滚动，防止背景被卡住
   useEffect(() => {
-    const originalStyle = window.getComputedStyle(document.body).overflow;
-    const originalPaddingRight = window.getComputedStyle(document.body).paddingRight;
+    // ⚠️ 必须保存 inline style（document.body.style.overflow），
+    // 不能用 getComputedStyle().overflow —— 否则一旦 CSS 里有
+    // `body { overflow-x: hidden }`（globals.css 就是这样），
+    // 还原时就会把 body 永久设成 overflow:hidden，整页都拖不动。
+    const prevOverflow = document.body.style.overflow;
+    const prevPaddingRight = document.body.style.paddingRight;
     // 计算滚动条宽度，避免内容抖动
     const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
 
@@ -136,8 +140,9 @@ export default function BodyTypeAssessment({ onResult, onClose }: BodyTypeAssess
     document.body.style.paddingRight = `${scrollbarWidth}px`;
 
     return () => {
-      document.body.style.overflow = originalStyle;
-      document.body.style.paddingRight = originalPaddingRight;
+      // 还原 inline style：设回空字符串，让 CSS 规则重新生效
+      document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPaddingRight;
     };
   }, []);
 

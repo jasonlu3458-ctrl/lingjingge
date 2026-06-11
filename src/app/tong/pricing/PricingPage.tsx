@@ -23,12 +23,16 @@ const plans = [
   {
     name: '行者',
     description: '精进修行，感悟真谛',
-    price: '29',
+    price: '59',
     period: '/月',
+    // 高亮权益块（解锁全部 7 份 AI 深度报告）
+    highlight: {
+      title: '✓ 解锁全部7份AI报告（价值 ¥399）',
+      content: '含：照见前尘、AI生命密码、AI易理师、AI亲子导师、AI疗愈师、AI体质观察、AI炼体师',
+    },
     features: [
       '云游全部权益',
       'AI禅师高级对话',
-      '体质深度分析报告',
       '取名轩升级版',
       '藏经阁全文阅读',
       '会员专属内容',
@@ -41,7 +45,7 @@ const plans = [
   {
     name: '真人',
     description: '通达大道，明心见性',
-    price: '299',
+    price: '599',
     period: '/年',
     features: [
       '行者全部权益',
@@ -184,6 +188,18 @@ export default function PricingPage() {
                   <span className="text-4xl font-bold text-zen-ink">{plan.price}</span>
                   <span className="text-zen-ink/60">{plan.period}</span>
                 </div>
+
+                {/* 套餐高亮权益块（如：解锁全部 7 份 AI 报告） */}
+                {plan.highlight && (
+                  <div className="mb-6 p-4 bg-[#fff5f3] border border-[#f5d4cc] rounded-lg">
+                    <div className="text-lg font-bold text-[#b85a4a] mb-2">
+                      {plan.highlight.title}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {plan.highlight.content}
+                    </div>
+                  </div>
+                )}
 
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((feature, index) => (

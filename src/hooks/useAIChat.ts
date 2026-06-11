@@ -1,6 +1,9 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useFreeTurns } from './useFreeTurns';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import type { UserRole } from '@/lib/auth';
 
 interface Message {
   id: string;
@@ -11,15 +14,61 @@ interface Message {
 interface UseAIChatOptions {
   type: string;
   initialMessages?: Message[];
+  /**
+   * 服务端注入的用户角色（page.tsx 通过 getUserRole() 传入）
+   * 如果不传，hook 会客户端再 fetch 一次
+   */
+  userRole?: UserRole;
 }
 
-export function useAIChat({ type, initialMessages = [] }: UseAIChatOptions) {
+export function useAIChat({ type, userRole: serverUserRole, initialMessages = [] }: UseAIChatOptions) {
+  // 客户端兜底获取角色（兼容没有 SSR 注入的页面）
+  const [clientRole, setClientRole] = useState<UserRole>(serverUserRole || 'free');
+  useEffect(() => {
+    if (serverUserRole) return;
+    if (!isSupabaseConfigured()) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (cancelled || !user) {
+          if (!cancelled) setClientRole('free');
+          return;
+        }
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        if (cancelled) return;
+        const r = profile?.role;
+        setClientRole(
+          r === 'admin' ? 'admin' :
+          r === 'monthly' || r === 'yearly' ? 'member' :
+          'free'
+        );
+      } catch {
+        if (!cancelled) setClientRole('free');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [serverUserRole]);
+
+  const effectiveRole = serverUserRole || clientRole;
+  const { used, limit, remaining, isExempt, trySend, mounted, canSend } = useFreeTurns(type, effectiveRole);
+
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;
+
+    // 免费轮次守卫（mounted 之前不阻塞，避免 SSR hydration 抖动）
+    if (mounted) {
+      const allowed = trySend();
+      if (!allowed) return; // 已跳转到 /tong/signup
+    }
 
     setIsLoading(true);
     setError(null);
@@ -99,7 +148,7 @@ export function useAIChat({ type, initialMessages = [] }: UseAIChatOptions) {
     } finally {
       setIsLoading(false);
     }
-  }, [type, isLoading]);
+  }, [type, isLoading, mounted, trySend]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);
@@ -112,5 +161,13 @@ export function useAIChat({ type, initialMessages = [] }: UseAIChatOptions) {
     clearMessages,
     isLoading,
     error,
+    freeTurns: {
+      used,
+      limit,
+      remaining,
+      isExempt,
+      canSend,
+      mounted,
+    },
   };
 }

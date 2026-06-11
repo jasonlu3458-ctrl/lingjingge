@@ -1,6 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // 独立输出：生成 .next/standalone/，Docker 部署仅需 copy
+  // 必要文件（standalone 目录 + public + .next/static），
+  // 镜像体积可从 ~500MB 降至 ~150MB。
+  output: 'standalone',
   reactStrictMode: true,
+  // 隐藏 Next.js dev 指示器（右下角圆形按钮）：
+  // 固定在 right-0 / bottom-0，会盖住浏览器窗口右侧约 40px 的
+  // 拖动/调整大小热区。在报告页（内容很长、滚动条贴近右缘）体感尤为明显。
+  // Next 14 这里必须是对象，不能直接传 false。
+  devIndicators: {
+    appIsrStatus: false,
+    buildActivity: false,
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
@@ -45,6 +57,30 @@ const nextConfig = {
             key: 'Cache-Control',
             value: staticCacheControl,
           },
+        ],
+      },
+      {
+        // /api/* 默认禁缓存，避免支付/会话接口返回旧数据
+        source: '/api/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' },
+        ],
+      },
+      {
+        // SVG 等无 hash 资源，限缓存 + 允许 revalidate
+        source: '/:path*.svg',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=86400, must-revalidate' },
+        ],
+      },
+      {
+        // 公共安全头（覆盖所有路由）
+        source: '/:path*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
         ],
       },
     ];

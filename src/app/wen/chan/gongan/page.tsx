@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAIChat } from '@/hooks/useAIChat';
+import Disclaimer from '@/components/Disclaimer';
 
 const gongans = [
   '如何是祖师西来意？',
@@ -15,7 +16,7 @@ const gongans = [
 ];
 
 export default function GonganPage() {
-  const { messages, sendMessage, isLoading } = useAIChat({ type: 'gongan' });
+  const { messages, sendMessage, isLoading, freeTurns } = useAIChat({ type: 'gongan' });
   const [input, setInput] = useState('');
   const [currentGongan, setCurrentGongan] = useState('');
   const [count, setCount] = useState(0);
@@ -87,6 +88,28 @@ export default function GonganPage() {
               「{currentGongan}」
             </div>
           </div>
+
+          {/* 免费轮次提示 */}
+          {freeTurns?.mounted && !freeTurns.isExempt && freeTurns.remaining <= 2 && freeTurns.remaining >= 0 && (
+            <div
+              className={`mb-4 text-sm text-center ${
+                freeTurns.remaining === 0 ? 'text-red-300' : 'text-amber-200/80'
+              }`}
+              style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}
+            >
+              {freeTurns.remaining === 0
+                ? `本工具免费体验已用完（${freeTurns.used}/${freeTurns.limit}）· 注册后可继续参悟`
+                : `免费体验还剩 ${freeTurns.remaining} 次（${freeTurns.used}/${freeTurns.limit}）`}
+              {freeTurns.remaining === 0 && (
+                <a
+                  href={`/tong/signup?redirect=${encodeURIComponent('/wen/chan/gongan')}`}
+                  className="ml-2 underline font-medium text-amber-100 hover:text-white"
+                >
+                  立即注册
+                </a>
+              )}
+            </div>
+          )}
 
           {/* 参悟输入区 */}
           <div className="flex gap-3">

@@ -157,13 +157,13 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <Link href="/home" className="flex items-center gap-2 group">
-              <Image 
-                src="/images/logo.png" 
-                alt="灵境阁" 
-                width={40} 
-                height={40} 
-                className="rounded-full transition-transform duration-300 group-hover:scale-105" 
+            <Link href="/home" prefetch={true} className="flex items-center gap-2 group">
+              <Image
+                src="/images/logo.png"
+                alt="灵境阁"
+                width={40}
+                height={40}
+                className="rounded-full transition-transform duration-300 group-hover:scale-105"
               />
               <span className="text-xl font-serif text-[#2c2c2c] hidden sm:inline" style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}>
                 灵境阁
@@ -185,6 +185,7 @@ export default function Navbar() {
                 {/* 主菜单按钮 */}
                 <Link
                   href={menu.href}
+                  prefetch={true}
                   className="px-6 py-2.5 rounded-[20px] font-medium transition-all duration-300 flex items-center gap-2"
                   style={{
                     backgroundColor: activeMenu === menu.label ? '#2c2c2c' : 'transparent',
@@ -237,6 +238,7 @@ export default function Navbar() {
                           <Link
                             key={item.href}
                             href={item.href}
+                            prefetch={true}
                             className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-amber-50 transition-all duration-200 mx-2 rounded-lg"
                             style={{
                               fontFamily: "'Ma Shan Zheng', cursive, serif",
@@ -323,6 +325,7 @@ export default function Navbar() {
                             <Link
                               key={item.href}
                               href={item.href}
+                              prefetch={true}
                               className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-white rounded-lg transition-colors block w-full"
                               onClick={closeMobileMenu}
                             >

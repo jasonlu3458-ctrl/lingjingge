@@ -9,8 +9,8 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 interface UserProfile {
   id: string;
   role: string;
-  stripe_customer_id?: string;
-  stripe_subscription_id?: string;
+  polar_customer_id?: string;
+  polar_subscription_id?: string;
   subscription_status?: string;
   subscription_start?: string;
   subscription_end?: string;
@@ -26,6 +26,14 @@ interface Subscription {
   created_at: string;
 }
 
+// 支付成功弹窗配置
+interface PaymentSuccessModal {
+  title: string;
+  content: string;
+  buttonText: string;
+  buttonAction: () => void;
+}
+
 const planNames: Record<string, string> = {
   free: '云游免费版',
   monthly: '行者月度会员',
@@ -37,6 +45,8 @@ export default function SubscriptionPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [showSuccess, setShowSuccess] = useState(false);
+  // 支付成功后的引导弹窗（解锁报告后提示升级会员）
+  const [paymentModal, setPaymentModal] = useState<PaymentSuccessModal | null>(null);
 
   const fetchData = useCallback(async () => {
     // 如果 Supabase 未配置，直接返回
@@ -65,7 +75,7 @@ export default function SubscriptionPage() {
         if (profileData) {
           setProfile(profileData as UserProfile);
         }
-        setSubscriptions((subscriptionsData as Subscription[]) || []);
+        setSubscriptions((subscriptionsData as unknown as Subscription[]) || []);
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
@@ -95,10 +105,36 @@ export default function SubscriptionPage() {
     if (urlParams.get('success') === 'true') {
       setShowSuccess(true);
       handleSyncSubscription();
+
+      // 支付成功后引导弹窗
+      // - 单次解锁报告（?type=single）：强力引导升级会员
+      // - 普通订阅：保持现有"订阅成功"横幅，不弹窗骚扰
+      const paymentType = urlParams.get('type');
+      if (paymentType === 'single') {
+        setPaymentModal({
+          title: '解锁报告成功！',
+          content: '现在升级会员，全场报告无限看，仅需 ¥59/月',
+          buttonText: '立即升级 →',
+          buttonAction: () => {
+            setPaymentModal(null);
+            window.location.href = '/tong/pricing';
+          },
+        });
+      }
     } else {
       fetchData();
     }
   }, [fetchData, handleSyncSubscription]);
+
+  // ESC 键关闭支付引导弹窗
+  useEffect(() => {
+    if (!paymentModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPaymentModal(null);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [paymentModal]);
 
   if (loading) {
     return (
@@ -155,12 +191,64 @@ export default function SubscriptionPage() {
           <p className="text-zen-ink/70">查看和管理您的会员订阅</p>
         </div>
 
-        {showSuccess && (
+        {/* 支付成功提示横幅（保留作为兜底/SEO 友好） */}
+        {showSuccess && !paymentModal && (
           <div className="bg-green-50 text-green-600 px-4 py-3 rounded-lg mb-6 text-center">
             <svg className="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
             订阅成功！您的会员权益已更新
+          </div>
+        )}
+
+        {/* 支付成功后的升级引导弹窗 */}
+        {paymentModal && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={() => setPaymentModal(null)}
+          >
+            <div
+              className="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8 text-center animate-[fadeIn_0.2s_ease-out]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* 关闭按钮 */}
+              <button
+                onClick={() => setPaymentModal(null)}
+                className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="关闭"
+              >
+                ✕
+              </button>
+
+              {/* 成功图标 */}
+              <div className="text-5xl mb-4">🎉</div>
+
+              {/* 标题 */}
+              <h3 className="text-2xl font-serif font-bold text-zen-ink mb-3" style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}>
+                {paymentModal.title}
+              </h3>
+
+              {/* 内容 */}
+              <p className="text-zen-ink/70 mb-6 leading-relaxed">
+                {paymentModal.content}
+              </p>
+
+              {/* 主操作按钮 */}
+              <button
+                onClick={paymentModal.buttonAction}
+                className="w-full py-3 bg-zen-ink text-white rounded-lg hover:bg-zen-ink/80 transition-colors font-semibold mb-3"
+              >
+                {paymentModal.buttonText}
+              </button>
+
+              {/* 次要操作：继续查看 */}
+              <button
+                onClick={() => setPaymentModal(null)}
+                className="text-sm text-zen-ink/50 hover:text-zen-ink/70 transition-colors"
+              >
+                稍后再说
+              </button>
+            </div>
           </div>
         )}
 

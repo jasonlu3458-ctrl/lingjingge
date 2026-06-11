@@ -4,19 +4,9 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { supabase, isSupabaseConfigured, testSupabaseConnection } from '@/lib/supabase';
+import { mockDaoDeJing, type MockArticle } from '../../mock-dao-de-jing';
 
-interface Article {
-  id: string;
-  slug: string;
-  title: string;
-  content: string;
-  translation?: string | null;
-  annotation?: string | null;
-  author_note?: string | null;
-  source: string | null;
-  category: string | null;
-  created_at: string;
-}
+type Article = MockArticle;
 
 // 单文章兜底
 const singleMock: Record<string, Article> = {
@@ -61,8 +51,11 @@ export default function ArticlePage() {
             }
           }
         }
-        // 兜底
-        const fallback = singleMock[slug] || null;
+        // 兜底：singleMock 优先，再走道德经 81 章 mock 兜底
+        let fallback: Article | null = singleMock[slug] ?? null;
+        if (!fallback) {
+          fallback = mockDaoDeJing.find((a) => a.slug === slug) ?? null;
+        }
         if (fallback) {
           setArticle(fallback);
         } else {
@@ -161,9 +154,10 @@ function ArticleDetail({ article, category }: { article: Article; category: stri
           </div>
 
           {mode === 'original' && (
-            <div className="prose max-w-none whitespace-pre-line leading-loose text-[#2c2c2c]">
-              {article.content}
-            </div>
+            <div
+              className="prose max-w-none leading-loose text-[#2c2c2c]"
+              dangerouslySetInnerHTML={{ __html: article.content }}
+            />
           )}
           {mode === 'translation' && (
             <div className="prose max-w-none leading-loose text-[#2c2c2c]">
@@ -176,9 +170,10 @@ function ArticleDetail({ article, category }: { article: Article; category: stri
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <h3 className="text-xs font-bold text-gray-500 mb-2 tracking-widest">原文</h3>
-                <div className="prose max-w-none whitespace-pre-line leading-loose text-[#2c2c2c]">
-                  {article.content}
-                </div>
+                <div
+                  className="prose max-w-none leading-loose text-[#2c2c2c]"
+                  dangerouslySetInnerHTML={{ __html: article.content }}
+                />
               </div>
               <div>
                 <h3 className="text-xs font-bold text-gray-500 mb-2 tracking-widest">白话</h3>
@@ -191,13 +186,14 @@ function ArticleDetail({ article, category }: { article: Article; category: stri
             </div>
           )}
 
-          {/* 字词注释 */}
+          {/* 字词注释（DB 里是 HTML，同样用 dangerouslySetInnerHTML 解析） */}
           {article.annotation && (
             <div className="mt-8 pt-6 border-t border-gray-100">
               <h3 className="text-sm font-bold text-[#b88a4a] mb-2">📝 字词注释</h3>
-              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                {article.annotation}
-              </p>
+              <div
+                className="text-sm text-gray-700 leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: article.annotation }}
+              />
             </div>
           )}
 
@@ -205,9 +201,10 @@ function ArticleDetail({ article, category }: { article: Article; category: stri
           {article.author_note && (
             <div className="mt-6">
               <h3 className="text-sm font-bold text-[#b88a4a] mb-2">✒️ 作者按语</h3>
-              <p className="text-sm text-gray-700 leading-relaxed italic">
-                {article.author_note}
-              </p>
+              <div
+                className="text-sm text-gray-700 leading-relaxed italic"
+                dangerouslySetInnerHTML={{ __html: article.author_note }}
+              />
             </div>
           )}
         </article>

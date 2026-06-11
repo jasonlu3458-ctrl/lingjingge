@@ -41,18 +41,40 @@ export default function NewTopicPage() {
       throw new Error('请先登录后再发布话题');
     }
 
-    const { error: insertError } = await supabase
+    const { data, error: insertError } = await supabase
       .from('topics')
       .insert({
-        user_id: user.id as string,
-        title: title as string,
-        content: content as string,
-        tag: tag,
-        created_at: new Date().toISOString()
-      } as any);
+        user_id: user.id,
+        title,
+        content,
+        tag,
+        created_at: new Date().toISOString(),
+      })
+      .select('id')
+      .single();
 
     if (insertError) {
       throw new Error(`发布失败: ${insertError.message}`);
+    }
+    return data?.id as number | undefined;
+  };
+
+  // 触发 AI 自动回帖（不阻塞主流程，失败仅打日志）
+  const triggerAutoReply = async (topicId: number, title: string, content: string, tag: string) => {
+    try {
+      const r = await fetch('/api/community/auto-reply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topicId, title, content, tag }),
+      });
+      const data = await r.json();
+      if (!r.ok || !data.success) {
+        console.warn('[auto-reply] 失败：', data?.error || r.status);
+      } else {
+        console.log('[auto-reply] 已成功回复：', data.reply?.id);
+      }
+    } catch (e) {
+      console.warn('[auto-reply] 请求异常：', e);
     }
   };
 
@@ -73,7 +95,13 @@ export default function NewTopicPage() {
       const tag = await classifyPost(content);
       setPredictedTag(tag);
       // 将 tag 与帖子一起保存到 Supabase
-      await savePost({ title, content, tag, author: '' });
+      const topicId = await savePost({ title, content, tag, author: '' });
+
+      // 触发 AI 自动回帖（不阻塞跳转）
+      if (topicId) {
+        triggerAutoReply(topicId, title, content, tag).catch(() => {});
+      }
+
       router.push('/tong/community');
     } catch (error) {
       console.error('发帖失败:', error);

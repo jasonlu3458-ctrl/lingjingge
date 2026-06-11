@@ -7,11 +7,12 @@
  */
 
 // ========================================
-// Mock Stripe 价格配置
+// Mock Polar 产品 ID 配置
 // ========================================
 export const MOCK_PRICE_IDS = {
-  monthly: 'price_mock_monthly_001',
-  yearly: 'price_mock_yearly_001',
+  monthly: 'prod_mock_monthly_001',
+  yearly: 'prod_mock_yearly_001',
+  single: 'prod_mock_single_001',
 };
 
 // ========================================
@@ -33,8 +34,8 @@ export const MOCK_PROFILE = {
   email: 'test@example.com',
   role: 'free', // 'free' | 'monthly' | 'yearly'
   subscription_status: null, // null | 'active' | 'past_due' | 'canceled'
-  stripe_customer_id: null,
-  stripe_subscription_id: null,
+  polar_customer_id: null,
+  polar_subscription_id: null,
   subscription_start: null,
   subscription_end: null,
   created_at: new Date().toISOString(),
@@ -42,35 +43,25 @@ export const MOCK_PROFILE = {
 };
 
 // ========================================
-// Mock Stripe Checkout Session 响应
+// Mock Polar Checkout Session 响应
 // ========================================
 export const MOCK_CHECKOUT_SESSION = {
-  id: 'cs_mock_' + Date.now(),
-  object: 'checkout.session',
-  payment_method_types: ['card'],
-  mode: 'subscription',
+  id: 'co_mock_' + Date.now(),
   status: 'open',
-  url: 'https://checkout.stripe.com/pay/cs_mock_xxx',
-  customer: 'cus_mock_' + Date.now(),
-  subscription: 'sub_mock_' + Date.now(),
+  url: 'https://buy.polar.sh/polar_mock_' + Date.now(),
+  customer_id: 'cus_mock_' + Date.now(),
+  product_id: 'prod_mock_monthly_001',
   metadata: {
     userId: MOCK_USER.id,
     plan: 'monthly',
   },
-  subscription_data: {
-    metadata: {
-      userId: MOCK_USER.id,
-      plan: 'monthly',
-    },
-  },
 };
 
 // ========================================
-// Mock Stripe Subscription 响应
+// Mock Polar Subscription 响应
 // ========================================
 export const MOCK_SUBSCRIPTION = {
   id: 'sub_mock_' + Date.now(),
-  object: 'subscription',
   status: 'active',
   current_period_start: Math.floor(Date.now() / 1000),
   current_period_end: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60, // 30天后
@@ -78,7 +69,7 @@ export const MOCK_SUBSCRIPTION = {
     userId: MOCK_USER.id,
     plan: 'monthly',
   },
-  customer: 'cus_mock_' + Date.now(),
+  customer_id: 'cus_mock_' + Date.now(),
 };
 
 // ========================================
@@ -167,28 +158,28 @@ export async function mockHandleWebhook(eventType: string, data: Record<string, 
   await new Promise(resolve => setTimeout(resolve, 300));
   
   switch (eventType) {
-    case 'checkout.session.completed':
-      console.log('✅ Mock: 订阅完成事件已处理');
+    case 'checkout.created':
+    case 'checkout.updated':
+      console.log('✅ Mock: Polar checkout 事件已处理');
       return { received: true };
       
-    case 'customer.subscription.updated':
-      console.log('📝 Mock: 订阅更新事件已处理');
+    case 'order.paid':
+      console.log('💰 Mock: Polar 订单已支付');
       return { received: true };
       
-    case 'customer.subscription.deleted':
-      console.log('❌ Mock: 订阅取消事件已处理');
+    case 'subscription.created':
+    case 'subscription.updated':
+    case 'subscription.active':
+      console.log('📝 Mock: Polar 订阅事件已处理');
       return { received: true };
       
-    case 'invoice.payment_succeeded':
-      console.log('💰 Mock: 支付成功事件已处理');
-      return { received: true };
-      
-    case 'invoice.payment_failed':
-      console.log('⚠️ Mock: 支付失败事件已处理');
+    case 'subscription.canceled':
+    case 'subscription.revoked':
+      console.log('❌ Mock: Polar 订阅已取消');
       return { received: true };
       
     default:
-      console.log('⚪ Mock: 未知事件类型', eventType);
+      console.log('⚪ Mock: 未知 Polar 事件类型', eventType);
       return { received: true };
   }
 }
@@ -234,8 +225,8 @@ export async function testSubscriptionFlow(plan = 'monthly') {
     console.log('');
     
     // Step 4: 模拟支付完成
-    console.log('📝 Step 4: 模拟支付完成（Webhook）');
-    const webhookResult = await mockHandleWebhook('checkout.session.completed', {
+    console.log('📝 Step 4: 模拟支付完成（Polar webhook）');
+    const webhookResult = await mockHandleWebhook('order.paid', {
       session: checkoutResult,
       subscription: MOCK_SUBSCRIPTION,
     });
@@ -248,7 +239,7 @@ export async function testSubscriptionFlow(plan = 'monthly') {
       ...MOCK_PROFILE,
       role: plan,
       subscription_status: 'active',
-      stripe_subscription_id: MOCK_SUBSCRIPTION.id,
+      polar_subscription_id: MOCK_SUBSCRIPTION.id,
       subscription_start: new Date(MOCK_SUBSCRIPTION.current_period_start * 1000).toISOString(),
       subscription_end: new Date(MOCK_SUBSCRIPTION.current_period_end * 1000).toISOString(),
     };

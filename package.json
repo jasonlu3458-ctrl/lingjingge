@@ -3,22 +3,26 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo",
+    "dev:webpack": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "@stripe/stripe-js": "^9.7.0",
+    "@opentelemetry/api": "^1.9.1",
+    "@polar-sh/sdk": "^0.48.0",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.2",
     "axios": "^1.16.1",
     "date-fns": "^4.4.0",
-    "framer-motion": "^12.40.0",
+    "framer-motion": "^11.18.2",
     "next": "14.2.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "stripe": "^22.2.0"
+    "standardwebhooks": "^1.0.0",
+    "stripe": "^22.2.0",
+    "zod": "^3.25.65"
   },
   "devDependencies": {
     "@types/node": "^20.12.12",

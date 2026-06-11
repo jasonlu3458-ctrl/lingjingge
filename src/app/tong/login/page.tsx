@@ -158,7 +158,10 @@ export default function LoginPage() {
 
         <p className="text-center text-zen-ink/60 mt-6">
           还没有账户？{' '}
-          <a href="/tong/signup" className="text-zen-ink hover:underline">
+          <a
+            href={redirect !== '/home' ? `/tong/signup?redirect=${encodeURIComponent(redirect)}` : '/tong/signup'}
+            className="text-zen-ink hover:underline"
+          >
             立即注册
           </a>
         </p>

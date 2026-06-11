@@ -1,30 +1,51 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
-export default function SignupPage() {
+function SignupForm() {
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
-  
+  const [redirect, setRedirect] = useState<string>('');
+
+  useEffect(() => {
+    // 从 URL 读 redirect 参数（未注册时存一份，验证/登录时用）
+    const r = searchParams.get('redirect') || '';
+    if (r) {
+      setRedirect(r);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('signup_redirect', r);
+      }
+    } else if (typeof window !== 'undefined') {
+      // 兜底：读 localStorage（页面刷新后 searchParams 可能丢失）
+      const saved = localStorage.getItem('signup_redirect');
+      if (saved) setRedirect(saved);
+    }
+  }, [searchParams]);
+
+  const loginUrl = redirect
+    ? `/tong/login?redirect=${encodeURIComponent(redirect)}`
+    : '/tong/login';
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password || !confirmPassword) {
       setError('请填写所有字段');
       return;
     }
-    
+
     if (password !== confirmPassword) {
       setError('两次输入的密码不一致');
       return;
     }
 
-    // 检查 Supabase 是否配置
     if (!isSupabaseConfigured()) {
       setError('Supabase 未配置，无法注册');
       return;
@@ -34,12 +55,15 @@ export default function SignupPage() {
     setError('');
 
     try {
+      // 邮件验证链接带 redirect，验证后到 /tong/login 时回跳
+      const emailRedirectTo = redirect
+        ? `${window.location.origin}/tong/login?redirect=${encodeURIComponent(redirect)}`
+        : `${window.location.origin}/tong/login`;
+
       const { data, error: signupError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/tong/login`
-        }
+        options: { emailRedirectTo },
       });
 
       if (signupError) {
@@ -53,13 +77,11 @@ export default function SignupPage() {
           setError(signupError.message);
         }
       } else if (data?.user?.identities?.length === 0) {
-        // Supabase 静默成功但 identities 为空 = 邮箱已注册
         setError('该邮箱已被注册，请直接登录');
       } else {
         setSignupSuccess(true);
       }
     } catch (err: any) {
-      // err 可能是字符串、TypeError 或非标准对象
       const msg =
         err?.message ||
         (typeof err === 'string' ? err : '') ||
@@ -181,11 +203,24 @@ export default function SignupPage() {
 
         <p className="text-center text-zen-ink/60 mt-6">
           已有账户？{' '}
-          <a href="/tong/login" className="text-zen-ink hover:underline">
-            立即登录
+          <a href={loginUrl} className="text-zen-ink hover:underline">
+            立即登录{redirect ? '（验证后自动回到原页面）' : ''}
           </a>
         </p>
       </div>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  // useSearchParams 必须包在 Suspense 里（Next.js 14+ 要求）
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-zen-beige flex items-center justify-center">
+        <div className="text-zen-ink/60">加载中…</div>
+      </div>
+    }>
+      <SignupForm />
+    </Suspense>
   );
 }

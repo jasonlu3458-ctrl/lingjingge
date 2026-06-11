@@ -4,23 +4,27 @@ import { createServerClient } from '@supabase/ssr';
 export type UserRole = 'free' | 'member' | 'admin';
 
 /**
- * 检查 Supabase 环境变量是否配置
+ * profiles.role 数据库原始值 → 应用层 UserRole 映射
+ *
+ * Bug 修复：数据库存的是 'monthly' / 'yearly'，但应用层 isMember()
+ *  是用 `role === 'member'` 判定的。如果直接返回数据库原值，
+ *  isMember() 永远返回 false，付费墙失效。
  */
+function mapProfileRole(profileRole: string | null | undefined): UserRole {
+  if (profileRole === 'monthly' || profileRole === 'yearly') return 'member';
+  if (profileRole === 'admin') return 'admin';
+  return 'free';
+}
+
 function isSupabaseConfigured(): boolean {
   return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 }
 
-/**
- * 获取当前用户的角色
- * @returns 用户角色 ('free' | 'member' | 'admin')
- */
 export async function getUserRole(): Promise<UserRole> {
-  // 如果 Supabase 未配置，返回默认角色
   if (!isSupabaseConfigured()) {
     console.warn('Supabase 未配置，使用默认角色 free');
     return 'free';
   }
-  
   try {
     const cookieStore = cookies();
     const supabase = createServerClient(
@@ -36,12 +40,16 @@ export async function getUserRole(): Promise<UserRole> {
     );
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return 'free';
-    const { data: profile } = await supabase
+    const { data: profile, error } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single();
-    return profile?.role || 'free';
+    if (error || !profile) {
+      console.error('获取用户角色失败:', error);
+      return 'free';
+    }
+    return mapProfileRole(profile.role);
   } catch (error) {
     console.error('获取用户角色失败:', error);
     return 'free';
