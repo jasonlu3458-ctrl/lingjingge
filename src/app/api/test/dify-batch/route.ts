@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
 
       try {
         const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 30_000);
+        const timer = setTimeout(() => controller.abort(), 25_000);
         let response: Response;
         try {
           response = await fetch('https://api.dify.ai/v1/chat-messages', {

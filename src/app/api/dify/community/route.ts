@@ -26,10 +26,10 @@ type AutoReplyContent = {
 // Edge runtime —— 出口网络与 Node.js Serverless 不同，可绕过 DIFY Cloud 对共享 IP 的限流
 export const runtime = 'edge';
 
-/** 30s 硬超时调用 Dify（blocking 模式） */
+/** 25s 硬超时调用 Dify（blocking 模式） */
 async function callDify(apiKey: string, prompt: string, user: string): Promise<string> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 30_000);
+  const timer = setTimeout(() => controller.abort(), 25_000);
   let res: Response;
   try {
     res = await fetch('https://api.dify.ai/v1/chat-messages', {

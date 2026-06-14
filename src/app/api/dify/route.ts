@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 //     可绕过 DIFY Cloud 对共享 IP 的限流/屏蔽。
 //  2) 完整降级链 —— DIFY 任何失败（网络/超时/4xx/5xx）→ 友好 mock，
 //     永远不让用户看到空白或未捕获错误。
-//  3) 严格超时 —— 30s 内必须出响应（Vercel Hobby maxDuration 60s 留余量）。
+//  3) 严格超时 —— 25s 内部超时（Vercel Hobby Edge maxDuration 30s 留 5s 余量）。
 //  4) 缓存 —— 内存 5 分钟文本缓存，避免重复请求 DIFY。
 //  5) Key 安全 —— 仅服务端使用，env var 不进 bundle。
 
@@ -129,9 +129,9 @@ async function proxyToDify(
   };
   if (conversationId) body.conversation_id = conversationId;
 
-  // 30s 硬超时：覆盖整个 fetch（包括 DNS + TCP + TLS + 全部 chunk）
+  // 25s 硬超时：Vercel Hobby Edge maxDuration 30s 留 5s 余量
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 30_000);
+  const timer = setTimeout(() => controller.abort(), 25_000);
 
   let difyRes: Response;
   try {
