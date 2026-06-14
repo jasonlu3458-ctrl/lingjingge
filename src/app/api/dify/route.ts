@@ -214,49 +214,23 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   if (url.searchParams.get('ping') === '1') {
     // 网络层诊断：测 Vercel 出口到 DIFY 是否可达
-    const wantType = url.searchParams.get('type') || 'mingli';
-    const diag: any = { ping: true, wantType, tests: [] };
-    // 测试 1: GET https://api.dify.ai/  (基础网络)
-    try {
+    const diag: any = { ping: true, tests: [] };
+    const tests: Array<[string, () => Promise<Response>]> = [
+      ['GET api.dify.ai/', () => fetch('https://api.dify.ai/', { signal: AbortSignal.timeout(6000) })],
+      ['GET api.dify.ai/v1/parameters', () => fetch('https://api.dify.ai/v1/parameters', { signal: AbortSignal.timeout(6000) })],
+      ['GET www.google.com', () => fetch('https://www.google.com/', { signal: AbortSignal.timeout(6000) })],
+      ['GET httpbin.org/get', () => fetch('https://httpbin.org/get', { signal: AbortSignal.timeout(6000) })],
+      ['GET raw.githubusercontent.com', () => fetch('https://raw.githubusercontent.com/', { signal: AbortSignal.timeout(6000) })],
+    ];
+    for (const [name, fetcher] of tests) {
       const t0 = Date.now();
-      const r = await fetch('https://api.dify.ai/', { signal: AbortSignal.timeout(8000) });
-      const t = await r.text();
-      diag.tests.push({ name: 'GET api.dify.ai', status: r.status, ms: Date.now() - t0, body: t.slice(0, 200) });
-    } catch (e) { diag.tests.push({ name: 'GET api.dify.ai', error: String(e).slice(0, 200) }); }
-    // 测试 2: GET https://api.dify.ai/v1/parameters  (鉴权失败快)
-    try {
-      const t0 = Date.now();
-      const r = await fetch('https://api.dify.ai/v1/parameters', { signal: AbortSignal.timeout(8000) });
-      const t = await r.text();
-      diag.tests.push({ name: 'GET v1/parameters (no auth)', status: r.status, ms: Date.now() - t0, body: t.slice(0, 200) });
-    } catch (e) { diag.tests.push({ name: 'GET v1/parameters', error: String(e).slice(0, 200) }); }
-    // 测试 3: POST chat-messages 带真 key (streaming, 8s)
-    const entry = Object.entries(TYPED_KEYS).find(([t]) => t === wantType);
-    if (entry && entry[1]) {
-      const [type, key] = entry;
-      const keyPrefix = key.slice(0, 6) + '...' + key.slice(-3);
       try {
-        const t0 = Date.now();
-        const r = await fetch('https://api.dify.ai/v1/chat-messages', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ inputs: {}, query: 'ping', response_mode: 'streaming', user: 'connectivity-test' }),
-          signal: AbortSignal.timeout(15000),
-        });
-        diag.tests.push({ name: 'POST chat-messages (with key)', type, keyPrefix, status: r.status, ms: Date.now() - t0, contentType: r.headers.get('content-type') });
-        if (r.body) {
-          const reader = r.body.getReader();
-          const first = await Promise.race([
-            reader.read(),
-            new Promise<{done:boolean,value?:undefined}>(r => setTimeout(() => r({done:true}), 5000)),
-          ]);
-          try { await reader.cancel(); } catch {}
-          const firstBytes = first.value ? new TextDecoder().decode(first.value).slice(0, 500) : '(no data within 5s)';
-          diag.tests.push({ name: 'first chunk (with key)', body: firstBytes, ms: Date.now() - t0 });
-        }
-      } catch (e) { diag.tests.push({ name: 'POST chat-messages (with key)', type, keyPrefix, error: String(e).slice(0, 300) }); }
-    } else {
-      diag.tests.push({ name: 'POST chat-messages (with key)', error: 'type=' + wantType + ' has no key' });
+        const r = await fetcher();
+        const t = await r.text();
+        diag.tests.push({ name, status: r.status, ms: Date.now() - t0, body: t.slice(0, 200) });
+      } catch (e) {
+        diag.tests.push({ name, error: String(e).slice(0, 200), ms: Date.now() - t0 });
+      }
     }
     return NextResponse.json(diag);
   }
