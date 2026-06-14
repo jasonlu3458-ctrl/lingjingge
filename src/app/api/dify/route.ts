@@ -213,54 +213,48 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   if (url.searchParams.get('ping') === '1') {
-    // 真连通性测试：用每个非空 key 发最小请求到 DIFY
-    const tests: Array<{ type: string; status: number | string; body: string; keyPrefix: string }> = [];
-    for (const [type, key] of Object.entries(TYPED_KEYS)) {
-      if (!key) {
-        tests.push({ type, status: 'no_key', body: '', keyPrefix: '' });
-        continue;
-      }
-      const keyPrefix = key.slice(0, 6) + '...' + key.slice(-3);
-      try {
-        // 用 streaming 测首字节（生产代码用的就是 streaming）
-        const r = await fetch('https://api.dify.ai/v1/chat-messages', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${key}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            inputs: {},
-            query: 'ping',
-            response_mode: 'streaming',
-            user: 'connectivity-test',
-          }),
-          signal: AbortSignal.timeout(10000),
-        });
-        // 读第一个 chunk（不论 status）来判断连通性
-        if (!r.body) {
-          tests.push({ type, status: 'empty_body', body: '', keyPrefix: keyPrefix });
-          continue;
-        }
-        const reader = r.body.getReader();
-        const first = await Promise.race([
-          reader.read(),
-          new Promise<{done:boolean,value?:undefined}>(r => setTimeout(() => r({done:true}), 3000)),
-        ]);
-        // 取消读后续，节省 token
-        try { await reader.cancel(); } catch {}
-        const firstBytes = first.value ? new TextDecoder().decode(first.value).slice(0, 300) : '(no data)';
-        tests.push({ type, status: r.status, body: firstBytes, keyPrefix: keyPrefix });
-      } catch (e) {
-        tests.push({
-          type,
-          status: 'fetch_error',
-          body: (e instanceof Error ? e.message : String(e)).slice(0, 200),
-          keyPrefix: key ? key.slice(0, 6) + '...' + key.slice(-3) : '',
-        });
-      }
+    // 单 key 真连通性测试（Vercel Hobby 60s 限制，无法串行 18 个）
+    // ?type=mingli  指定 type；缺省 mingli
+    const wantType = url.searchParams.get('type') || 'mingli';
+    const entry = Object.entries(TYPED_KEYS).find(([t]) => t === wantType);
+    if (!entry) {
+      return NextResponse.json({ ping: true, error: 'unknown type', wantType, available: Object.keys(TYPED_KEYS) });
     }
-    return NextResponse.json({ ping: true, tests });
+    const [type, key] = entry;
+    if (!key) {
+      return NextResponse.json({ ping: true, type, error: 'no_key', keyPrefix: '' });
+    }
+    const keyPrefix = key.slice(0, 6) + '...' + key.slice(-3);
+    const t0 = Date.now();
+    try {
+      const r = await fetch('https://api.dify.ai/v1/chat-messages', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${key}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          inputs: {},
+          query: 'ping',
+          response_mode: 'streaming',
+          user: 'connectivity-test',
+        }),
+        signal: AbortSignal.timeout(20000),
+      });
+      if (!r.body) {
+        return NextResponse.json({ ping: true, tests: [{ type, status: 'empty_body', body: '', keyPrefix, ms: Date.now() - t0 }] });
+      }
+      const reader = r.body.getReader();
+      const first = await Promise.race([
+        reader.read(),
+        new Promise<{done:boolean,value?:undefined}>(r => setTimeout(() => r({done:true}), 8000)),
+      ]);
+      try { await reader.cancel(); } catch {}
+      const firstBytes = first.value ? new TextDecoder().decode(first.value).slice(0, 500) : '(no data within 8s)';
+      return NextResponse.json({ ping: true, tests: [{ type, status: r.status, body: firstBytes, keyPrefix, ms: Date.now() - t0 }] });
+    } catch (e) {
+      return NextResponse.json({ ping: true, tests: [{ type, status: 'fetch_error', body: (e instanceof Error ? e.message : String(e)).slice(0, 300), keyPrefix, ms: Date.now() - t0 }] });
+    }
   }
   return NextResponse.json({
     typedKeys: Object.fromEntries(Object.entries(TYPED_KEYS).map(([k, v]) => [k, Boolean(v)])),
