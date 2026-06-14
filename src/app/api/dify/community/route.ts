@@ -23,6 +23,41 @@ type AutoReplyContent = {
   authorName?: string;
 };
 
+// Edge runtime —— 出口网络与 Node.js Serverless 不同，可绕过 DIFY Cloud 对共享 IP 的限流
+export const runtime = 'edge';
+
+/** 30s 硬超时调用 Dify（blocking 模式） */
+async function callDify(apiKey: string, prompt: string, user: string): Promise<string> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 30_000);
+  let res: Response;
+  try {
+    res = await fetch('https://api.dify.ai/v1/chat-messages', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: prompt,
+        user: user || 'lingjingge-user',
+        response_mode: 'blocking',
+      }),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    clearTimeout(timer);
+    throw new Error(`Dify network error: ${err instanceof Error ? err.message : String(err)}`);
+  }
+  clearTimeout(timer);
+  if (!res.ok) {
+    const t = await res.text().catch(() => '');
+    throw new Error(`Dify ${res.status}: ${t.slice(0, 300)}`);
+  }
+  const data = await res.json();
+  return data.answer || '';
+}
+
 export async function POST(req: Request) {
   try {
     const { type, content, user } = await req.json();
@@ -76,40 +111,21 @@ export async function POST(req: Request) {
       });
     }
 
-    // 调用 Dify（blocking 模式 + response_mode 字段）
-    const response = await fetch('https://api.dify.ai/v1/chat-messages', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: prompt,
-        user: user || 'lingjingge-user',
-        response_mode: 'blocking', // ← 修复：原代码用 stream: false（Dify 协议不识别）
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[dify/community] Dify API 错误：', errorText);
-      // Dify 不可用时回退到 mock，保证社区功能不会因 Dify 中断而瘫痪
+    // 调用 Dify（带 30s 超时 + 失败降级到 mock）
+    try {
+      const answer = await callDify(apiKey, prompt, user);
+      return NextResponse.json({ success: true, type, result: answer, source: 'dify' });
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : String(err);
+      console.warn(`[dify/community] ${type} 失败 (${reason})，降级到 mock`);
       return NextResponse.json({
         success: true,
         type,
         result: getMockResponse(type, content),
         source: 'mock-fallback',
-        difyError: errorText.slice(0, 200),
+        difyError: reason.slice(0, 200),
       });
     }
-
-    const data = await response.json();
-    return NextResponse.json({
-      success: true,
-      type,
-      result: data.answer,
-      source: 'dify',
-    });
 
   } catch (error) {
     console.error('Community API 错误:', error);
