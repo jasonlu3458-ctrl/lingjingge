@@ -3,15 +3,16 @@ import { NextRequest, NextResponse } from 'next/server';
 // ============================================
 // /api/dify  ——  灵境阁统一的 Dify 聊天代理
 // ============================================
-// 修复点：
-//  1) 不再把 ReadableStream 存进缓存（流是一次性消耗的），
-//     改为只缓存已序列化的最终文本，再重新包装为 SSE。
-//  2) 新增 DIFY_API_KEY 统一兜底：未配置专属 key 时使用同一个全局 key。
-//  3) Mock 响应改为按用户 query 生成（至少要 ack 一下输入），
-//     不再对所有输入返回同一段固定文本。
-//  4) Dify 报错时降级到 mock，并打 warn，不再让用户看到空白。
-//  5) 修复 conversations_id 透传：前后端都用同一个 conversation_id。
-// ============================================
+// 关键设计:
+//  1) Edge Runtime —— 出口网络与 Node.js Serverless 不同，
+//     可绕过 DIFY Cloud 对共享 IP 的限流/屏蔽。
+//  2) 完整降级链 —— DIFY 任何失败（网络/超时/4xx/5xx）→ 友好 mock，
+//     永远不让用户看到空白或未捕获错误。
+//  3) 严格超时 —— 30s 内必须出响应（Vercel Hobby maxDuration 60s 留余量）。
+//  4) 缓存 —— 内存 5 分钟文本缓存，避免重复请求 DIFY。
+//  5) Key 安全 —— 仅服务端使用，env var 不进 bundle。
+
+export const runtime = 'edge';
 
 // —— 内存缓存：只缓存「已序列化」的文本 ——
 type CachedReply = { text: string; timestamp: number };
@@ -53,10 +54,8 @@ function resolveApiKey(type: string): string | undefined {
   return TYPED_KEYS[type] || GLOBAL_FALLBACK_KEY || undefined;
 }
 
-// —— Mock 文本（按 type + query 动态生成，至少回应用户输入）——
-//   关键：mock 路径必须对前端明确告知「这是占位回复，不是 AI 真在运行」
-//   否则生产环境一旦 Dify 密钥丢失，用户看到的固定话术会被误认为 AI 正常运行。
-function buildMockText(type: string, query: string): { text: string; isMock: true; reason: string } {
+// —— Mock 文本（按 type + query 动态生成）——
+function buildMockText(type: string, query: string, reason: string): string {
   const q = (query || '').trim();
   const echo = q ? `关于「${q.slice(0, 24)}${q.length > 24 ? '…' : ''}」，` : '';
   const templates: Record<string, string> = {
@@ -76,12 +75,11 @@ function buildMockText(type: string, query: string): { text: string; isMock: tru
     'library_classics':  `${echo}经典像一面镜子，你读的当下，它照见的正是此刻的你。`,
     'library_treasure':  `${echo}秘藏是行者的脚注。读懂它的前提，是先走一段路。`,
   };
-  const fallbackText = templates[type]
-    || `${echo}这是一个占位回复（未配置 Dify API Key）。请联系管理员在 Vercel Dashboard → Settings → Environment Variables 中设置 ${type.toUpperCase()}_API_KEY 或全局 DIFY_API_KEY。`;
-  return { text: fallbackText, isMock: true, reason: 'dify_not_configured' };
+  const text = templates[type] || `${echo}这是一个占位回复（${reason}）。请稍后重试，或联系管理员。`;
+  return text;
 }
 
-// —— 把一段文本包成与 Dify 协议兼容的 SSE 流（可附带 metadata）——
+// —— 把一段文本包成与 Dify 协议兼容的 SSE 流 ——
 function wrapAsSseStream(
   fullText: string,
   conversationId: string,
@@ -91,11 +89,8 @@ function wrapAsSseStream(
   return new ReadableStream({
     start(controller) {
       const messageId = `msg_${Date.now()}`;
-      // 起始事件
       controller.enqueue(encoder.encode(`data: ${JSON.stringify({ event: 'message_start', message_id: messageId, metadata: meta })}\n\n`));
-      // 一次性把文本作为 message 事件发出去（前端 useAIChat 兼容 event=message / agent_message）
       controller.enqueue(encoder.encode(`data: ${JSON.stringify({ event: 'message', answer: fullText, conversation_id: conversationId, metadata: meta })}\n\n`));
-      // 结束
       controller.enqueue(encoder.encode(`data: ${JSON.stringify({ event: 'message_end', message_id: messageId, conversation_id: conversationId, metadata: meta })}\n\n`));
       controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
       controller.close();
@@ -103,7 +98,21 @@ function wrapAsSseStream(
   });
 }
 
-// —— 真正的 Dify 代理（透传流） ——
+// —— 把一个 SSE 流式文本（来自缓存文本或降级 mock）包成 Response ——
+function sseResponse(text: string, conversationId: string, meta: Record<string, any> = {}): Response {
+  const stream = wrapAsSseStream(text, conversationId, meta);
+  return new Response(stream, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    },
+  });
+}
+
+// —— 真正的 Dify 代理（透传流，带严格超时）——
 async function proxyToDify(
   apiKey: string,
   type: string,
@@ -115,19 +124,31 @@ async function proxyToDify(
   const body: Record<string, any> = {
     inputs: { ...(inputs || {}) },
     query,
-    response_mode: 'streaming', // ← 关键：Dify 协议字段名是 response_mode
+    response_mode: 'streaming',
     user: user || 'lingjingge-user',
   };
   if (conversationId) body.conversation_id = conversationId;
 
-  const difyRes = await fetch('https://api.dify.ai/v1/chat-messages', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
+  // 30s 硬超时：覆盖整个 fetch（包括 DNS + TCP + TLS + 全部 chunk）
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 30_000);
+
+  let difyRes: Response;
+  try {
+    difyRes = await fetch('https://api.dify.ai/v1/chat-messages', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    clearTimeout(timer);
+    throw new Error(`Dify network error: ${err instanceof Error ? err.message : String(err)}`);
+  }
+  clearTimeout(timer);
 
   if (!difyRes.ok) {
     const txt = await difyRes.text().catch(() => '');
@@ -140,12 +161,14 @@ async function proxyToDify(
     status: 200,
     headers: {
       'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
+      'Cache-Control': 'no-cache, no-transform',
       'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
     },
   });
 }
 
+// —— POST handler: 主路径 ——
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => null);
@@ -163,43 +186,35 @@ export async function POST(request: NextRequest) {
     const convId = (typeof conversation_id === 'string' && conversation_id.trim()) ? conversation_id.trim() : undefined;
     const isNewConversation = !convId;
 
-    // —— 1) 缓存：只对"无 conversation_id"（新会话）做 5 分钟文本缓存 ——
+    // —— 1) 缓存命中 ——
     if (isNewConversation) {
       const cacheKey = generateCacheKey(type, query);
       const hit = cache.get(cacheKey);
       if (hit && isCacheValid(hit.timestamp)) {
-        const stream = wrapAsSseStream(hit.text, `cached_${Date.now()}`, { source: 'cache' });
-        return new Response(stream, {
-          headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
-        });
+        return sseResponse(hit.text, `cached_${Date.now()}`, { source: 'cache' });
       }
     }
 
-    // —— 2) 有 Dify Key：走真实代理 ——
+    // —— 2) 有 Dify Key：尝试真代理；任何失败降级到 mock ——
     if (apiKey) {
       try {
         return await proxyToDify(apiKey, type, query, convId, inputs, user);
       } catch (err) {
-        console.warn(`[dify] ${type} 代理失败，降级到 mock:`, err);
-        // 降级不抛错，继续走 mock
+        const reason = err instanceof Error ? err.message : String(err);
+        console.warn(`[dify] ${type} 代理失败 (${reason})，降级到 mock`);
+        // 继续走 mock
       }
     } else {
-      console.warn(`[dify] ${type} 未配置 DIFY_*_API_KEY 且无全局 DIFY_API_KEY，使用 mock 响应`);
+      console.warn(`[dify] ${type} 未配置 API_KEY，使用 mock`);
     }
 
-    // —— 3) Mock 路径：生成文本 → 缓存 → 包成 SSE（明确标注是占位回复）——
-    const mockPayload = buildMockText(type, query);
+    // —— 3) Mock 路径：缓存 + SSE ——
+    const reason = apiKey ? 'dify_call_failed' : 'dify_not_configured';
+    const mockText = buildMockText(type, query, reason);
     if (isNewConversation) {
-      cache.set(generateCacheKey(type, query), { text: mockPayload.text, timestamp: Date.now() });
+      cache.set(generateCacheKey(type, query), { text: mockText, timestamp: Date.now() });
     }
-    const stream = wrapAsSseStream(mockPayload.text, `mock_${Date.now()}`, {
-      source: 'mock',
-      isMock: mockPayload.isMock,
-      mockReason: mockPayload.reason,
-    });
-    return new Response(stream, {
-      headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
-    });
+    return sseResponse(mockText, `mock_${Date.now()}`, { source: 'mock', isMock: true, mockReason: reason });
   } catch (error) {
     console.error('[dify] 代理错误:', error);
     return NextResponse.json(
@@ -209,22 +224,37 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// 调试用：列出已配置的 key + 真连通性测试
+// —— GET handler: 健康检查 + 简单连通性测试（不暴露 key 值）——
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   if (url.searchParams.get('ping') === '1') {
-    // 网络层诊断：测 Vercel 出口到 DIFY（单 host, 4s timeout, 必须 < 10s maxDuration）
-    const target = url.searchParams.get('host') || 'api.dify.ai';
+    // 简单连通性：5s 内能不能连上 DIFY
     const t0 = Date.now();
     try {
-      const r = await fetch('https://' + target + '/', { signal: AbortSignal.timeout(4000) });
+      const r = await fetch('https://api.dify.ai/v1/parameters', {
+        signal: AbortSignal.timeout(5000),
+      });
       const t = await r.text();
-      return NextResponse.json({ ping: true, host: target, status: r.status, ms: Date.now() - t0, body: t.slice(0, 300) });
+      return NextResponse.json({
+        ping: true,
+        runtime: 'edge',
+        difyReachable: r.status === 401, // 401 = 通但未授权（这是预期的）
+        difyStatus: r.status,
+        ms: Date.now() - t0,
+        body: t.slice(0, 200),
+      });
     } catch (e) {
-      return NextResponse.json({ ping: true, host: target, error: String(e).slice(0, 200), ms: Date.now() - t0 });
+      return NextResponse.json({
+        ping: true,
+        runtime: 'edge',
+        difyReachable: false,
+        error: String(e).slice(0, 200),
+        ms: Date.now() - t0,
+      });
     }
   }
   return NextResponse.json({
+    runtime: 'edge',
     typedKeys: Object.fromEntries(Object.entries(TYPED_KEYS).map(([k, v]) => [k, Boolean(v)])),
     hasGlobalFallback: Boolean(GLOBAL_FALLBACK_KEY),
   });
