@@ -220,6 +220,7 @@ export async function GET(request: NextRequest) {
         tests.push({ type, status: 'no_key', body: '', keyPrefix: '' });
         continue;
       }
+      const keyPrefix = key.slice(0, 6) + '...' + key.slice(-3);
       try {
         // 用 streaming 测首字节（生产代码用的就是 streaming）
         const r = await fetch('https://api.dify.ai/v1/chat-messages', {
@@ -238,7 +239,7 @@ export async function GET(request: NextRequest) {
         });
         // 读第一个 chunk（不论 status）来判断连通性
         if (!r.body) {
-          tests.push({ type, status: 'empty_body', body: '', keyPrefix });
+          tests.push({ type, status: 'empty_body', body: '', keyPrefix: keyPrefix });
           continue;
         }
         const reader = r.body.getReader();
@@ -249,13 +250,13 @@ export async function GET(request: NextRequest) {
         // 取消读后续，节省 token
         try { await reader.cancel(); } catch {}
         const firstBytes = first.value ? new TextDecoder().decode(first.value).slice(0, 300) : '(no data)';
-        tests.push({ type, status: r.status, body: firstBytes, keyPrefix: keyPrefix || '' });
+        tests.push({ type, status: r.status, body: firstBytes, keyPrefix: keyPrefix });
       } catch (e) {
         tests.push({
           type,
           status: 'fetch_error',
           body: (e instanceof Error ? e.message : String(e)).slice(0, 200),
-          keyPrefix,
+          keyPrefix: key ? key.slice(0, 6) + '...' + key.slice(-3) : '',
         });
       }
     }
