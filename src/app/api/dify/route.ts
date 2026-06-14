@@ -209,8 +209,50 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// 调试用：列出已配置的 key
-export async function GET() {
+// 调试用：列出已配置的 key + 真连通性测试
+export async function GET(request: NextRequest) {
+  const url = new URL(request.url);
+  if (url.searchParams.get('ping') === '1') {
+    // 真连通性测试：用每个非空 key 发最小请求到 DIFY
+    const tests: Array<{ type: string; status: number | string; body: string; keyPrefix: string }> = [];
+    for (const [type, key] of Object.entries(TYPED_KEYS)) {
+      if (!key) {
+        tests.push({ type, status: 'no_key', body: '', keyPrefix: '' });
+        continue;
+      }
+      try {
+        const r = await fetch('https://api.dify.ai/v1/chat-messages', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${key}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            inputs: {},
+            query: 'ping',
+            response_mode: 'blocking',
+            user: 'connectivity-test',
+          }),
+          signal: AbortSignal.timeout(15000),
+        });
+        const text = await r.text();
+        tests.push({
+          type,
+          status: r.status,
+          body: text.slice(0, 300),
+          keyPrefix: key.slice(0, 6) + '...' + key.slice(-3),
+        });
+      } catch (e) {
+        tests.push({
+          type,
+          status: 'fetch_error',
+          body: (e instanceof Error ? e.message : String(e)).slice(0, 200),
+          keyPrefix: key ? key.slice(0, 6) + '...' + key.slice(-3) : '',
+        });
+      }
+    }
+    return NextResponse.json({ ping: true, tests });
+  }
   return NextResponse.json({
     typedKeys: Object.fromEntries(Object.entries(TYPED_KEYS).map(([k, v]) => [k, Boolean(v)])),
     hasGlobalFallback: Boolean(GLOBAL_FALLBACK_KEY),
