@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Edge runtime —— 出口网络与 Node.js Serverless 不同
+export const runtime = 'edge';
+
 /**
  * 经典白话文翻译（批量）
  *

@@ -3,15 +3,18 @@ import { createClient } from '@supabase/supabase-js';
 
 /**
  * 每日话题生成定时任务
- * 
+ *
  * 功能：
  * 1. 调用Dify生成今日参究话题
  * 2. 创建置顶帖子到社区
- * 
+ *
  * 使用方式：
  * - 通过Vercel Cron Jobs定时调用
  * - 或手动触发：POST /api/cron/daily-topic
  */
+
+// Edge runtime —— 出口网络与 Node.js Serverless 不同
+export const runtime = 'edge';
 
 // 延迟初始化Supabase客户端
 function getSupabaseClient() {

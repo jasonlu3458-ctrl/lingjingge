@@ -4,6 +4,9 @@ import { NextRequest, NextResponse } from 'next/server';
  * Dify API 批量测试端点
  */
 
+// Edge runtime —— 出口网络与 Node.js Serverless 不同
+export const runtime = 'edge';
+
 export async function GET(request: NextRequest) {
   // 所有需要测试的 API
   const apiList = [
@@ -52,19 +55,27 @@ export async function GET(request: NextRequest) {
       }
 
       try {
-        const response = await fetch('https://api.dify.ai/v1/chat-messages', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            query: '你好',
-            user: 'test-user',
-            response_mode: 'blocking',
-            inputs: {},
-          }),
-        });
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 30_000);
+        let response: Response;
+        try {
+          response = await fetch('https://api.dify.ai/v1/chat-messages', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              query: '你好',
+              user: 'test-user',
+              response_mode: 'blocking',
+              inputs: {},
+            }),
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timer);
+        }
 
         const time = Date.now() - startTime;
 
