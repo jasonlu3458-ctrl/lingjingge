@@ -213,26 +213,16 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   if (url.searchParams.get('ping') === '1') {
-    // 网络层诊断：测 Vercel 出口到 DIFY 是否可达
-    const diag: any = { ping: true, tests: [] };
-    const tests: Array<[string, () => Promise<Response>]> = [
-      ['GET api.dify.ai/', () => fetch('https://api.dify.ai/', { signal: AbortSignal.timeout(6000) })],
-      ['GET api.dify.ai/v1/parameters', () => fetch('https://api.dify.ai/v1/parameters', { signal: AbortSignal.timeout(6000) })],
-      ['GET www.google.com', () => fetch('https://www.google.com/', { signal: AbortSignal.timeout(6000) })],
-      ['GET httpbin.org/get', () => fetch('https://httpbin.org/get', { signal: AbortSignal.timeout(6000) })],
-      ['GET raw.githubusercontent.com', () => fetch('https://raw.githubusercontent.com/', { signal: AbortSignal.timeout(6000) })],
-    ];
-    for (const [name, fetcher] of tests) {
-      const t0 = Date.now();
-      try {
-        const r = await fetcher();
-        const t = await r.text();
-        diag.tests.push({ name, status: r.status, ms: Date.now() - t0, body: t.slice(0, 200) });
-      } catch (e) {
-        diag.tests.push({ name, error: String(e).slice(0, 200), ms: Date.now() - t0 });
-      }
+    // 网络层诊断：测 Vercel 出口到 DIFY（单 host, 4s timeout, 必须 < 10s maxDuration）
+    const target = url.searchParams.get('host') || 'api.dify.ai';
+    const t0 = Date.now();
+    try {
+      const r = await fetch('https://' + target + '/', { signal: AbortSignal.timeout(4000) });
+      const t = await r.text();
+      return NextResponse.json({ ping: true, host: target, status: r.status, ms: Date.now() - t0, body: t.slice(0, 300) });
+    } catch (e) {
+      return NextResponse.json({ ping: true, host: target, error: String(e).slice(0, 200), ms: Date.now() - t0 });
     }
-    return NextResponse.json(diag);
   }
   return NextResponse.json({
     typedKeys: Object.fromEntries(Object.entries(TYPED_KEYS).map(([k, v]) => [k, Boolean(v)])),
