@@ -89,7 +89,10 @@ export async function GET() {
       .lte('sign_in_date', today)
       .order('sign_in_date', { ascending: false });
 
-    const consecutive = calcConsecutive(recent?.map((r) => r.sign_in_date) || [], today);
+    const consecutive = calcConsecutive(
+      (recent?.map((r) => r.sign_in_date).filter((d): d is string => !!d) || []),
+      today
+    );
 
     return NextResponse.json({
       ok: true,

@@ -19,7 +19,12 @@ export interface Database {
           subscription_status: string | null;
           subscription_start: string | null;
           subscription_end: string | null;
+          subscription_type: string | null;
           polar_customer_id: string | null;
+          invited_by: string | null;
+          reward_claimed: boolean | null;
+          consent_given_at: string | null;
+          consent_version: string | null;
         };
         Insert: {
           id: string;
@@ -30,7 +35,12 @@ export interface Database {
           subscription_status?: string | null;
           subscription_start?: string | null;
           subscription_end?: string | null;
+          subscription_type?: string | null;
           polar_customer_id?: string | null;
+          invited_by?: string | null;
+          reward_claimed?: boolean | null;
+          consent_given_at?: string | null;
+          consent_version?: string | null;
         };
         Update: {
           id?: string;
@@ -41,7 +51,12 @@ export interface Database {
           subscription_status?: string | null;
           subscription_start?: string | null;
           subscription_end?: string | null;
+          subscription_type?: string | null;
           polar_customer_id?: string | null;
+          invited_by?: string | null;
+          reward_claimed?: boolean | null;
+          consent_given_at?: string | null;
+          consent_version?: string | null;
         };
         Relationships: [];
       };
@@ -174,6 +189,117 @@ export interface Database {
           user_id?: string;
           type?: string;
           created_at?: string;
+        };
+        Relationships: [];
+      };
+      user_points: {
+        Row: {
+          id: string;
+          user_id: string;
+          points: number | null;
+          sign_in_date: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          points?: number | null;
+          sign_in_date?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          points?: number | null;
+          sign_in_date?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      report_purchases: {
+        Row: {
+          id: string;
+          user_id: string;
+          report_type: string;
+          price: number | null;
+          purchased_at: string;
+          report_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          report_type: string;
+          price?: number | null;
+          purchased_at?: string;
+          report_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          report_type?: string;
+          price?: number | null;
+          purchased_at?: string;
+          report_id?: string | null;
+        };
+        Relationships: [];
+      };
+      promotion_configs: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          discount_type: string;
+          discount_value: number;
+          start_date: string | null;
+          end_date: string | null;
+          product_id: string | null;
+          max_uses: number | null;
+          current_uses: number | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string | null;
+          discount_type: string;
+          discount_value: number;
+          start_date?: string | null;
+          end_date?: string | null;
+          product_id?: string | null;
+          max_uses?: number | null;
+          current_uses?: number | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string | null;
+          discount_type?: string;
+          discount_value?: number;
+          start_date?: string | null;
+          end_date?: string | null;
+          product_id?: string | null;
+          max_uses?: number | null;
+          current_uses?: number | null;
+        };
+        Relationships: [];
+      };
+      free_turns: {
+        Row: {
+          id: string;
+          user_id: string;
+          turns: number | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          turns?: number | null;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          turns?: number | null;
+          updated_at?: string;
         };
         Relationships: [];
       };

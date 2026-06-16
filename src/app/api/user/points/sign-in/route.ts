@@ -95,7 +95,10 @@ export async function POST() {
       .gte('sign_in_date', startStr)
       .lte('sign_in_date', today);
 
-    const consecutive = calcConsecutive(recent?.map((r) => r.sign_in_date) || [], today);
+    const consecutive = calcConsecutive(
+      (recent?.map((r) => r.sign_in_date).filter((d): d is string => !!d) || []),
+      today
+    );
     let bonus = 0;
     if (consecutive > 0 && consecutive % 7 === 0) {
       bonus = SEVEN_DAY_BONUS;

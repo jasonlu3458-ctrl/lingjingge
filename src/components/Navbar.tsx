@@ -194,7 +194,7 @@ export default function Navbar() {
                     onMouseLeave={handleMenuLeave}
                   >
                     {menu.items.map((category) =>
-                      'subItems' in category && category.subItems ? (
+                      'subItems' in category && Array.isArray((category as { subItems?: unknown[] }).subItems) ? (
                         <div key={category.label} className="mb-3 last:mb-0">
                           <div
                             className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider"
@@ -205,7 +205,7 @@ export default function Navbar() {
                           >
                             {category.label}
                           </div>
-                          {category.subItems.map((item) => (
+                          {((category as { subItems: { href: string; label: string; icon?: string }[] }).subItems).map((item) => (
                             <Link
                               key={item.href}
                               href={item.href}
@@ -307,12 +307,12 @@ export default function Navbar() {
                   {activeMenu === menu.label && (
                     <div className="bg-gray-50 px-2 py-2 animate-fadeIn">
                       {menu.items.map((category) =>
-                        'subItems' in category && category.subItems ? (
+                        'subItems' in category && Array.isArray((category as { subItems?: unknown[] }).subItems) ? (
                           <div key={category.label}>
                             <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">
                               {category.label}
                             </div>
-                            {category.subItems.map((item) => (
+                            {((category as { subItems: { href: string; label: string; icon?: string }[] }).subItems).map((item) => (
                               <Link
                                 key={item.href}
                                 href={item.href}
