@@ -47,6 +47,7 @@ interface CheckoutBody {
   userId?: string;
   email?: string | null;
   report?: string;
+  promotionCode?: string;   // 'first_month' | undefined
 }
 
 async function createCheckout(plan: PolarPlan, body: CheckoutBody) {
@@ -55,6 +56,9 @@ async function createCheckout(plan: PolarPlan, body: CheckoutBody) {
     throw new Error(`未知的 plan: ${plan}`);
   }
   const polar = getPolarClient();
+  const base = getBaseUrl();
+
+  // Polar checkout API 不支持 price 字段；price 由 webhook 检测 promotionCode 动态处理
   const checkout = await polar.checkouts.create({
     products: [productId],
     successUrl: buildSuccessUrl(plan, body.report ?? null),
@@ -63,6 +67,8 @@ async function createCheckout(plan: PolarPlan, body: CheckoutBody) {
       userId: body.userId || '',
       plan,
       report: body.report || '',
+      promotionCode: body.promotionCode || '',
+      // subscription_start / subscription_end 由 webhook subscription.created 写入
     },
   });
   return checkout;
@@ -113,6 +119,7 @@ export async function GET(req: Request) {
     const report = searchParams.get('report');
     const type = searchParams.get('type');   // 'single' | 'subscription'
     const planParam = searchParams.get('plan');
+    const promotionCode = searchParams.get('promotionCode') || undefined;
 
     if (!userId) {
       return NextResponse.json({ error: '请先登录后再订阅' }, { status: 401 });
@@ -130,7 +137,7 @@ export async function GET(req: Request) {
     const safeEmail = (email ?? undefined) as string | undefined;
     const safeUserId = (userId ?? undefined) as string | undefined;
     const safeReport = (report ?? undefined) as string | undefined;
-    const checkout = await createCheckout(plan, { plan, userId: safeUserId, email: safeEmail, report: safeReport });
+    const checkout = await createCheckout(plan, { plan, userId: safeUserId, email: safeEmail, report: safeReport, promotionCode });
     return NextResponse.json({ id: checkout.id, url: checkout.url, plan });
   } catch (error) {
     console.error('Polar checkout GET error:', error);

@@ -22,35 +22,80 @@ const isCacheValid = (ts: number) => Date.now() - ts < CACHE_DURATION;
 const generateCacheKey = (type: string, query: string) => `${type}:${query.slice(0, 100)}`;
 
 // —— API Key 映射表 ——
+/**
+ * 兼容两种命名（用户配的 .env.local 是 NEXT_PUBLIC_DIFY_*_API_KEY，
+ * 但 Next.js 服务端 API route 可以读任何 env，Dify key 是服务端的，
+ * 不需要 NEXT_PUBLIC_ 前缀。优先用专用命名，缺失时回落到 NEXT_PUBLIC_）。
+ */
+const key = (typed: string, publicTyped: string) =>
+  process.env[typed] || process.env[publicTyped];
+
 const TYPED_KEYS: Record<string, string | undefined> = {
   // 问道 (wen/)
-  'ai-zen-master': process.env.DIFY_AI_ZEN_MASTER_API_KEY,
-  'mind':          process.env.DIFY_MIND_API_KEY,
-  'parenting':     process.env.DIFY_PARENTING_API_KEY,
-  'yili':          process.env.DIFY_YILI_API_KEY,
-  'gongan':        process.env.DIFY_GONGAN_API_KEY,
-  'awakening':     process.env.DIFY_AWAKENING_API_KEY,
-  'meditation':    process.env.DIFY_MEDITATION_API_KEY,
-  'healing':       process.env.DIFY_HEALING_API_KEY,
+  'ai-zen-master':  key('DIFY_AI_ZEN_MASTER_API_KEY',  'NEXT_PUBLIC_DIFY_AI_ZEN_MASTER_API_KEY'),
+  'mind':           key('DIFY_MIND_API_KEY',           'NEXT_PUBLIC_DIFY_MIND_API_KEY'),
+  'parenting':      key('DIFY_PARENTING_API_KEY',      'NEXT_PUBLIC_DIFY_PARENTING_API_KEY'),
+  'yili':           key('DIFY_YILI_API_KEY',           'NEXT_PUBLIC_DIFY_YILI_API_KEY'),
+  'gongan':         key('DIFY_GONGAN_API_KEY',         'NEXT_PUBLIC_DIFY_GONGAN_API_KEY'),
+  'awakening':      key('DIFY_AWAKENING_API_KEY',      'NEXT_PUBLIC_DIFY_AWAKENING_API_KEY'),
+  'meditation':     key('DIFY_MEDITATION_API_KEY',     'NEXT_PUBLIC_DIFY_MEDITATION_API_KEY'),
+  'healing':        key('DIFY_HEALING_API_KEY',        'NEXT_PUBLIC_DIFY_HEALING_API_KEY'),
   // 观心 (guan/)
-  'health':        process.env.DIFY_HEALTH_API_KEY,
-  'mingli':        process.env.DIFY_MINGLI_API_KEY,
-  'name':          process.env.DIFY_NAME_API_KEY,
-  'tili':          process.env.DIFY_TILI_API_KEY,
-  'pastlife':      process.env.DIFY_PASTLIFE_API_KEY,
+  'health':         key('DIFY_HEALTH_API_KEY',         'NEXT_PUBLIC_DIFY_HEALTH_API_KEY'),
+  'mingli':         key('DIFY_MINGLI_API_KEY',         'NEXT_PUBLIC_DIFY_MINGLI_API_KEY'),
+  'name':           key('DIFY_NAME_API_KEY',           'NEXT_PUBLIC_DIFY_NAME_API_KEY'),
+  'tili':           key('DIFY_TILI_API_KEY',           'NEXT_PUBLIC_DIFY_TILI_API_KEY'),
+  'pastlife':       key('DIFY_PASTLIFE_API_KEY',       'NEXT_PUBLIC_DIFY_PASTLIFE_API_KEY'),
+  // 内观新增 5 项 (family/career/education/house/body)
+  'family':         key('DIFY_FAMILY_API_KEY',         'NEXT_PUBLIC_DIFY_FAMILY_API_KEY'),
+  'career':         key('DIFY_CAREER_API_KEY',         'NEXT_PUBLIC_DIFY_CAREER_API_KEY'),
+  'education':      key('DIFY_EDUCATION_API_KEY',      'NEXT_PUBLIC_DIFY_EDUCATION_API_KEY'),
+  'house':          key('DIFY_HOUSE_API_KEY',          'NEXT_PUBLIC_DIFY_HOUSE_API_KEY'),
+  'body':           key('DIFY_BODY_API_KEY',           'NEXT_PUBLIC_DIFY_BODY_API_KEY'),
   // 藏经 (zang/)
-  'library_classics':  process.env.DIFY_LIBRARY_CLASSICS_API_KEY,
-  'library_treasure':  process.env.DIFY_LIBRARY_TREASURE_API_KEY,
+  'library_classics': key('DIFY_LIBRARY_CLASSICS_API_KEY', 'NEXT_PUBLIC_DIFY_LIBRARY_CLASSICS_API_KEY'),
+  'library_treasure': key('DIFY_LIBRARY_TREASURE_API_KEY', 'NEXT_PUBLIC_DIFY_LIBRARY_TREASURE_API_KEY'),
   // 同修 (tong/)
-  'community_essence':  process.env.DIFY_COMMUNITY_ESSENCE_API_KEY,
-  'community_topics':   process.env.DIFY_COMMUNITY_TOPICS_API_KEY,
+  'community_essence': key('DIFY_COMMUNITY_ESSENCE_API_KEY', 'NEXT_PUBLIC_DIFY_COMMUNITY_ESSENCE_API_KEY'),
+  'community_topics':  key('DIFY_COMMUNITY_TOPICS_API_KEY',  'NEXT_PUBLIC_DIFY_COMMUNITY_TOPICS_API_KEY'),
+  'community':         key('DIFY_COMMUNITY_API_KEY',         'NEXT_PUBLIC_DIFY_COMMUNITY_API_KEY'),
 };
 
-const GLOBAL_FALLBACK_KEY = process.env.DIFY_API_KEY;
+const GLOBAL_FALLBACK_KEY =
+  process.env.DIFY_API_KEY ||
+  process.env.NEXT_PUBLIC_DIFY_API_KEY ||
+  process.env.NEXT_PUBLIC_DIFY_CHAT_API_KEY; // 用户配的全局 chat key
 
 /** 取一个 type 对应的可用 key：优先专属 key，回落到全局 key */
 function resolveApiKey(type: string): string | undefined {
   return TYPED_KEYS[type] || GLOBAL_FALLBACK_KEY || undefined;
+}
+
+// —— 启动时安全提示 ——
+/**
+ * Next.js 约定：以 `NEXT_PUBLIC_` 开头的 env 会被打包进 client bundle，
+ * 仅推荐用于**非敏感**的公开配置。Dify key 是 secret，绝不应进 client。
+ *
+ * 这里做一次启动期扫描：若发现 .env.local 用了 NEXT_PUBLIC_DIFY_*_API_KEY 命名，
+ * 会在控制台一次性 warn 提示用户迁移到 DIFY_*_API_KEY（去掉 NEXT_PUBLIC_ 前缀）。
+ * 由于 key() 优先级是 先 DIFY_* 再 NEXT_PUBLIC_*，功能上完全兼容，
+ * 但 DIFY_* 不会泄露到客户端 bundle，是更安全的标准做法。
+ */
+let _securityWarned = false;
+function maybeSecurityWarn() {
+  if (_securityWarned) return;
+  _securityWarned = true;
+  const publicKeys = Object.keys(process.env).filter(
+    (k) => k.startsWith('NEXT_PUBLIC_DIFY_') && k.endsWith('_API_KEY') && !!process.env[k]
+  );
+  if (publicKeys.length > 0) {
+    console.warn(
+      `[dify 安全提示] 检测到 ${publicKeys.length} 个 NEXT_PUBLIC_DIFY_*_API_KEY 仍配在 .env.local。` +
+      `NEXT_PUBLIC_* 会被打包进浏览器 bundle，存在被反编译读取的风险。` +
+      `建议把 .env.local 中这些 key 改名为 DIFY_*_API_KEY（去掉 NEXT_PUBLIC_ 前缀），` +
+      `代码兼容（会自动回落），但 key 不会进入 client bundle。`
+    );
+  }
 }
 
 // —— Mock 文本（按 type + query 动态生成，至少回应用户输入）——
@@ -73,6 +118,13 @@ function buildMockText(type: string, query: string): string {
     'pastlife':      `${echo}前世不是宿命，是习气。今天遇到的人和事，常常是前世剧本的回响。`,
     'library_classics':  `${echo}经典像一面镜子，你读的当下，它照见的正是此刻的你。`,
     'library_treasure':  `${echo}秘藏是行者的脚注。读懂它的前提，是先走一段路。`,
+    'family':        `${echo}关系里没有对错，只有"我们如何共同面对"。先把你的期待放下，试着说"我感受到的是"，而不只是"你应该"。`,
+    'career':        `${echo}事业是天赋与世界相遇。先回到自己：什么让你废寝忘食？卡点往往不在外部，而在你没敢承认的"我想要"。`,
+    'education':     `${echo}孩子不是一张白纸，而是一颗种子。父母的功课，是看见他本来的样子，而不是把他修剪成你想要的样子。`,
+    'house':         `${echo}家是身心的延伸。先想：你在家里最放松的是哪一处？答案就是空间的核心场域。`,
+    'body':          `${echo}身体是地图，不是问题。说说近期的睡眠、精力、情绪，我们一起看看地图上正在发生什么。`,
+    'community_essence': `${echo}能被留下来反复读的，都是真功夫。试着把一句话的"知"变成一年的"行"。`,
+    'community_topics':  `${echo}每一题都是一扇门。进门之后不必赶路，停一停，听听自己说什么。`,
   };
   return templates[type] || `${echo}这是一个模拟回复（未配置 Dify API Key）。请在 .env.local 设置 ${type.toUpperCase()}_API_KEY 或全局 DIFY_API_KEY。`;
 }
@@ -96,8 +148,25 @@ function wrapAsSseStream(fullText: string, conversationId: string): ReadableStre
 }
 
 // —— 真正的 Dify 代理（透传流） ——
+/**
+ * 支持自定义 Dify base url（自部署时使用 DIFY_BASE_URL env）
+ * 401 时自动 fallback 到全局 key（如果全局 key 存在且和当前 key 不同）
+ */
 async function proxyToDify(
   apiKey: string,
+  type: string,
+  query: string,
+  conversationId: string | undefined,
+  inputs: Record<string, any> | undefined,
+  user: string,
+): Promise<Response> {
+  const baseUrl = (process.env.DIFY_BASE_URL || 'https://api.dify.ai').replace(/\/$/, '');
+  return proxyToDifyWithKey(apiKey, baseUrl, type, query, conversationId, inputs, user);
+}
+
+async function proxyToDifyWithKey(
+  apiKey: string,
+  baseUrl: string,
   type: string,
   query: string,
   conversationId: string | undefined,
@@ -112,7 +181,7 @@ async function proxyToDify(
   };
   if (conversationId) body.conversation_id = conversationId;
 
-  const difyRes = await fetch('https://api.dify.ai/v1/chat-messages', {
+  const difyRes = await fetch(`${baseUrl}/v1/chat-messages`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
@@ -140,6 +209,7 @@ async function proxyToDify(
 
 export async function POST(request: NextRequest) {
   try {
+    maybeSecurityWarn(); // 启动期安全提示（一次性）
     const body = await request.json().catch(() => null);
     if (!body) {
       return NextResponse.json({ error: '请求体不是有效的 JSON' }, { status: 400 });

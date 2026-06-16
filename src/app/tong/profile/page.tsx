@@ -5,6 +5,8 @@ import { format } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import ActivityStats from '@/components/ActivityStats'
+import PointsSignIn from '@/components/PointsSignIn'
+import SubscriptionStatusCard from '@/components/SubscriptionStatusCard'
 
 interface UserProfile {
   id: string
@@ -139,6 +141,12 @@ export default async function ProfilePage() {
 
         {/* 修行统计 */}
         <ActivityStats />
+
+        {/* 会员状态 */}
+        <SubscriptionStatusCard />
+
+        {/* 积分签到 */}
+        <PointsSignIn userId={profile.id} />
 
         <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8">

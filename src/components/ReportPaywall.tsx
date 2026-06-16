@@ -1,7 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { useIsAuthenticated } from '@/hooks/useIsAuthenticated';
+import { useConsent } from '@/hooks/useConsent';
+import ConsentModal from './ConsentModal';
 import type { UserRole } from '@/lib/auth';
 
 export interface ReportPaywallProps {
@@ -36,7 +39,38 @@ export default function ReportPaywall({
   accentClass = 'text-amber-300',
 }: ReportPaywallProps) {
   const isAuthenticated = useIsAuthenticated();
+  const { hasConsented, giveConsent, hydrated } = useConsent();
+  const [showConsentModal, setShowConsentModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState<null | (() => void)>(null);
   const isPaid = userRole === 'member' || userRole === 'admin';
+
+  /**
+   * 关键行为前确认：已同意 → 直接放行；未同意 → 弹弹窗，同意后再放行
+   * @param action 实际的解锁/支付动作
+   */
+  const guarded = (action: () => void) => {
+    if (!hydrated) return; // 等 localStorage 读取完成
+    if (hasConsented) {
+      action();
+    } else {
+      setPendingAction(() => action);
+      setShowConsentModal(true);
+    }
+  };
+
+  const handleConfirm = () => {
+    giveConsent();
+    setShowConsentModal(false);
+    if (pendingAction) {
+      const a = pendingAction;
+      setPendingAction(null);
+      a();
+    }
+  };
+  const handleCancel = () => {
+    setShowConsentModal(false);
+    setPendingAction(null);
+  };
 
   if (isPaid) {
     return (
@@ -75,9 +109,11 @@ export default function ReportPaywall({
               <>
                 {/* 已登录免费用户：推单次解锁 + 升级会员 */}
                 <button
-                  onClick={() => {
-                    window.location.href = `/api/create-checkout-session?type=single&report=${reportKey}`;
-                  }}
+                  onClick={() =>
+                    guarded(() => {
+                      window.location.href = `/api/create-checkout-session?type=single&report=${reportKey}`;
+                    })
+                  }
                   className="flex-1 py-2 bg-white border border-[#2c2c2c] text-[#2c2c2c] rounded hover:bg-gray-50 transition-colors"
                 >
                   单次解锁 · ¥9.9
@@ -97,6 +133,9 @@ export default function ReportPaywall({
               : '单次解锁仅限当前报告，会员可查看所有深度内容'}
           </div>
         </div>
+      )}
+      {showConsentModal && (
+        <ConsentModal onConfirm={handleConfirm} onCancel={handleCancel} />
       )}
     </>
   );

@@ -41,7 +41,15 @@ next-env.d.ts
 # dev server logs
 /devlog*.txt
 /dev.log
+/dev-server.*.log
+/dev-server.log
+/dev-server.err.log
+/dev-server.out.log
+/next-dev.err
+/next-dev.out
 
 # build logs
 /build_out.txt
 /build_err.txt
+/build_out*.log
+/build_err*.log

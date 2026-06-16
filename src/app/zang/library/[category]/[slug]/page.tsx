@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { supabase, isSupabaseConfigured, testSupabaseConnection } from '@/lib/supabase';
+import { useUserRole } from '@/hooks/useUserRole';
+import ReportPaywall from '@/components/ReportPaywall';
 import { mockDaoDeJing, type MockArticle } from '../../mock-dao-de-jing';
 
 type Article = MockArticle;
@@ -102,11 +104,23 @@ export default function ArticlePage() {
 }
 
 function ArticleDetail({ article, category }: { article: Article; category: string }) {
-  const [mode, setMode] = useState<'original' | 'translation' | 'both'>('both');
+  const [mode, setMode] = useState<'original' | 'translation' | 'both'>('original');
+  const userRole = useUserRole();
 
   // 返回目录链接 — 优先用 category
   const backHref = `/zang/library/${encodeURIComponent(category || article.source || '')}`;
   const backLabel = category ? `返回${category}` : article.source ? `返回${article.source}` : '返回藏经阁';
+
+  // 是否有译文内容
+  const hasTranslation = Boolean(article.translation);
+  // 译文预览：截取前 80 字作为 freePart 引导
+  const translationText = article.translation || '';
+  const translationFreePreview = hasTranslation
+    ? translationText.length > 80
+      ? translationText.slice(0, 80).replace(/\s+/g, ' ').trim() + '…'
+      : translationText
+    : '白话翻译待添加';
+  const translationFull = hasTranslation ? translationText : '';
 
   return (
     <div className="min-h-screen bg-[#f5f0eb]">
@@ -124,6 +138,9 @@ function ArticleDetail({ article, category }: { article: Article; category: stri
             <span>📜</span>
             <span>{article.source || '典籍'}</span>
             {article.category && <span className="text-gray-400">· {article.category}</span>}
+            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+              原文免费
+            </span>
           </div>
           <h1
             className="text-3xl sm:text-4xl font-serif text-[#2c2c2c] mb-6"
@@ -135,20 +152,31 @@ function ArticleDetail({ article, category }: { article: Article; category: stri
           {/* 模式切换 */}
           <div className="flex flex-wrap gap-2 mb-6 border-b border-gray-100 pb-4">
             {([
-              ['original', '原文'],
-              ['translation', '白话'],
-              ['both', '对照'],
-            ] as const).map(([k, label]) => (
+              ['original', '📜 原文', '免费'],
+              ['translation', '🌐 白话', '会员'],
+              ['both', '📖 对照', '会员'],
+            ] as const).map(([k, label, fee]) => (
               <button
                 key={k}
                 onClick={() => setMode(k)}
-                className={`px-4 py-1.5 text-sm rounded-full transition-colors ${
+                className={`px-4 py-1.5 text-sm rounded-full transition-colors flex items-center gap-1.5 ${
                   mode === k
                     ? 'bg-[#b88a4a] text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                {label}
+                <span>{label}</span>
+                <span
+                  className={`text-[9px] px-1.5 py-0.5 rounded-full ${
+                    mode === k
+                      ? 'bg-white/20 text-white'
+                      : fee === '免费'
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : 'bg-amber-100 text-amber-700'
+                  }`}
+                >
+                  {fee}
+                </span>
               </button>
             ))}
           </div>
@@ -161,32 +189,42 @@ function ArticleDetail({ article, category }: { article: Article; category: stri
           )}
           {mode === 'translation' && (
             <div className="prose max-w-none leading-loose text-[#2c2c2c]">
-              {article.translation || (
-                <span className="text-gray-400 italic">白话翻译待添加</span>
-              )}
+              <ReportPaywall
+                userRole={userRole}
+                reportKey={`library-${article.slug}`}
+                premiumSections={['完整白话译文', '作者背景', '典故出处']}
+                freePart={hasTranslation ? translationFreePreview : '白话翻译待添加'}
+                premiumPart={translationFull}
+                accentClass="text-amber-300"
+              />
             </div>
           )}
           {mode === 'both' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h3 className="text-xs font-bold text-gray-500 mb-2 tracking-widest">原文</h3>
+                <h3 className="text-xs font-bold text-emerald-600 mb-2 tracking-widest">📜 原文（免费）</h3>
                 <div
                   className="prose max-w-none leading-loose text-[#2c2c2c]"
                   dangerouslySetInnerHTML={{ __html: article.content }}
                 />
               </div>
               <div>
-                <h3 className="text-xs font-bold text-gray-500 mb-2 tracking-widest">白话</h3>
+                <h3 className="text-xs font-bold text-amber-600 mb-2 tracking-widest">🌐 白话（会员）</h3>
                 <div className="prose max-w-none leading-loose text-[#2c2c2c]">
-                  {article.translation || (
-                    <span className="text-gray-400 italic">白话翻译待添加</span>
-                  )}
+                  <ReportPaywall
+                    userRole={userRole}
+                    reportKey={`library-${article.slug}-both`}
+                    premiumSections={['完整白话译文', '作者背景', '典故出处']}
+                    freePart={hasTranslation ? translationFreePreview : '白话翻译待添加'}
+                    premiumPart={translationFull}
+                    accentClass="text-amber-300"
+                  />
                 </div>
               </div>
             </div>
           )}
 
-          {/* 字词注释（DB 里是 HTML，同样用 dangerouslySetInnerHTML 解析） */}
+          {/* 字词注释（DB 里是 HTML，同样用 dangerouslySetInnerHTML 解析） — 永远免费 */}
           {article.annotation && (
             <div className="mt-8 pt-6 border-t border-gray-100">
               <h3 className="text-sm font-bold text-[#b88a4a] mb-2">📝 字词注释</h3>
@@ -197,7 +235,7 @@ function ArticleDetail({ article, category }: { article: Article; category: stri
             </div>
           )}
 
-          {/* 作者按语 */}
+          {/* 作者按语 — 永远免费 */}
           {article.author_note && (
             <div className="mt-6">
               <h3 className="text-sm font-bold text-[#b88a4a] mb-2">✒️ 作者按语</h3>

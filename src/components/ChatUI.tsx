@@ -3,9 +3,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import InkSpreadAnimation from './InkSpreadAnimation';
-import Disclaimer from './Disclaimer';
+import ConsentModal from './ConsentModal';
 import ReportPaywall from './ReportPaywall';
 import { useFreeTurns } from '@/hooks/useFreeTurns';
+import { useConsent } from '@/hooks/useConsent';
 import type { UserRole } from '@/lib/auth';
 
 export interface StateOption {
@@ -31,6 +32,12 @@ export interface PageConfig {
   theme: string;
   welcomeMessage: string;
   difyType: string;
+  /**
+   * 是否在开屏强制弹出免责声明
+   * - true（默认）：首次访问弹窗（命理/报告/付费类关键页面）
+   * - false：不弹（藏经阁原文、术语百科、法脉源流等"非关键"页面）
+   */
+  requireConsent?: boolean;
   formConfig?: {
     submitLabel: string;
     fields: FormField[];
@@ -66,6 +73,15 @@ interface ChatUIProps {
 
 export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
   const { used, limit, remaining, isExempt, canSend, trySend, mounted } = useFreeTurns(config.difyType, userRole);
+  // 同意弹窗：未同意时开屏显示，同意后写 localStorage 不再弹
+  // - requireConsent !== false 才弹（默认 true），藏经阁原文等非关键页面跳过
+  const { hasConsented, giveConsent, hydrated } = useConsent();
+  const [showConsent, setShowConsent] = useState(false);
+  useEffect(() => {
+    if (hydrated && config.requireConsent !== false && !hasConsented) {
+      setShowConsent(true);
+    }
+  }, [hydrated, hasConsented, config.requireConsent]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [chatInput, setChatInput] = useState<string>('');
@@ -75,14 +91,29 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
   const [showForm, setShowForm] = useState(true);
   const [selectedState, setSelectedState] = useState<StateOption | null>(null);
   const [guideText, setGuideText] = useState<string | null>(null);
-  
+
   // 公案模式特殊状态
   const [gonganCount, setGonganCount] = useState(0);
   const [currentGongan, setCurrentGongan] = useState('');
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const charQueueRef = useRef<string[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // 同意弹窗处理：写入 localStorage + 后端（用于法律证据） + 关闭弹窗
+  const handleConsentConfirm = useCallback(() => {
+    giveConsent();
+    setShowConsent(false);
+    // 异步上报到服务端（失败不影响前端）
+    fetch('/api/user/consent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ version: 'v1.0' }),
+    }).catch(() => {});
+  }, [giveConsent]);
+  const handleConsentCancel = useCallback(() => {
+    setShowConsent(false);
+  }, []);
 
   useEffect(() => {
     const savedConversationId = localStorage.getItem(`conv_${config.difyType}_uuid`);
@@ -590,7 +621,14 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
   // 如果有 meditationConfig，渲染状态选择界面
   if (config.meditationConfig && !guideText) {
     return (
-      <div className="flex flex-col h-screen" style={{ backgroundColor: config.theme }}>
+      <>
+        {showConsent && (
+          <ConsentModal
+            onConfirm={handleConsentConfirm}
+            onCancel={handleConsentCancel}
+          />
+        )}
+        <div className="flex flex-col h-screen" style={{ backgroundColor: config.theme }}>
         <div className="flex-1 flex flex-col items-center justify-center p-6">
           <div className="text-center max-w-md">
             <div className="text-6xl mb-6">🧘</div>
@@ -618,13 +656,21 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
           </div>
         </div>
       </div>
+      </>
     );
   }
 
   // 冥想模式下显示引导词
   if (config.meditationConfig && guideText) {
     return (
-      <div className="flex flex-col h-screen" style={{ backgroundColor: config.theme }}>
+      <>
+        {showConsent && (
+          <ConsentModal
+            onConfirm={handleConsentConfirm}
+            onCancel={handleConsentCancel}
+          />
+        )}
+        <div className="flex flex-col h-screen" style={{ backgroundColor: config.theme }}>
         <div className="flex-1 flex flex-col items-center justify-center p-6">
           <div className="text-center max-w-2xl w-full">
             <div className="text-4xl mb-4">🧘</div>
@@ -649,6 +695,7 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
           </div>
         </div>
       </div>
+      </>
     );
   }
 
@@ -657,8 +704,15 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
 
   // 普通表单模式或纯对话模式
   return (
-    <div className="min-h-screen" style={{ backgroundColor: config.theme }}>
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <>
+      {showConsent && (
+        <ConsentModal
+          onConfirm={handleConsentConfirm}
+          onCancel={handleConsentCancel}
+        />
+      )}
+      <div className="min-h-screen" style={{ backgroundColor: config.theme }}>
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* 页面标题 */}
         <div className="text-center mb-8">
           <div className="text-4xl mb-2">{config.icon}</div>
@@ -962,8 +1016,8 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
 
         {/* 消息区域 */}
         {messages.length > 0 && (
-          <div className="bg-white bg-opacity-60 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 overflow-hidden mb-6">
-            <div className="p-6 space-y-4">
+          <div className="bg-white bg-opacity-60 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 overflow-hidden mb-6 max-h-[70vh] flex flex-col">
+            <div className="p-6 space-y-4 overflow-y-auto flex-1">
               {messages.map((msg, idx) => {
                 // 处理assistant消息的付费内容分割
                 const reportStructure = config.formConfig?.reportStructure || config.conversationConfig?.reportStructure;
@@ -1093,10 +1147,8 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
             </button>
           </div>
         )}
-
-        {/* 页脚免责声明（所有 AI 工具页统一显示） */}
-        <Disclaimer />
       </main>
     </div>
+    </>
   );
 }

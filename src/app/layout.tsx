@@ -19,9 +19,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN" style={{ [maShanZhengVariable]: "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif" } as React.CSSProperties}>
-      <body>
+      <body className="flex flex-col min-h-screen">
         <NavbarWrapper />
-        {children}
+        <div className="flex-1">{children}</div>
+        <footer className="text-xs text-gray-400 text-center py-2 border-t border-gray-100">
+          <div>
+            ⚠️ 本平台内容仅供传统文化交流与娱乐参考，不构成专业建议。
+            <a href="/disclaimer" className="underline hover:text-gray-600">详细了解</a>
+            <span className="mx-2">|</span>
+            <a href="/privacy" className="underline hover:text-gray-600">隐私政策</a>
+            <span className="mx-2">|</span>
+            <a href="/terms" className="underline hover:text-gray-600">服务条款</a>
+          </div>
+          <div className="mt-1 text-gray-300" title="移动端改造前基线版本">
+            v0.1.0 · 移动端改造前 · baseline @ 2026-06-16
+          </div>
+        </footer>
       </body>
     </html>
   );

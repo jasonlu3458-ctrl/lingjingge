@@ -53,6 +53,23 @@ export const pageConfigs: Record<string, PageConfig> = {
     // 纯对话无表单
   },
 
+  'light-solution': {
+    title: 'AI轻解忧',
+    subtitle: '把心事说出来，答案就藏在你心里',
+    icon: '💭',
+    theme: '#a8c4d4',
+    welcomeMessage: '说一句你现在的烦恼，让我陪你理一理。',
+    difyType: 'light-solution',
+    conversationConfig: {
+      roundsForReport: 3,
+      promptStart: '你是一位温柔耐心、善于倾听的陪伴者。用户正经历一些生活困扰，希望被理解、被看见。你的任务是共情、复述情绪、提出 1-2 个开放式问题帮用户理清思路。',
+      reportStructure: {
+        free: ['情绪标签', '困扰简析', '可尝试的一步'],
+        premium: ['深层模式识别', '专属建议清单', '7 天自我照护计划'],
+      },
+    },
+  },
+
   'awakening': {
     title: '觉醒日记',
     subtitle: '每日一悟，明心见性',
@@ -183,81 +200,156 @@ export const pageConfigs: Record<string, PageConfig> = {
         { name: 'gender', label: '性别', type: 'select', options: [
           { label: '男', value: 'male' }, { label: '女', value: 'female' }
         ], required: true },
+        // 整合自原 AI取名轩：可顺便为新生儿 / 自己起一个雅名
+        { name: 'want_name', label: '是否需要名字建议', type: 'select', options: [
+          { label: '仅解读', value: 'no' },
+          { label: '顺便取名', value: 'yes' },
+        ], required: false },
+        { name: 'surname', label: '姓氏 (取名时填写)', type: 'text', placeholder: '如：李 / 王 / 张', required: false },
+        { name: 'name_style', label: '名字风格 (取名时填写)', type: 'select', options: [
+          { label: '古典', value: 'classic' },
+          { label: '现代', value: 'modern' },
+          { label: '诗意', value: 'poetic' },
+        ], required: false },
       ],
       reportStructure: {
         free: ['生命灵数解析', '星座/生肖概要', '天赋潜能'],
-        premium: ['深度八字简析', '人生阶段运势', '个性化成长建议'],
+        premium: ['深度八字简析', '人生阶段运势', '个性化成长建议', '专属取名推荐'],
       },
     },
   },
 
-  'name': {
-    title: 'AI取名轩',
-    subtitle: '赐你好名，一生相伴',
-    icon: '📝',
-    theme: '#b85a4a',
-    welcomeMessage: '一个好名，就是一道护身符。',
-    difyType: 'name',
-    formConfig: {
-      submitLabel: '生成名字建议',
-      fields: [
-        { name: 'surname', label: '姓氏', type: 'text', placeholder: '请输入姓氏', required: true },
-        { name: 'gender', label: '性别', type: 'select', options: [{label:'男',value:'male'},{label:'女',value:'female'}], required: true },
-        { name: 'birth_date', label: '出生日期 (可选)', type: 'date', required: false },
-        { name: 'style', label: '期望风格', type: 'select', options: [{label:'古典',value:'classic'},{label:'现代',value:'modern'},{label:'诗意',value:'poetic'}], required: false },
-      ],
-      reportStructure: {
-        free: ['名字推荐', '五行解析'],
-        premium: ['深度姓名分析', '运势关联'],
-      },
-    },
-  },
+  // === 内观系列新增 5 项 (family/career/education/house/body) ===
 
-  'tili': {
-    title: 'AI炼体师',
-    subtitle: '炼形炼神，内外合一',
-    icon: '⚡',
-    theme: '#b88a4a',
-    welcomeMessage: '身体是灵魂的殿堂。',
-    difyType: 'tili',
+  'family': {
+    title: 'AI婚姻家庭',
+    subtitle: '解结化怨，重建亲密',
+    icon: '💞',
+    theme: '#c45a6a',
+    welcomeMessage: '一段关系，需要被看见、被理解。',
+    difyType: 'family',
     formConfig: {
-      submitLabel: '生成炼体方案',
+      submitLabel: '生成关系分析',
       fields: [
-        { name: 'age', label: '年龄', type: 'text', placeholder: '请输入年龄', required: true },
-        { name: 'body_type', label: '体质类型', type: 'select', options: [
-          { label: '平和 (精力充沛，睡眠良好，不易生病)', value: 'balanced' },
-          { label: '气虚 (容易疲劳，说话有气无力，稍动就出汗)', value: 'qi_deficiency' },
-          { label: '阳虚 (非常怕冷，手脚冰凉，喜热食热饮)', value: 'yang_deficiency' },
-          { label: '阴虚 (口干咽燥，手心脚心发热，容易失眠)', value: 'yin_deficiency' },
-          { label: '痰湿 (体型偏胖，身体沉重，容易困倦，舌苔厚腻)', value: 'phlegm_dampness' },
+        { name: 'relation_type', label: '关系类型', type: 'select', options: [
+          { label: '夫妻', value: 'couple' },
+          { label: '亲子', value: 'parent_child' },
+          { label: '婆媳 / 翁婿', value: 'in_laws' },
+          { label: '兄弟姐妹', value: 'siblings' },
         ], required: true },
-        { name: 'symptoms', label: '当前症状', type: 'textarea', placeholder: '请描述身体不适', required: false },
+        { name: 'concern', label: '目前的困扰', type: 'textarea', placeholder: '说说让你头疼或难过的事', required: true },
+        { name: 'expectation', label: '你希望达成的状态', type: 'textarea', placeholder: '理想的关系是怎样的？', required: false },
       ],
       reportStructure: {
-        free: ['功法推荐', '呼吸法'],
-        premium: ['定制炼体计划', '饮食建议'],
+        free: ['关系现状诊断', '常见模式识别'],
+        premium: ['深层动力分析', '7 天关系修复建议', '沟通话术模板'],
       },
     },
   },
 
-  'health': {
-    title: 'AI体质观察',
-    subtitle: '辨体质，调身心',
-    icon: '🌱',
-    theme: '#6a8a5a',
-    welcomeMessage: '你的体质，藏着你的健康密码。',
-    difyType: 'health',
+  'career': {
+    title: 'AI事业财富',
+    subtitle: '看清大势，顺势而为',
+    icon: '💼',
+    theme: '#8a6a4a',
+    welcomeMessage: '事业是天赋与世界相遇的方式。',
+    difyType: 'career',
     formConfig: {
-      submitLabel: '生成体质报告',
+      submitLabel: '生成事业建议',
       fields: [
-        { name: 'height', label: '身高 (cm)', type: 'text', placeholder: '请输入身高', required: true },
-        { name: 'weight', label: '体重 (kg)', type: 'text', placeholder: '请输入体重', required: true },
-        { name: 'symptoms', label: '主要症状', type: 'textarea', placeholder: '请描述您的身体状况', required: true },
-        { name: 'tongue', label: '舌象描述 (可选)', type: 'text', placeholder: '如：舌苔白腻', required: false },
+        { name: 'industry', label: '当前行业 / 领域', type: 'text', placeholder: '如：互联网 / 教育 / 设计', required: true },
+        { name: 'career_stage', label: '事业阶段', type: 'select', options: [
+          { label: '起步期 (0-3 年)', value: 'start' },
+          { label: '成长期 (3-8 年)', value: 'growth' },
+          { label: '转型期', value: 'pivot' },
+          { label: '成熟期 (8 年+)', value: 'mature' },
+        ], required: true },
+        { name: 'concern', label: '当前的卡点', type: 'textarea', placeholder: '是收入瓶颈？晋升难题？方向迷茫？', required: true },
       ],
       reportStructure: {
-        free: ['体质类型', '四季调养'],
-        premium: ['深度体质分析', '定制方案'],
+        free: ['天赋与行业匹配度', '近期趋势提示'],
+        premium: ['三年事业蓝图', '关键决策清单', '财富增长建议'],
+      },
+    },
+  },
+
+  'education': {
+    title: 'AI子女教育',
+    subtitle: '懂孩子，才能教孩子',
+    icon: '🌱',
+    theme: '#5a8a6a',
+    welcomeMessage: '每一个孩子，都有自己的时区。',
+    difyType: 'education',
+    formConfig: {
+      submitLabel: '生成养育建议',
+      fields: [
+        { name: 'child_age', label: '孩子年龄', type: 'text', placeholder: '如：7 岁', required: true },
+        { name: 'child_traits', label: '性格特征', type: 'textarea', placeholder: '活泼 / 敏感 / 内向 / 慢热 ...', required: false },
+        { name: 'concern', label: '目前最关心的教育问题', type: 'textarea', placeholder: '写作业拖拉 / 情绪管理 / 学业压力 ...', required: true },
+      ],
+      reportStructure: {
+        free: ['孩子气质分析', '常见误区提醒'],
+        premium: ['个性化教养策略', '亲子沟通话术', '阶段性成长建议'],
+      },
+    },
+  },
+
+  'house': {
+    title: 'AI家居环境',
+    subtitle: '住的舒服，是最好的风水',
+    icon: '🏠',
+    theme: '#6a7a8a',
+    welcomeMessage: '家，是身心的容器。',
+    difyType: 'house',
+    formConfig: {
+      submitLabel: '生成家居建议',
+      fields: [
+        { name: 'house_type', label: '户型', type: 'select', options: [
+          { label: '一室一厅', value: '1b1l' },
+          { label: '两室一厅', value: '2b1l' },
+          { label: '三室及以上', value: '3b' },
+          { label: 'loft / 复式', value: 'loft' },
+        ], required: true },
+        { name: 'orientation', label: '房屋朝向', type: 'select', options: [
+          { label: '坐北朝南', value: 'sn' },
+          { label: '东西向', value: 'ew' },
+          { label: '不规则 / 不清楚', value: 'unknown' },
+        ], required: false },
+        { name: 'concern', label: '想改善的空间或困扰', type: 'textarea', placeholder: '卧室睡眠 / 客厅凌乱 / 儿童房 / 书房 ...', required: true },
+      ],
+      reportStructure: {
+        free: ['空间能量诊断', '基础摆放建议'],
+        premium: ['逐区域优化方案', '色彩与材质指南', '四季调整策略'],
+      },
+    },
+  },
+
+  'body': {
+    title: 'AI身心合一',
+    subtitle: '炼体炼心，内外同调',
+    icon: '🌿',
+    theme: '#6a8a5a',
+    welcomeMessage: '身心本是一体，听见身体的低语。',
+    difyType: 'body',
+    formConfig: {
+      submitLabel: '生成身心报告',
+      fields: [
+        { name: 'birth_date', label: '出生日期', type: 'date', required: true },
+        { name: 'gender', label: '性别', type: 'select', options: [
+          { label: '男', value: 'male' }, { label: '女', value: 'female' }
+        ], required: true },
+        { name: 'focus', label: '关注方向（可多选）', type: 'select', options: [
+          { label: '体质与养生', value: 'constitution' },
+          { label: '功法与炼体', value: 'practice' },
+          { label: '心绪与释怀', value: 'emotion' },
+          { label: '三者皆想了解', value: 'all' },
+        ], required: true },
+        { name: 'current_state', label: '当前身体 / 情绪状态', type: 'textarea', placeholder: '最近睡眠 / 精力 / 情绪的实际情况', required: false },
+        { name: 'past_pattern', label: '想照见的前因 / 业力课题 (可选)', type: 'textarea', placeholder: '反复出现的模式、想解开的结', required: false },
+      ],
+      reportStructure: {
+        free: ['体质类型概要', '身心互动简析'],
+        premium: ['深度体质报告', '炼体功法定制', '心绪疏导路径', '前世因缘参考'],
       },
     },
   },
@@ -271,6 +363,7 @@ export const pageConfigs: Record<string, PageConfig> = {
     theme: '#5a4a3a',
     welcomeMessage: '经典是千年的对话。',
     difyType: 'library_classics',
+    requireConsent: false, // 藏经阁原文：非关键页面，不强制弹窗
   },
 
   'library_treasure': {
@@ -280,6 +373,7 @@ export const pageConfigs: Record<string, PageConfig> = {
     theme: '#5a4a3a',
     welcomeMessage: '唯有行者，方得一见。',
     difyType: 'library_treasure',
+    requireConsent: false, // 秘藏原文：非关键页面，不强制弹窗
   },
 
   // ===== 同修系列 (tong/) =====

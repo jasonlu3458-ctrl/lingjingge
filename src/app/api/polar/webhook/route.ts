@@ -24,11 +24,13 @@ interface PolarCheckoutMetadata {
   userId?: string;
   plan?: string;     // 'single' | 'monthly' | 'yearly'
   report?: string;   // 'pastlife' / 'tili' / ...
+  promotionCode?: string;
 }
 
 interface PolarSubscriptionMetadata {
   userId?: string;
   plan?: string;
+  promotionCode?: string;
 }
 
 function planToRole(plan?: string): string {
@@ -96,6 +98,23 @@ export async function POST(req: Request) {
         }
         // 单次解锁不写 subscriptions 表，只更新 profiles.subscription_status
         if (metadata.plan === 'single') {
+          // 写 report_purchases 表
+          const reportType = metadata.report || order?.product?.id || 'unknown';
+          const { error: rpErr } = await supabase
+            .from('report_purchases')
+            .upsert(
+              {
+                user_id: userId,
+                report_type: reportType,
+                price: order?.total_amount ? order.total_amount / 100 : 9.9,
+                purchased_at: new Date().toISOString(),
+                report_id: order?.id || null,
+              },
+              { onConflict: 'user_id,report_type' }
+            );
+          if (rpErr && rpErr.code !== '42P01') {
+            console.error('report_purchases upsert error:', rpErr);
+          }
           console.log(`✅ 用户 ${userId} 单次解锁报告: ${metadata.report}`);
         }
         break;
@@ -118,19 +137,42 @@ export async function POST(req: Request) {
         const currentPeriodEnd = sub?.current_period_end || sub?.cancel_at_period_end;
         const subscriptionStart = sub?.current_period_start || sub?.started_at;
 
-        // 更新 profiles
+        // subscription_end 兜底：Polar 数据缺失时按 plan 推算
+        let endDateIso: string | null = null;
+        if (currentPeriodEnd) {
+          endDateIso = new Date(currentPeriodEnd * 1000).toISOString();
+        } else {
+          const d = new Date();
+          if (plan === 'yearly') d.setFullYear(d.getFullYear() + 1);
+          else d.setMonth(d.getMonth() + 1);
+          endDateIso = d.toISOString();
+        }
+        const startDateIso = subscriptionStart
+          ? new Date(subscriptionStart * 1000).toISOString()
+          : new Date().toISOString();
+
+        // 更新 profiles（含 subscription_type 字段）
         const { error: profileErr } = await supabase
           .from('profiles')
           .update({
             role,
             subscription_status: status,
-            subscription_start: subscriptionStart ? new Date(subscriptionStart * 1000).toISOString() : null,
-            subscription_end: currentPeriodEnd ? new Date(currentPeriodEnd * 1000).toISOString() : null,
+            subscription_start: startDateIso,
+            subscription_end: endDateIso,
+            subscription_type: plan === 'yearly' ? 'yearly' : 'monthly',
             polar_customer_id: polarCustomerId,
             updated_at: new Date().toISOString(),
           })
           .eq('id', userId);
         if (profileErr) console.error('profile update error:', profileErr);
+
+        // 首月特惠：累计一次
+        if (metadata.promotionCode === 'first_month') {
+          await supabase
+            .from('promotion_configs')
+            .update({ current_uses: (sub as any)?.__promo_count || 0 })
+            .eq('discount_type', 'first_month');
+        }
 
         // 写 subscriptions 表
         if (polarSubscriptionId) {
@@ -148,7 +190,7 @@ export async function POST(req: Request) {
             );
           if (subErr) console.error('subscription upsert error:', subErr);
         }
-        console.log(`✅ 用户 ${userId} 订阅 ${event.type}: plan=${plan}, status=${status}`);
+        console.log(`✅ 用户 ${userId} 订阅 ${event.type}: plan=${plan}, status=${status}, end=${endDateIso}`);
         break;
       }
 

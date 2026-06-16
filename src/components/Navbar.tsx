@@ -8,75 +8,45 @@ import UserStatus from './UserStatus';
 // 导航菜单数据结构
 const menuItems = [
   {
-    label: '问道',
-    href: '/wen/chan/ai-zen-master',
+    label: '解惑',
+    href: '/wen',
     items: [
-      {
-        label: '禅修系列',
-        subItems: [
-          { label: 'AI禅师', href: '/wen/chan/ai-zen-master', icon: '🧘' },
-          { label: '公案参究', href: '/wen/chan/gongan', icon: '📿' },
-          { label: '觉醒日记', href: '/wen/chan/awakening', icon: '🌅' },
-        ]
-      },
-      {
-        label: '疗愈系列',
-        subItems: [
-          { label: 'AI疗愈师', href: '/wen/liao/mind', icon: '💚' },
-          { label: '身心疗愈', href: '/wen/liao/healing', icon: '🌸' },
-          { label: 'AI亲子导师', href: '/wen/liao/parenting', icon: '👨‍👩‍👧' },
-        ]
-      },
-      {
-        label: '易理系列',
-        subItems: [
-          { label: 'AI易理师', href: '/wen/yi/yili', icon: '☯️' },
-        ]
-      },
+      { label: 'AI轻解忧', href: '/wen/light-solution', icon: '�' },
+      { label: 'AI易理师', href: '/wen/yi/yili', icon: '☯️' },
+      { label: 'AI疗愈师', href: '/wen/liao/mind', icon: '💚' },
+      { label: 'AI禅师',   href: '/wen/chan/ai-zen-master', icon: '🧘' },
     ]
   },
   {
-    label: '观我',
-    href: '/guan/mingli',
+    label: '内观',
+    href: '/guan',
     items: [
-      {
-        label: '观我系列',
-        subItems: [
-          { label: 'AI生命密码', href: '/guan/mingli', icon: '🔮' },
-          { label: 'AI取名轩', href: '/guan/name', icon: '📝' },
-          { label: 'AI炼体师', href: '/guan/tili', icon: '💪' },
-          { label: 'AI体质观察', href: '/guan/health', icon: '🌿' },
-          { label: '照见前尘', href: '/guan/pastlife', icon: '✨' },
-        ]
-      },
+      { label: 'AI生命密码', href: '/guan/mingli',     icon: '🔮' },
+      { label: 'AI婚姻家庭', href: '/guan/family',     icon: '�' },
+      { label: 'AI事业财富', href: '/guan/career',     icon: '�' },
+      { label: 'AI子女教育', href: '/guan/education',  icon: '🌱' },
+      { label: 'AI家居环境', href: '/guan/house',      icon: '�' },
+      { label: 'AI身心合一', href: '/guan/body',       icon: '🌿' },
     ]
   },
   {
     label: '藏经',
-    href: '/zang/library',
+    href: '/zang',
     items: [
-      {
-        label: '藏经系列',
-        subItems: [
-          { label: '藏经阁', href: '/zang/library', icon: '📚' },
-          { label: '正念冥想', href: '/zang/meditation', icon: '🧘‍♂️' },
-          { label: '法脉源流', href: '/zang/lineage', icon: '📜' },
-        ]
-      },
+      { label: '藏经阁',   href: '/zang/library', icon: '📚' },
+      { label: '术语百科', href: '/zang/terms',   icon: '📖' },
+      { label: '法脉源流', href: '/zang/lineage', icon: '📜' },
     ]
   },
   {
     label: '同修',
     href: '/tong/community',
     items: [
-      {
-        label: '社区系列',
-        subItems: [
-          { label: '同修社区', href: '/tong/community', icon: '🤝' },
-          { label: '个人中心', href: '/tong/profile', icon: '🏠' },
-          { label: '会员订阅', href: '/tong/pricing', icon: '💎' },
-        ]
-      },
+      { label: '社区',     href: '/tong/community',  icon: '🤝' },
+      { label: '每日话题', href: '/tong/daily-topic', icon: '☀️' },
+      { label: '个人中心', href: '/tong/profile',    icon: '🏠' },
+      { label: '会员订阅', href: '/tong/pricing',    icon: '💎' },
+      { label: '邀请好友', href: '/tong/invite',     icon: '🎁' },
     ]
   },
 ];
@@ -223,38 +193,58 @@ export default function Navbar() {
                     onMouseEnter={() => handleMenuEnter(menu.label)}
                     onMouseLeave={handleMenuLeave}
                   >
-                    {menu.items.map((category) => (
-                      <div key={category.label} className="mb-3 last:mb-0">
-                        <div
-                          className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider"
-                          style={{
-                            fontFamily: "'Ma Shan Zheng', cursive, serif",
-                            letterSpacing: '1px',
-                          }}
-                        >
-                          {category.label}
-                        </div>
-                        {category.subItems.map((item) => (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            prefetch={true}
-                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-amber-50 transition-all duration-200 mx-2 rounded-lg"
+                    {menu.items.map((category) =>
+                      'subItems' in category && category.subItems ? (
+                        <div key={category.label} className="mb-3 last:mb-0">
+                          <div
+                            className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider"
                             style={{
                               fontFamily: "'Ma Shan Zheng', cursive, serif",
                               letterSpacing: '1px',
                             }}
-                            onClick={() => {
-                              handleMenuLeave();
-                              closeMobileMenu();
-                            }}
                           >
-                            <span className="text-lg">{item.icon}</span>
-                            <span>{item.label}</span>
-                          </Link>
-                        ))}
-                      </div>
-                    ))}
+                            {category.label}
+                          </div>
+                          {category.subItems.map((item) => (
+                            <Link
+                              key={item.href}
+                              href={item.href}
+                              prefetch={true}
+                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-amber-50 transition-all duration-200 mx-2 rounded-lg"
+                              style={{
+                                fontFamily: "'Ma Shan Zheng', cursive, serif",
+                                letterSpacing: '1px',
+                              }}
+                              onClick={() => {
+                                handleMenuLeave();
+                                closeMobileMenu();
+                              }}
+                            >
+                              <span className="text-lg">{item.icon}</span>
+                              <span>{item.label}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      ) : (
+                        <Link
+                          key={(category as { href: string }).href}
+                          href={(category as { href: string }).href}
+                          prefetch={true}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-amber-50 transition-all duration-200 mx-2 rounded-lg"
+                          style={{
+                            fontFamily: "'Ma Shan Zheng', cursive, serif",
+                            letterSpacing: '1px',
+                          }}
+                          onClick={() => {
+                            handleMenuLeave();
+                            closeMobileMenu();
+                          }}
+                        >
+                          <span className="text-lg">{(category as { icon?: string }).icon}</span>
+                          <span>{category.label}</span>
+                        </Link>
+                      )
+                    )}
                   </div>
                 )}
               </div>
@@ -316,25 +306,38 @@ export default function Navbar() {
                   {/* 移动端子菜单 */}
                   {activeMenu === menu.label && (
                     <div className="bg-gray-50 px-2 py-2 animate-fadeIn">
-                      {menu.items.map((category) => (
-                        <div key={category.label}>
-                          <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">
-                            {category.label}
+                      {menu.items.map((category) =>
+                        'subItems' in category && category.subItems ? (
+                          <div key={category.label}>
+                            <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">
+                              {category.label}
+                            </div>
+                            {category.subItems.map((item) => (
+                              <Link
+                                key={item.href}
+                                href={item.href}
+                                prefetch={true}
+                                className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-white rounded-lg transition-colors block w-full"
+                                onClick={closeMobileMenu}
+                              >
+                                <span className="text-lg">{item.icon}</span>
+                                <span>{item.label}</span>
+                              </Link>
+                            ))}
                           </div>
-                          {category.subItems.map((item) => (
-                            <Link
-                              key={item.href}
-                              href={item.href}
-                              prefetch={true}
-                              className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-white rounded-lg transition-colors block w-full"
-                              onClick={closeMobileMenu}
-                            >
-                              <span className="text-lg">{item.icon}</span>
-                              <span>{item.label}</span>
-                            </Link>
-                          ))}
-                        </div>
-                      ))}
+                        ) : (
+                          <Link
+                            key={(category as { href: string }).href}
+                            href={(category as { href: string }).href}
+                            prefetch={true}
+                            className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-white rounded-lg transition-colors block w-full"
+                            onClick={closeMobileMenu}
+                          >
+                            <span className="text-lg">{(category as { icon?: string }).icon}</span>
+                            <span>{category.label}</span>
+                          </Link>
+                        )
+                      )}
                     </div>
                   )}
                 </div>
