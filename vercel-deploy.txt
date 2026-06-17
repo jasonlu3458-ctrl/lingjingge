@@ -1,1 +1,0 @@
-﻿{"error":{"code":"forbidden","message":"Not authorized: Trying to access resource under scope \"lujie999-s-projects\". You must re-authenticate to this scope or use a token with access to this scope.","saml":true,"teamId":null,"scope":"lujie999-s-projects","enforced":false}}

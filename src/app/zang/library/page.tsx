@@ -347,7 +347,7 @@ export default function LibraryPage() {
             📖 术语百科 ({terms.length} 条)
           </h2>
           <Link
-            href="/zang/library/terms"
+            href="/zang/terms"
             className="text-xs text-[#b88a4a] hover:underline"
           >
             查看全部 →
@@ -364,7 +364,7 @@ export default function LibraryPage() {
             {terms.map((term) => (
               <Link
                 key={term.id}
-                href="/zang/library/terms"
+                href="/zang/terms"
                 className="block bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow border border-gray-100"
               >
                 <div className="flex items-center gap-2 mb-2">

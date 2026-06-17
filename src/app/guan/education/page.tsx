@@ -1,5 +1,5 @@
 import { getUserRole } from '@/lib/auth';
-import PageRenderer from '@/components/PageRenderer';
+import EducationPageClient from './EducationPageClient';
 
 export const metadata = {
   title: 'AI 子女教育 · 灵境阁',
@@ -8,5 +8,5 @@ export const metadata = {
 
 export default async function EducationPage() {
   const userRole = await getUserRole();
-  return <PageRenderer configKey="education" userRole={userRole} />;
+  return <EducationPageClient userRole={userRole} />;
 }

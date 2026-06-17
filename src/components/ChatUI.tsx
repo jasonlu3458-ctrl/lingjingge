@@ -711,8 +711,8 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
           onCancel={handleConsentCancel}
         />
       )}
-      <div className="min-h-screen" style={{ backgroundColor: config.theme }}>
-        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex flex-col" style={{ backgroundColor: config.theme }}>
+        <main className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 flex-1 pb-32">
         {/* 页面标题 */}
         <div className="text-center mb-8">
           <div className="text-4xl mb-2">{config.icon}</div>
@@ -837,7 +837,7 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
 
         {/* 纯对话模式的输入区域 */}
         {isPureChatMode && showForm && config.difyType !== 'awakening' && config.difyType !== 'healing' && (
-          <form onSubmit={handleChatSubmit} className="bg-white bg-opacity-80 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 p-4 mb-6">
+          <form onSubmit={handleChatSubmit} className="sticky bottom-0 z-20 bg-white/95 backdrop-blur-md rounded-lg shadow-[0_-4px_16px_rgba(0,0,0,0.08)] border border-gray-200 p-4 mb-4">
             <div className="flex space-x-4">
               <input
                 type="text"
@@ -1016,7 +1016,7 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
 
         {/* 消息区域 */}
         {messages.length > 0 && (
-          <div className="bg-white bg-opacity-60 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 overflow-hidden mb-6 max-h-[70vh] flex flex-col">
+          <div className="bg-white bg-opacity-60 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 overflow-hidden mb-4 max-h-[60vh] md:max-h-[70vh] flex flex-col">
             <div className="p-6 space-y-4 overflow-y-auto flex-1">
               {messages.map((msg, idx) => {
                 // 处理assistant消息的付费内容分割
