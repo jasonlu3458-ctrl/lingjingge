@@ -1,5 +1,5 @@
 import { getUserRole } from '@/lib/auth';
-import PageRenderer from '@/components/PageRenderer';
+import LightSolutionClient from './LightSolutionClient';
 
 export const metadata = {
   title: 'AI 轻解忧 · 灵境阁',
@@ -7,15 +7,16 @@ export const metadata = {
 };
 
 /**
- * AI 轻解忧页面 - 纯对话 + 报告付费墙
+ * AI 轻解忧页面 - 沉浸式对话流
  *
- * 内部由 ChatUI 完成：
- *  - 纯对话模式（无 formConfig）
- *  - conversationConfig.reportStructure 提供 free / premium 报告内容
- *  - ChatUI 在 assistant 消息渲染时自动调用 <ReportPaywall />
+ * 内部由 LightSolutionClient 完成：
+ *  - 顶部：标题 + 副标题 + AI 开场白
+ *  - 中部：可滚动的消息流（初始化包含 1 条 AI 欢迎气泡 + 3 个快捷倾诉按钮）
+ *  - 底部：sticky 输入区，含免费次数提示
+ *  - 3 轮对话后自动生成报告并展示 ReportPaywall
  */
 export default async function LightSolutionPage() {
   const userRole = await getUserRole();
 
-  return <PageRenderer configKey="light-solution" userRole={userRole} />;
+  return <LightSolutionClient userRole={userRole} />;
 }

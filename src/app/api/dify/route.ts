@@ -40,6 +40,7 @@ const TYPED_KEYS: Record<string, string | undefined> = {
   'awakening':      key('DIFY_AWAKENING_API_KEY',      'NEXT_PUBLIC_DIFY_AWAKENING_API_KEY'),
   'meditation':     key('DIFY_MEDITATION_API_KEY',     'NEXT_PUBLIC_DIFY_MEDITATION_API_KEY'),
   'healing':        key('DIFY_HEALING_API_KEY',        'NEXT_PUBLIC_DIFY_HEALING_API_KEY'),
+  'light-solution': key('DIFY_LIGHT_SOLUTION_API_KEY', 'NEXT_PUBLIC_DIFY_LIGHT_SOLUTION_API_KEY'),
   // 观心 (guan/)
   'health':         key('DIFY_HEALTH_API_KEY',         'NEXT_PUBLIC_DIFY_HEALTH_API_KEY'),
   'mingli':         key('DIFY_MINGLI_API_KEY',         'NEXT_PUBLIC_DIFY_MINGLI_API_KEY'),
@@ -174,7 +175,7 @@ async function proxyToDifyWithKey(
   user: string,
 ): Promise<Response> {
   const body: Record<string, any> = {
-    inputs: { ...(inputs || {}) },
+    inputs: { ...(inputs || {}), user_query: query },
     query,
     response_mode: 'streaming', // ← 关键：Dify 协议字段名是 response_mode
     user: user || 'lingjingge-user',
