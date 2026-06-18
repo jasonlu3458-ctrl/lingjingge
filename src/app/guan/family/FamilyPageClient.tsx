@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useState, useMemo, type FormEvent, type ReactNode } from 'react';
 import type { UserRole } from '@/lib/auth';
 import ReportPaywall from '@/components/ReportPaywall';
 import type {
@@ -148,6 +148,13 @@ export default function FamilyPageClient({ userRole }: FamilyPageClientProps) {
   const [painPoints, setPainPoints] = useState<PainPoint[]>([]);
   const [showPrivate, setShowPrivate] = useState(false);
 
+  // 单人 / 双人 模式判断
+  // 姓名 + 公历/农历日期 都填齐 → 双人；否则走单人「个人姻缘画像」
+  const isPartnerFilled = useMemo(
+    () => !!(partner.name && partner.name.trim() && partner.birthDate),
+    [partner.name, partner.birthDate]
+  );
+
   // 报告
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -172,15 +179,19 @@ export default function FamilyPageClient({ userRole }: FamilyPageClientProps) {
     setPolished('');
     setPolishSource('');
     try {
+      // 单人模式：不传 partner / painPoints / relationshipStatus
+      const body: Record<string, unknown> = {
+        self: { ...self, birthHour: self.birthHour === -1 ? 12 : self.birthHour },
+      };
+      if (isPartnerFilled) {
+        body.partner = { ...partner, birthHour: partner.birthHour === -1 ? 12 : partner.birthHour };
+        body.relationshipStatus = relationshipStatus;
+        body.painPoints = painPoints;
+      }
       const res = await fetch('/api/marriage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          self: { ...self, birthHour: self.birthHour === -1 ? 12 : self.birthHour },
-          partner: { ...partner, birthHour: partner.birthHour === -1 ? 12 : partner.birthHour },
-          relationshipStatus,
-          painPoints,
-        }),
+        body: JSON.stringify(body),
       });
       const json = await res.json();
       if (!json.success) {
@@ -205,15 +216,19 @@ export default function FamilyPageClient({ userRole }: FamilyPageClientProps) {
     setPolished('');
     setPolishSource('');
     try {
+      // 单人模式不传 partner
+      const body: Record<string, unknown> = {
+        self: { ...self, birthHour: self.birthHour === -1 ? 12 : self.birthHour },
+      };
+      if (isPartnerFilled) {
+        body.partner = { ...partner, birthHour: partner.birthHour === -1 ? 12 : partner.birthHour };
+        body.relationshipStatus = relationshipStatus;
+        body.painPoints = painPoints;
+      }
       const res = await fetch('/api/marriage/polish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          self: { ...self, birthHour: self.birthHour === -1 ? 12 : self.birthHour },
-          partner: { ...partner, birthHour: partner.birthHour === -1 ? 12 : partner.birthHour },
-          relationshipStatus,
-          painPoints,
-        }),
+        body: JSON.stringify(body),
       });
       const json = await res.json();
       if (!json.success) {
@@ -230,36 +245,74 @@ export default function FamilyPageClient({ userRole }: FamilyPageClientProps) {
   };
 
   // 准备 ReportPaywall 的免费/付费内容
-  const freePart = report ? [
-    report.free.overview.content,
-    '',
-    `【${report.free.personality.title}】`,
-    `${report.input.self.name}：${report.free.personality.selfTrait}`,
-    `${report.input.partner.name}：${report.free.personality.partnerTrait}`,
-    `融合：${report.free.personality.blend}`,
-    '',
-    `【${report.free.coreMatch.title}】`,
-    ...report.free.coreMatch.bullets.map(b => `· ${b}`),
-    '',
-    `【${report.free.tips.title}】`,
-    ...report.free.tips.items.map((t, i) => `${i + 1}. ${t}`),
-  ].join('\n') : '';
+  const isSingle = report?.personCount === 'single';
+  const partnerName = report?.input.partner.name || '对方';
 
-  const premiumPart = report ? [
-    `【${report.paid.yearlyFortune.title}】`,
-    ...report.paid.yearlyFortune.years.map(y => `${y.year}年：${y.theme}。${y.advice}`),
-    '',
-    `【${report.paid.weddingTiming.title}】`,
-    `最佳结婚年份：${report.paid.weddingTiming.bestYear} 年`,
-    `最佳结婚月份：${report.paid.weddingTiming.bestMonth}`,
-    `理由：${report.paid.weddingTiming.reason}`,
-    '',
-    `【${report.paid.fengShui.title}】`,
-    `卧室：${report.paid.fengShui.bedroom}`,
-    `客厅：${report.paid.fengShui.livingRoom}`,
-    `夫妻位：${report.paid.fengShui.coupleCorner}`,
-    `物品建议：${report.paid.fengShui.items}`,
-  ].join('\n') : '';
+  const freePart = report
+    ? (isSingle
+        ? [
+            `## ${report.free.overview.title}`,
+            report.free.overview.content,
+            '',
+            `【${report.free.personality.title}】`,
+            `${report.input.self.name}：${report.free.personality.selfTrait}`,
+            `理想对象：${report.free.personality.partnerTrait}`,
+            `配偶宫：${report.free.personality.blend}`,
+            '',
+            `【${report.free.coreMatch.title}】`,
+            ...report.free.coreMatch.bullets.map(b => `· ${b}`),
+            '',
+            `【${report.free.tips.title}】`,
+            ...report.free.tips.items.map((t, i) => `${i + 1}. ${t}`),
+            '',
+            `> 💡 想知道未来伴侣的具体模样？现在填上「对方」的信息即可解锁【双人合婚】。`,
+          ].join('\n')
+        : [
+            report.free.overview.content,
+            '',
+            `【${report.free.personality.title}】`,
+            `${report.input.self.name}：${report.free.personality.selfTrait}`,
+            `${partnerName}：${report.free.personality.partnerTrait}`,
+            `融合：${report.free.personality.blend}`,
+            '',
+            `【${report.free.coreMatch.title}】`,
+            ...report.free.coreMatch.bullets.map(b => `· ${b}`),
+            '',
+            `【${report.free.tips.title}】`,
+            ...report.free.tips.items.map((t, i) => `${i + 1}. ${t}`),
+          ].join('\n'))
+    : '';
+
+  const premiumPart = report ? (isSingle
+    ? [
+        `【${report.paid.yearlyFortune.title}】`,
+        ...report.paid.yearlyFortune.years.map(y => `${y.year}年：${y.theme}。${y.advice}`),
+        '',
+        `【${report.paid.weddingTiming.title}】`,
+        `最佳感情时点：${report.paid.weddingTiming.bestYear} 年（${report.paid.weddingTiming.bestMonth}）`,
+        `理由：${report.paid.weddingTiming.reason}`,
+        '',
+        `【${report.paid.fengShui.title}】`,
+        `卧室：${report.paid.fengShui.bedroom}`,
+        `客厅：${report.paid.fengShui.livingRoom}`,
+        `桃花位：${report.paid.fengShui.coupleCorner}`,
+        `物品建议：${report.paid.fengShui.items}`,
+      ].join('\n')
+    : [
+        `【${report.paid.yearlyFortune.title}】`,
+        ...report.paid.yearlyFortune.years.map(y => `${y.year}年：${y.theme}。${y.advice}`),
+        '',
+        `【${report.paid.weddingTiming.title}】`,
+        `最佳结婚年份：${report.paid.weddingTiming.bestYear} 年`,
+        `最佳结婚月份：${report.paid.weddingTiming.bestMonth}`,
+        `理由：${report.paid.weddingTiming.reason}`,
+        '',
+        `【${report.paid.fengShui.title}】`,
+        `卧室：${report.paid.fengShui.bedroom}`,
+        `客厅：${report.paid.fengShui.livingRoom}`,
+        `夫妻位：${report.paid.fengShui.coupleCorner}`,
+        `物品建议：${report.paid.fengShui.items}`,
+      ].join('\n')) : '';
 
   return (
     <div className="flex flex-col" style={{ backgroundColor: FAMILY_THEME }}>
@@ -294,6 +347,13 @@ export default function FamilyPageClient({ userRole }: FamilyPageClientProps) {
             🪷 请填写双方信息
           </h2>
 
+          {/* 单人模式引导：未填对方时的小提示 */}
+          {!isPartnerFilled && (
+            <div className="mb-4 p-3 rounded-lg bg-rose-50 border border-rose-200 text-sm text-rose-700" style={{ fontFamily: FONT_KAI }}>
+              ✨ 当前为「<strong>个人姻缘画像</strong>」模式 —— 下方填上「对方」信息即可解锁「双人合婚」。
+            </div>
+          )}
+
           {/* 双人并排：左右镜像 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <PersonColumn
@@ -302,12 +362,33 @@ export default function FamilyPageClient({ userRole }: FamilyPageClientProps) {
               onChange={setSelf}
               accent="rose"
             />
-            <PersonColumn
-              title="🌸 对方"
-              data={partner}
-              onChange={setPartner}
-              accent="amber"
-            />
+            <div className="relative">
+              <PersonColumn
+                title="🌸 对方"
+                data={partner}
+                onChange={setPartner}
+                accent="amber"
+                disabled={!isPartnerFilled}
+              />
+              {/* 单人模式：对方列半透明灰底 + 引导文案 */}
+              {!isPartnerFilled && (
+                <div
+                  className="absolute inset-0 rounded-lg bg-gray-200/70 backdrop-blur-[1px] flex items-center justify-center pointer-events-none"
+                  style={{ fontFamily: FONT_KAI }}
+                >
+                  <p className="text-center text-gray-700 text-sm px-6 leading-relaxed">
+                    <span className="block text-base font-semibold mb-1">🔒 双人合婚未解锁</span>
+                    <span className="text-xs text-gray-500">
+                      *请在下方输入对方信息，即可解锁双人合盘*
+                    </span>
+                    <br />
+                    <span className="text-xs text-rose-600 mt-2 inline-block">
+                      （继续填写即可激活「对方」列）
+                    </span>
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* 关系状态 */}
@@ -388,7 +469,11 @@ export default function FamilyPageClient({ userRole }: FamilyPageClientProps) {
             className="mt-6 w-full bg-rose-700 text-white py-3 rounded-lg font-semibold hover:bg-rose-800 transition disabled:opacity-60 disabled:cursor-not-allowed"
             style={{ fontFamily: FONT_KAI }}
           >
-            {loading ? '⏳ 排盘比对中…' : '🙏 生成专属合婚报告'}
+            {loading
+              ? '⏳ 排盘中…'
+              : isPartnerFilled
+                ? '🙏 生成专属合婚报告'
+                : '✨ 生成我的单人姻缘解析'}
           </button>
 
           {errorMsg && (
@@ -402,21 +487,37 @@ export default function FamilyPageClient({ userRole }: FamilyPageClientProps) {
         {report && (
           <div id="family-report" className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-rose-200 p-6 mb-6">
             <div className="text-center mb-4">
-              <div className="text-3xl mb-1">💞</div>
+              <div className="text-3xl mb-1">{isSingle ? '🌸' : '💞'}</div>
               <h2 className="text-2xl font-bold text-gray-800" style={{ fontFamily: FONT_KAI }}>
-                {report.input.self.name} ❤️ {report.input.partner.name}
+                {isSingle
+                  ? `${report.input.self.name} · 你 · 一个人的姻缘密码`
+                  : `${report.input.self.name} ❤️ ${report.input.partner.name}`}
               </h2>
-              <p className="text-sm text-gray-500 mt-1" style={{ fontFamily: FONT_KAI }}>
-                合婚分数：<span className="text-2xl font-bold text-rose-700">{report.compatibility.score}</span> 分
-                <span className="ml-2 px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-xs">
-                  {report.compatibility.level}
-                </span>
-              </p>
-              <p className="text-xs text-gray-500 mt-1" style={{ fontFamily: FONT_KAI }}>
-                {report.input.self.name}：{report.selfBazi.yearGanzhi} {report.selfBazi.monthGanzhi} {report.selfBazi.dayGanzhi}（{report.selfBazi.fiveElement}）
-                {'  ·  '}
-                {report.input.partner.name}：{report.partnerBazi.yearGanzhi} {report.partnerBazi.monthGanzhi} {report.partnerBazi.dayGanzhi}（{report.partnerBazi.fiveElement}）
-              </p>
+              {isSingle ? (
+                <p className="text-sm text-gray-500 mt-1" style={{ fontFamily: FONT_KAI }}>
+                  八字：<span className="text-rose-700">{report.selfBazi.yearGanzhi} {report.selfBazi.monthGanzhi} {report.selfBazi.dayGanzhi}</span>
+                  <span className="ml-2 text-gray-400">（{report.selfBazi.fiveElement}）</span>
+                  {report.personal && (
+                    <span className="ml-2 px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-xs">
+                      桃花：{report.personal.peachBlossom.label}
+                    </span>
+                  )}
+                </p>
+              ) : (
+                <p className="text-sm text-gray-500 mt-1" style={{ fontFamily: FONT_KAI }}>
+                  合婚分数：<span className="text-2xl font-bold text-rose-700">{report.compatibility!.score}</span> 分
+                  <span className="ml-2 px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-xs">
+                    {report.compatibility!.level}
+                  </span>
+                </p>
+              )}
+              {!isSingle && (
+                <p className="text-xs text-gray-500 mt-1" style={{ fontFamily: FONT_KAI }}>
+                  {report.input.self.name}：{report.selfBazi.yearGanzhi} {report.selfBazi.monthGanzhi} {report.selfBazi.dayGanzhi}（{report.selfBazi.fiveElement}）
+                  {'  ·  '}
+                  {report.input.partner.name}：{report.partnerBazi!.yearGanzhi} {report.partnerBazi!.monthGanzhi} {report.partnerBazi!.dayGanzhi}（{report.partnerBazi!.fiveElement}）
+                </p>
+              )}
             </div>
 
             {/* 免费报告 4 项 + ReportPaywall */}
@@ -483,14 +584,15 @@ interface PersonColumnProps {
   data: PersonForm;
   onChange: (next: PersonForm) => void;
   accent: 'rose' | 'amber';
+  disabled?: boolean;   // 单人模式：对方列半透灰
 }
 
-function PersonColumn({ title, data, onChange, accent }: PersonColumnProps) {
+function PersonColumn({ title, data, onChange, accent, disabled }: PersonColumnProps) {
   const borderClass = accent === 'rose' ? 'border-rose-200' : 'border-amber-200';
   const ringClass = accent === 'rose' ? 'focus:ring-rose-400' : 'focus:ring-amber-400';
 
   return (
-    <div className={`p-4 border-2 ${borderClass} rounded-lg bg-white/60`}>
+    <div className={`p-4 border-2 ${borderClass} rounded-lg bg-white/60 ${disabled ? 'opacity-50' : ''}`}>
       <h3 className="text-base font-bold text-gray-800 mb-3" style={{ fontFamily: FONT_KAI }}>
         {title}
       </h3>
@@ -504,7 +606,8 @@ function PersonColumn({ title, data, onChange, accent }: PersonColumnProps) {
           onChange={e => onChange({ ...data, name: e.target.value })}
           maxLength={20}
           required
-          className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 ${ringClass} text-sm`}
+          disabled={disabled}
+          className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 ${ringClass} text-sm ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
           style={{ fontFamily: FONT_KAI }}
           placeholder="请输入姓名"
         />
@@ -514,21 +617,23 @@ function PersonColumn({ title, data, onChange, accent }: PersonColumnProps) {
       <div className="mb-3">
         <label className="block text-xs text-gray-600 mb-1" style={{ fontFamily: FONT_KAI }}>性别 *</label>
         <div className="flex gap-4">
-          <label className="flex items-center gap-1 text-sm" style={{ fontFamily: FONT_KAI }}>
+          <label className={`flex items-center gap-1 text-sm ${disabled ? 'cursor-not-allowed' : ''}`} style={{ fontFamily: FONT_KAI }}>
             <input
               type="radio"
               value="female"
               checked={data.gender === 'female'}
               onChange={() => onChange({ ...data, gender: 'female' })}
+              disabled={disabled}
             />
             <span>女</span>
           </label>
-          <label className="flex items-center gap-1 text-sm" style={{ fontFamily: FONT_KAI }}>
+          <label className={`flex items-center gap-1 text-sm ${disabled ? 'cursor-not-allowed' : ''}`} style={{ fontFamily: FONT_KAI }}>
             <input
               type="radio"
               value="male"
               checked={data.gender === 'male'}
               onChange={() => onChange({ ...data, gender: 'male' })}
+              disabled={disabled}
             />
             <span>男</span>
           </label>
@@ -543,7 +648,8 @@ function PersonColumn({ title, data, onChange, accent }: PersonColumnProps) {
           value={data.birthDate}
           onChange={e => onChange({ ...data, birthDate: e.target.value })}
           required
-          className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 ${ringClass} text-sm`}
+          disabled={disabled}
+          className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 ${ringClass} text-sm ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
           style={{ fontFamily: FONT_KAI }}
         />
       </div>
@@ -554,7 +660,8 @@ function PersonColumn({ title, data, onChange, accent }: PersonColumnProps) {
         <select
           value={data.birthHour}
           onChange={e => onChange({ ...data, birthHour: Number(e.target.value) })}
-          className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 ${ringClass} text-sm`}
+          disabled={disabled}
+          className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 ${ringClass} text-sm ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
           style={{ fontFamily: FONT_KAI }}
         >
           {HOUR_OPTIONS.map(h => (
@@ -567,21 +674,23 @@ function PersonColumn({ title, data, onChange, accent }: PersonColumnProps) {
       <div>
         <label className="block text-xs text-gray-600 mb-1" style={{ fontFamily: FONT_KAI }}>历法 *</label>
         <div className="flex gap-4">
-          <label className="flex items-center gap-1 text-sm" style={{ fontFamily: FONT_KAI }}>
+          <label className={`flex items-center gap-1 text-sm ${disabled ? 'cursor-not-allowed' : ''}`} style={{ fontFamily: FONT_KAI }}>
             <input
               type="radio"
               value="solar"
               checked={data.calendarType === 'solar'}
               onChange={() => onChange({ ...data, calendarType: 'solar' })}
+              disabled={disabled}
             />
             <span>阳历</span>
           </label>
-          <label className="flex items-center gap-1 text-sm" style={{ fontFamily: FONT_KAI }}>
+          <label className={`flex items-center gap-1 text-sm ${disabled ? 'cursor-not-allowed' : ''}`} style={{ fontFamily: FONT_KAI }}>
             <input
               type="radio"
               value="lunar"
               checked={data.calendarType === 'lunar'}
               onChange={() => onChange({ ...data, calendarType: 'lunar' })}
+              disabled={disabled}
             />
             <span>农历</span>
           </label>

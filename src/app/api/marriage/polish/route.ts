@@ -27,8 +27,9 @@ const PersonSchema = z.object({
 
 const InputSchema = z.object({
   self: PersonSchema,
-  partner: PersonSchema,
-  relationshipStatus: z.enum(['dating', 'early-marriage', 'long-marriage', 'crisis']),
+  // partner 可选：单人模式只传 self
+  partner: PersonSchema.optional(),
+  relationshipStatus: z.enum(['dating', 'early-marriage', 'long-marriage', 'crisis']).default('dating'),
   painPoints: z.array(z.enum(['personality', 'inlaws', 'wealth', 'children', 'private'])).default([]),
   user: z.string().optional(),
   conversation_id: z.string().optional(),
@@ -40,7 +41,12 @@ const InputSchema = z.object({
  */
 function reportToInputs(report: ReturnType<typeof checkMarriageRules>) {
   const c = report.compatibility;
+  const isSingle = report.personCount === 'single';
+  const p = report.personal;
   return {
+    // 场景标记 —— Dify 端用 if/else 区分
+    person_count: isSingle ? 'single' : 'both',
+
     // 双方基本信息
     self_name: report.input.self.name,
     self_gender: report.input.self.gender,
@@ -58,52 +64,73 @@ function reportToInputs(report: ReturnType<typeof checkMarriageRules>) {
 
     partner_name: report.input.partner.name,
     partner_gender: report.input.partner.gender,
-    partner_solar_date: report.partnerBazi.solarDate,
-    partner_lunar_date: report.partnerBazi.lunarDate,
-    partner_bazi_year: report.partnerBazi.yearGanzhi,
-    partner_bazi_month: report.partnerBazi.monthGanzhi,
-    partner_bazi_day: report.partnerBazi.dayGanzhi,
-    partner_zodiac: report.partnerBazi.yearZodiac,
-    partner_day_stem: report.partnerBazi.dayStem,
-    partner_day_branch: report.partnerBazi.dayBranch,
-    partner_five_element: report.partnerBazi.fiveElement,
-    partner_da_yun_1: report.partnerBazi.daYun[0]?.ganzhi || '',
-    partner_da_yun_2: report.partnerBazi.daYun[1]?.ganzhi || '',
+    partner_solar_date: report.partnerBazi?.solarDate || '',
+    partner_lunar_date: report.partnerBazi?.lunarDate || '',
+    partner_bazi_year: report.partnerBazi?.yearGanzhi || '',
+    partner_bazi_month: report.partnerBazi?.monthGanzhi || '',
+    partner_bazi_day: report.partnerBazi?.dayGanzhi || '',
+    partner_zodiac: report.partnerBazi?.yearZodiac || '',
+    partner_day_stem: report.partnerBazi?.dayStem || '',
+    partner_day_branch: report.partnerBazi?.dayBranch || '',
+    partner_five_element: report.partnerBazi?.fiveElement || '',
+    partner_da_yun_1: report.partnerBazi?.daYun[0]?.ganzhi || '',
+    partner_da_yun_2: report.partnerBazi?.daYun[1]?.ganzhi || '',
+
+    // 单人模式专有
+    peach_blossom_label: p?.peachBlossom.label || '',
+    peach_blossom_source: p?.peachBlossom.source || '',
+    spouse_palace_branch: p?.spousePalace.branch || '',
+    spouse_palace_meaning: p?.spousePalace.meaning || '',
+    future_trend_window: p?.futureTrend.window || '',
+    future_trend_summary: p?.futureTrend.summary || '',
+    ideal_partner_day_stem: p?.idealPartner.dayStem || '',
+    ideal_partner_five_element: p?.idealPartner.fiveElement || '',
+    ideal_partner_traits: p?.idealPartner.traits?.join('、') || '',
 
     // 关系状态与痛点
     relationship_status: report.input.relationshipStatus,
     pain_points: report.input.painPoints.join(','),
 
     // 合婚比对结果
-    compat_score: c.score,
-    compat_level: c.level,
-    compat_level_hint: c.levelHint,
-    year_branch_relation: c.yearBranch.relation,
-    year_branch_detail: c.yearBranch.detail,
-    day_stem_relation: c.dayStem.relation,
-    day_stem_detail: c.dayStem.detail,
-    day_branch_relation: c.dayBranch.relation,
-    day_branch_detail: c.dayBranch.detail,
-    shensha_items: c.shenSha.items.join('、') || '无',
-    shensha_description: c.shenSha.description,
+    compat_score: c?.score ?? 0,
+    compat_level: c?.level || '需经营',
+    compat_level_hint: c?.levelHint || '',
+    year_branch_relation: c?.yearBranch.relation || '无显著关系',
+    year_branch_detail: c?.yearBranch.detail || '',
+    day_stem_relation: c?.dayStem.relation || '中性',
+    day_stem_detail: c?.dayStem.detail || '',
+    day_branch_relation: c?.dayBranch.relation || '无显著关系',
+    day_branch_detail: c?.dayBranch.detail || '',
+    shensha_items: c?.shenSha.items.join('、') || p?.peachBlossom.label || '无',
+    shensha_description: c?.shenSha.description || '',
 
     // 报告类型
-    report_type: 'marriage',
-    // 给 Dify 的结构化文本（含双方八字 + 比对 + 关系状态 + 痛点）
-    report_context: [
-      `【${report.input.self.name}】${report.selfBazi.solarDate}（农历 ${report.selfBazi.lunarDate}），生肖 ${report.selfBazi.yearZodiac}，日柱 ${report.selfBazi.dayGanzhi}（${report.selfBazi.fiveElement}），大运 ${report.selfBazi.daYun.map(d => d.ganzhi).join(' → ')}`,
-      `【${report.input.partner.name}】${report.partnerBazi.solarDate}（农历 ${report.partnerBazi.lunarDate}），生肖 ${report.partnerBazi.yearZodiac}，日柱 ${report.partnerBazi.dayGanzhi}（${report.partnerBazi.fiveElement}），大运 ${report.partnerBazi.daYun.map(d => d.ganzhi).join(' → ')}`,
-      `【合婚分数】${c.score} 分（${c.level}）—— ${c.levelHint}`,
-      `【年支】${c.yearBranch.self} 与 ${c.yearBranch.partner}：${c.yearBranch.relation} —— ${c.yearBranch.detail}`,
-      `【日干】${c.dayStem.self} 与 ${c.dayStem.partner}：${c.dayStem.relation} —— ${c.dayStem.detail}`,
-      `【日支】${c.dayBranch.self} 与 ${c.dayBranch.partner}：${c.dayBranch.relation} —— ${c.dayBranch.detail}`,
-      `【神煞】${c.shenSha.items.join('、') || '无'} —— ${c.shenSha.description}`,
-      `【关系状态】${relationshipStatusText(report.input.relationshipStatus)}`,
-      `【核心痛点】${painPointsText(report.input.painPoints)}`,
-      `【付费内容-流年】${report.paid.yearlyFortune.years.map(y => `${y.year}年：${y.theme}`).join('；')}`,
-      `【付费内容-婚期】${report.paid.weddingTiming.bestYear} 年 ${report.paid.weddingTiming.bestMonth} —— ${report.paid.weddingTiming.reason}`,
-      `【付费内容-风水】${report.paid.fengShui.bedroom}；客厅：${report.paid.fengShui.livingRoom}；夫妻位：${report.paid.fengShui.coupleCorner}；物品：${report.paid.fengShui.items}`,
-    ].join('\n'),
+    report_type: isSingle ? 'marriage-single' : 'marriage',
+    // 给 Dify 的结构化文本
+    report_context: isSingle
+      ? [
+          `【${report.input.self.name}】${report.selfBazi.solarDate}（农历 ${report.selfBazi.lunarDate}），生肖 ${report.selfBazi.yearZodiac}，日柱 ${report.selfBazi.dayGanzhi}（${report.selfBazi.fiveElement}），大运 ${report.selfBazi.daYun.map(d => d.ganzhi).join(' → ')}`,
+          `【桃花星】${p?.peachBlossom.label}——${p?.peachBlossom.source}`,
+          `【配偶宫】日支「${p?.spousePalace.branch}」：${p?.spousePalace.meaning}`,
+          `【理想对象】日干 ${p?.idealPartner.dayStem}（${p?.idealPartner.fiveElement}），${p?.idealPartner.traits.join('、')}`,
+          `【感情窗口】${p?.futureTrend.window} —— ${p?.futureTrend.summary}`,
+          `【个人流年】${report.paid.yearlyFortune.years.map(y => `${y.year}年：${y.theme}`).join('；')}`,
+          `【单人风水】${report.paid.fengShui.bedroom}；客厅：${report.paid.fengShui.livingRoom}；桃花位：${report.paid.fengShui.coupleCorner}；物品：${report.paid.fengShui.items}`,
+        ].join('\n')
+      : [
+          `【${report.input.self.name}】${report.selfBazi.solarDate}（农历 ${report.selfBazi.lunarDate}），生肖 ${report.selfBazi.yearZodiac}，日柱 ${report.selfBazi.dayGanzhi}（${report.selfBazi.fiveElement}），大运 ${report.selfBazi.daYun.map(d => d.ganzhi).join(' → ')}`,
+          `【${report.input.partner.name}】${report.partnerBazi!.solarDate}（农历 ${report.partnerBazi!.lunarDate}），生肖 ${report.partnerBazi!.yearZodiac}，日柱 ${report.partnerBazi!.dayGanzhi}（${report.partnerBazi!.fiveElement}），大运 ${report.partnerBazi!.daYun.map(d => d.ganzhi).join(' → ')}`,
+          `【合婚分数】${c!.score} 分（${c!.level}）—— ${c!.levelHint}`,
+          `【年支】${c!.yearBranch.self} 与 ${c!.yearBranch.partner}：${c!.yearBranch.relation} —— ${c!.yearBranch.detail}`,
+          `【日干】${c!.dayStem.self} 与 ${c!.dayStem.partner}：${c!.dayStem.relation} —— ${c!.dayStem.detail}`,
+          `【日支】${c!.dayBranch.self} 与 ${c!.dayBranch.partner}：${c!.dayBranch.relation} —— ${c!.dayBranch.detail}`,
+          `【神煞】${c!.shenSha.items.join('、') || '无'} —— ${c!.shenSha.description}`,
+          `【关系状态】${relationshipStatusText(report.input.relationshipStatus)}`,
+          `【核心痛点】${painPointsText(report.input.painPoints)}`,
+          `【付费内容-流年】${report.paid.yearlyFortune.years.map(y => `${y.year}年：${y.theme}`).join('；')}`,
+          `【付费内容-婚期】${report.paid.weddingTiming.bestYear} 年 ${report.paid.weddingTiming.bestMonth} —— ${report.paid.weddingTiming.reason}`,
+          `【付费内容-风水】${report.paid.fengShui.bedroom}；客厅：${report.paid.fengShui.livingRoom}；夫妻位：${report.paid.fengShui.coupleCorner}；物品：${report.paid.fengShui.items}`,
+        ].join('\n'),
   };
 }
 
@@ -181,38 +208,77 @@ export async function POST(request: NextRequest) {
 
     const { self, partner, relationshipStatus, painPoints, user, conversation_id } = parsed.data;
 
-    // 1. 本地算双八字 + 比对
+    // 1. 本地算（单人 / 双人自动分流）
     const report = checkMarriageRules({ self, partner, relationshipStatus, painPoints });
     const inputs = reportToInputs(report);
+    const isSingle = report.personCount === 'single';
 
-    // 2. 构造 query —— 给 Dify 的明确指令
-    const query = `你是婚姻家庭咨询师。请基于 ${report.input.self.name}（${inputs.self_solar_date}，${inputs.self_zodiac}年，日柱 ${inputs.self_bazi_day}）与 ${report.input.partner.name}（${inputs.partner_solar_date}，${inputs.partner_zodiac}年，日柱 ${inputs.partner_bazi_day}）的八字比对结果（合婚分数 ${inputs.compat_score}，${inputs.compat_level}），结合【关系状态：${relationshipStatusText(relationshipStatus)}】和【核心痛点：${painPointsText(painPoints)}】，写一份 600-800 字的婚姻关系报告。\n\n要求：\n1. 客观、温暖、有可操作性，避免绝对化判断；\n2. 开头用一句话点题（不要"在八字中"开头的程式化语言）；\n3. 中间按痛点顺序给 2-4 条具体建议（每条 2-3 句话）；\n4. 结尾用 1 句温柔鼓励；\n5. 文中必须出现：${report.input.self.name}、${report.input.partner.name}、当前关系状态、用户最关心的痛点。`;
+    // 2. 构造 query —— 单人 / 双人 分支
+    const query = isSingle
+      ? `你是婚姻家庭咨询师。用户「${report.input.self.name}」是 ${inputs.self_gender === 'female' ? '女性' : '男性'}，${inputs.self_solar_date}（${inputs.self_zodiac}年），日柱 ${inputs.self_bazi_day}（${inputs.self_five_element}）。
+
+请基于其八字信息（桃花星「${inputs.peach_blossom_label}」、配偶宫在日支「${inputs.spouse_palace_branch}」、理想对象日干「${inputs.ideal_partner_day_stem}」属${inputs.ideal_partner_five_element}、${inputs.ideal_partner_traits}），输出一份 500-700 字的【个人情感画像报告】，标题为《你 · 一个人的姻缘密码》。
+
+要求：
+1. 客观、温暖、有可操作性，避免绝对化判断；
+2. 开头用一句话点题（不要"在八字中"开头的程式化语言）；
+3. 中间按"桃花星 / 配偶宫 / 理想对象 / 感情窗口"四要素给 3-4 条具体洞察（每条 2-3 句话）；
+4. 结尾用 1 句温柔鼓励，并点出"想知道未来伴侣的具体模样？可解锁【双人合婚】"；
+5. 文中必须出现：${report.input.self.name}、桃花、配偶宫、理想对象、当前大运「${inputs.self_da_yun_1}」。`
+      : `你是婚姻家庭咨询师。请基于 ${report.input.self.name}（${inputs.self_solar_date}，${inputs.self_zodiac}年，日柱 ${inputs.self_bazi_day}）与 ${report.input.partner.name}（${inputs.partner_solar_date}，${inputs.partner_zodiac}年，日柱 ${inputs.partner_bazi_day}）的八字比对结果（合婚分数 ${inputs.compat_score}，${inputs.compat_level}），结合【关系状态：${relationshipStatusText(relationshipStatus)}】和【核心痛点：${painPointsText(painPoints)}】，写一份 600-800 字的婚姻关系报告。
+
+要求：
+1. 客观、温暖、有可操作性，避免绝对化判断；
+2. 开头用一句话点题（不要"在八字中"开头的程式化语言）；
+3. 中间按痛点顺序给 2-4 条具体建议（每条 2-3 句话）；
+4. 结尾用 1 句温柔鼓励；
+5. 文中必须出现：${report.input.self.name}、${report.input.partner.name}、当前关系状态、用户最关心的痛点。`;
 
     // 3. 调真实 Dify
     try {
+      const userKey = user || (isSingle
+        ? `single-${self.name}-${self.birthDate}`
+        : `mrg-${self.name}-${partner!.name}-${self.birthDate}`);
       const polished = await callDify(
         inputs,
         query,
-        user || `mrg-${self.name}-${partner.name}-${self.birthDate}`,
+        userKey,
         conversation_id
       );
-      return NextResponse.json({ success: true, source: 'dify', polished, conversation_id });
+      return NextResponse.json({ success: true, source: 'dify', polished, conversation_id, personCount: report.personCount });
     } catch (err) {
       console.warn('[api/marriage/polish] Dify 失败，回退到本地模板:', err);
-      // 降级：拼装一份本地模板
-      const fallback = [
-        `💞 ${report.input.self.name} 与 ${report.input.partner.name} —— 合婚简报`,
-        `双方缘分：${report.compatibility.score} 分（${report.compatibility.level}）。${report.compatibility.levelHint}`,
-        ``,
-        `【核心匹配】`,
-        ...report.free.coreMatch.bullets.map(b => `· ${b}`),
-        ``,
-        `【相处建议】`,
-        ...report.free.tips.items.map((t, i) => `${i + 1}. ${t}`),
-        ``,
-        `（注：本次未接通 Dify，已使用本地模板。原始错误：${err instanceof Error ? err.message : '未知'}）`,
-      ].join('\n');
-      return NextResponse.json({ success: true, source: 'local-template', polished: fallback });
+      // 降级：拼装一份本地模板（单人 / 双人）
+      const fallback = isSingle
+        ? [
+            `🌸 ${report.input.self.name} —— 你的姻缘密码`,
+            `${report.personal!.futureTrend.summary}`,
+            ``,
+            `【桃花星】${report.personal!.peachBlossom.label}——${report.personal!.peachBlossom.source}`,
+            `【配偶宫】日支「${report.personal!.spousePalace.branch}」：${report.personal!.spousePalace.meaning}`,
+            `【理想对象】日干 ${report.personal!.idealPartner.dayStem}（${report.personal!.idealPartner.fiveElement}），${report.personal!.idealPartner.traits.join('、')}`,
+            `【感情窗口】${report.personal!.futureTrend.window}`,
+            ``,
+            `【现阶段建议】`,
+            ...report.personal!.cautions.map((c, i) => `${i + 1}. ${c}`),
+            ``,
+            `💡 想看看未来伴侣的具体模样？解锁【双人合婚】即可。`,
+            ``,
+            `（注：本次未接通 Dify，已使用本地模板。原始错误：${err instanceof Error ? err.message : '未知'}）`,
+          ].join('\n')
+        : [
+            `💞 ${report.input.self.name} 与 ${report.input.partner.name} —— 合婚简报`,
+            `双方缘分：${report.compatibility!.score} 分（${report.compatibility!.level}）。${report.compatibility!.levelHint}`,
+            ``,
+            `【核心匹配】`,
+            ...report.free.coreMatch.bullets.map(b => `· ${b}`),
+            ``,
+            `【相处建议】`,
+            ...report.free.tips.items.map((t, i) => `${i + 1}. ${t}`),
+            ``,
+            `（注：本次未接通 Dify，已使用本地模板。原始错误：${err instanceof Error ? err.message : '未知'}）`,
+          ].join('\n');
+      return NextResponse.json({ success: true, source: 'local-template', polished: fallback, personCount: report.personCount });
     }
   } catch (err) {
     console.error('[api/marriage/polish] 错误:', err);

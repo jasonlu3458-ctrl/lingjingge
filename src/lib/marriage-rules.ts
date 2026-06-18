@@ -28,9 +28,32 @@ export type PainPoint = 'personality' | 'inlaws' | 'wealth' | 'children' | 'priv
 
 export interface MarriageInput {
   self: PersonInput;
-  partner: PersonInput;
-  relationshipStatus: RelationshipStatus;
-  painPoints: PainPoint[];
+  partner?: PersonInput;   // 单人模式可省略
+  relationshipStatus?: RelationshipStatus;  // 单人模式可省略
+  painPoints?: PainPoint[];
+}
+
+/** 单人模式 —— 「你 · 一个人的姻缘密码」 个人情感画像 */
+export interface PersonalPortrait {
+  peachBlossom: {
+    label: string;            // 红鸾 / 天喜 / 咸池 / 桃花正印
+    source: string;           // 推断来源
+    active: boolean;          // 是否为「主动型」桃花（对感情有兴趣的时机）
+  };
+  spousePalace: {
+    branch: string;           // 日支（如「午」）
+    meaning: string;          // 配偶宫含义
+  };
+  futureTrend: {
+    window: string;           // 未来 N 年的感情窗口
+    summary: string;          // 一句话概括
+  };
+  idealPartner: {
+    dayStem: string;          // 理想对象的日干
+    fiveElement: string;      // 理想对象的五行
+    traits: string[];         // 2-3 个性格特征
+  };
+  cautions: string[];         // 1-2 条提醒
 }
 
 export interface BaziInfo {
@@ -89,8 +112,10 @@ export interface MarriageReport {
     painPoints: PainPoint[];
   };
   selfBazi: BaziInfo;
-  partnerBazi: BaziInfo;
-  compatibility: CompatibilityResult;
+  partnerBazi?: BaziInfo;             // 单人模式缺省
+  compatibility?: CompatibilityResult; // 单人模式缺省
+  personal?: PersonalPortrait;          // 单人模式有，双人模式缺省
+  personCount: 'single' | 'both';     // 一目了然，Dify 用得上
   free: {
     overview: { title: string; content: string; source: string };
     personality: { title: string; selfTrait: string; partnerTrait: string; blend: string };
@@ -290,6 +315,48 @@ function checkGuasu(yearBranch: string) {
 // ============================================================
 export function checkMarriageRules(input: MarriageInput): MarriageReport {
   const selfBazi = buildBazi(input.self);
+
+  // 单人模式：partner 缺省 → 输出「你 · 一个人的姻缘密码」
+  if (!input.partner) {
+    const personal = buildPersonalPortrait(selfBazi, input.self.gender);
+    return {
+      input: {
+        self: { name: input.self.name, gender: input.self.gender, birthDate: input.self.birthDate },
+        partner: { name: '', gender: 'female', birthDate: '' },
+        relationshipStatus: input.relationshipStatus || 'dating',
+        painPoints: input.painPoints || [],
+      },
+      selfBazi,
+      personCount: 'single',
+      personal,
+      free: {
+        overview: { title: '🌸 你 · 一个人的姻缘密码', content: personal.futureTrend.summary, source: '基于日柱' },
+        personality: {
+          title: '🧬 个人情感画像',
+          selfTrait: `日柱 ${selfBazi.dayGanzhi}（${selfBazi.fiveElement}），${personal.idealPartner.traits.join('、')}。`,
+          partnerTrait: `理想对象日干：${personal.idealPartner.dayStem}（${personal.idealPartner.fiveElement}）。`,
+          blend: `配偶宫在「${personal.spousePalace.branch}」—— ${personal.spousePalace.meaning}`,
+        },
+        coreMatch: {
+          title: '🌟 核心姻缘要素',
+          bullets: [
+            `【桃花星】${personal.peachBlossom.label}——${personal.peachBlossom.source}`,
+            `【配偶宫】日支「${personal.spousePalace.branch}」：${personal.spousePalace.meaning}`,
+            `【理想对象】日干 ${personal.idealPartner.dayStem}（${personal.idealPartner.fiveElement}）`,
+            `【感情窗口】${personal.futureTrend.window}`,
+          ],
+        },
+        tips: { title: '📖 现阶段建议', items: personal.cautions },
+      },
+      paid: {
+        yearlyFortune: { title: '📅 个人未来 3 年流年', years: buildSingleYearlyFortune(selfBazi) },
+        weddingTiming: { title: '💍 最佳感情时点', bestYear: parseInt(selfBazi.daYun[0]?.ganzhi?.match(/\d+/)?.[0] || '0') + 25 || new Date().getFullYear() + 2, bestMonth: '立春后、霜降前', reason: `结合大运「${selfBazi.daYun[0]?.ganzhi || '未知'}」与桃花窗口推算。` },
+        fengShui: { title: '🛏️ 单人桃花风水', bedroom: personal.idealPartner.fiveElement === '水' ? '床头靠北，水主智，主睡安稳。' : '床头靠东或东南，木主生发，宜养绿植。', livingRoom: '客厅摆一对成双花瓶或鸳鸯摆件，引动「双」的能量。', coupleCorner: '桃花位在出生年支的对冲位（具体请咨询），可摆粉色或红色鲜花。', items: '床头放粉色水晶（粉晶）或一对小夜灯。' },
+      },
+    };
+  }
+
+  // 双人模式
   const partnerBazi = buildBazi(input.partner);
 
   // 1. 年支
@@ -327,12 +394,13 @@ export function checkMarriageRules(input: MarriageInput): MarriageReport {
     input: {
       self: { name: input.self.name, gender: input.self.gender, birthDate: input.self.birthDate },
       partner: { name: input.partner.name, gender: input.partner.gender, birthDate: input.partner.birthDate },
-      relationshipStatus: input.relationshipStatus,
-      painPoints: input.painPoints,
+      relationshipStatus: input.relationshipStatus || 'dating',
+      painPoints: input.painPoints || [],
     },
     selfBazi,
     partnerBazi,
     compatibility,
+    personCount: 'both',
     free: {
       overview: buildOverview(selfBazi, partnerBazi, compatibility),
       personality: buildPersonality(selfBazi, partnerBazi),
@@ -491,16 +559,17 @@ function buildTips(input: MarriageInput, c: CompatibilityResult) {
     items.push('建议一起做一件"小而具体的事"（如每月一次共同爱好），用行动积累信任。');
     items.push('必要时寻求专业婚姻家庭咨询师辅导，无须忌讳。');
   }
-  if (input.painPoints.includes('inlaws')) {
+  const points = input.painPoints || [];
+  if (points.includes('inlaws')) {
     items.push('与原生家庭有边界意识：经济与决策由小家庭主导，亲戚意见只作参考。');
   }
-  if (input.painPoints.includes('children')) {
+  if (points.includes('children')) {
     items.push('子女议题建议提前沟通到"生不生/几个/教育观"三件大事，再谈具体计划。');
   }
-  if (input.painPoints.includes('wealth')) {
+  if (points.includes('wealth')) {
     items.push('财务透明化：共同账户 + 各自自由账户的比例建议 7:3，避免"谁管钱=谁说了算"。');
   }
-  if (input.painPoints.includes('private')) {
+  if (points.includes('private')) {
     items.push('亲密关系需要"专属仪式感"：固定约会日、一句睡前的话，比昂贵礼物更有效。');
   }
   if (items.length < 2) {
@@ -652,4 +721,121 @@ function tianGanTrait(stem: string): string {
     癸: '雨露之水，细腻敏感，悟性极高',
   };
   return map[stem] || '性格独特';
+}
+
+// ============================================================
+// 单人模式：buildPersonalPortrait
+// 个人情感画像：桃花星、配偶宫、未来感情窗口、理想对象
+// ============================================================
+function buildPersonalPortrait(selfBazi: BaziInfo, gender: Gender): PersonalPortrait {
+  const dayStem = selfBazi.dayStem;
+  const dayBranch = selfBazi.dayBranch;
+  const dayElement = selfBazi.fiveElement;
+
+  // 1. 桃花星：按年支或日支查「桃花位」
+  // 简表：日支 + 4 邻支之一 = 桃花
+  const PEACH_MAP: Record<string, string> = {
+    子: '酉', 丑: '午', 寅: '卯', 卯: '子', 辰: '酉', 巳: '午',
+    午: '卯', 未: '子', 申: '酉', 酉: '午', 戌: '卯', 亥: '子',
+  };
+  const peachBranch = PEACH_MAP[dayBranch];
+  // 检查自己八字里有没有桃花字（粗查：年支或日支 = 桃花位则激活）
+  const peachActive = selfBazi.yearBranch === peachBranch || dayBranch === peachBranch;
+
+  // 2. 配偶宫：日支 + 含义
+  const SPOUSE_MEANING: Record<string, string> = {
+    子: '机敏灵巧、有点小聪明；配偶性格活泼但情绪多变。',
+    丑: '稳重踏实、慢热；配偶长相忠厚，关系越久越有味道。',
+    寅: '热情大方、有行动力；配偶开朗直率，志趣相近。',
+    卯: '温柔细腻、文艺范；配偶温柔体贴，但有时优柔寡断。',
+    辰: '有追求有野心、藏而不露；配偶能力强，但自我主张也强。',
+    巳: '聪明多变、情商高；配偶善沟通，但有时捉摸不定。',
+    午: '热情阳光、主动追求；配偶外向开朗，但容易急躁。',
+    未: '善良温厚、重家庭；配偶温和，但可能略缺主见。',
+    申: '机灵有才、爱表达；配偶聪明爱社交，但需注意耐心。',
+    酉: '高颜值、追求完美；配偶精致讲究，但也要注意沟通。',
+    戌: '忠义有担当；配偶可靠，但有时会显得固执。',
+    亥: '善良温和、浪漫；配偶温柔，但有时缺乏决断。',
+  };
+
+  // 3. 理想对象日干（异性五行相生）
+  const SHENG_FOR: Record<string, string> = { 木: '火', 火: '土', 土: '金', 金: '水', 水: '木' };
+  const idealElement = SHENG_FOR[dayElement] || '火';
+  const STEM_OF_EL: Record<string, string[]> = {
+    木: ['甲', '乙'], 火: ['丙', '丁'], 土: ['戊', '己'],
+    金: ['庚', '辛'], 水: ['壬', '癸'],
+  };
+  const idealStem = (gender === 'female' ? STEM_OF_EL[idealElement]?.[1] : STEM_OF_EL[idealElement]?.[0]) || '丙';
+
+  // 4. 性格特征（基于日干）
+  const STEM_TRAITS: Record<string, string[]> = {
+    甲: ['独立', '有主见', '正直'],
+    乙: ['柔韧', '善解人意', '适应力强'],
+    丙: ['阳光', '热情', '大方'],
+    丁: ['细腻', '温暖', '有洞察力'],
+    戊: ['稳重', '包容', '有担当'],
+    己: ['务实', '细心', '善于照顾人'],
+    庚: ['刚毅', '果断', '直接'],
+    辛: ['敏锐', '审美高', '有品味'],
+    壬: ['聪明', '善变', '有灵性'],
+    癸: ['温柔', '直觉强', '善于倾听'],
+  };
+
+  // 5. 未来窗口（基于大运）
+  const daYun1 = selfBazi.daYun[0]?.ganzhi || '';
+  const windowText = daYun1 ? `大运「${daYun1}」期间是感情的关键窗口期` : '未来 3-5 年是感情的关键窗口期';
+  const summary = peachActive
+    ? `桃花已动，未来 1-3 年有较大概率遇到契合的对象。`
+    : `桃花尚在蓄势，建议主动拓展社交圈，等待大运引动。`;
+
+  return {
+    peachBlossom: {
+      label: peachActive ? `${peachBranch === '子' || peachBranch === '午' ? '咸池桃花' : '红鸾星动'}` : '桃花未显',
+      source: peachActive
+        ? `日支「${dayBranch}」与年支「${selfBazi.yearBranch}」暗合桃花位（${peachBranch}），属于「主动型」桃花。`
+        : `八字中暂未显出主动桃花，需要流年/大运引动。`,
+      active: peachActive,
+    },
+    spousePalace: {
+      branch: dayBranch,
+      meaning: SPOUSE_MEANING[dayBranch] || '配偶性格待定。',
+    },
+    futureTrend: {
+      window: windowText,
+      summary,
+    },
+    idealPartner: {
+      dayStem: idealStem,
+      fiveElement: idealElement,
+      traits: STEM_TRAITS[idealStem] || ['温和', '有担当'],
+    },
+    cautions: peachActive
+      ? ['近期可能有人主动靠近，多留心观察对方的人品和价值观。', '感情来时别忘了「先慢后稳」，给自己和对方都留出时间。']
+      : ['不急于一时，先把生活过得有滋有味，桃花自然水到渠成。', '大运未至前可多读书、多旅行，扩展视野和社交圈。'],
+  };
+}
+
+// ============================================================
+// 单人模式：未来 3 年流年
+// ============================================================
+function buildSingleYearlyFortune(selfBazi: BaziInfo) {
+  const now = new Date().getFullYear();
+  const years = [now, now + 1, now + 2];
+  // 简化：按大运「十年一换」+ 年支 12 生肖推断
+  const ZODIAC_OF_YEAR: Record<number, string> = {
+    2024: '龙', 2025: '蛇', 2026: '马', 2027: '羊', 2028: '猴', 2029: '鸡',
+    2030: '狗', 2031: '猪', 2032: '鼠', 2033: '牛', 2034: '虎', 2035: '兔',
+    2036: '龙', 2037: '蛇', 2038: '马',
+  };
+  return years.map(y => {
+    const zodiac = ZODIAC_OF_YEAR[y] || '—';
+    const relation = selfBazi.yearBranch === zodiac ? '本命年' : '平运';
+    return {
+      year: y,
+      theme: `${y}年（${zodiac}年）—— ${relation}`,
+      advice: relation === '本命年'
+        ? '太岁当头，宜守不宜攻，感情上以「稳」为主，多听长辈意见。'
+        : '整体平稳，可多参加朋友聚会、学习新技能，扩展社交圈。',
+    };
+  });
 }

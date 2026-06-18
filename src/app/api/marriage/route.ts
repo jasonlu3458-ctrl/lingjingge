@@ -24,8 +24,9 @@ const PersonSchema = z.object({
 
 const InputSchema = z.object({
   self: PersonSchema,
-  partner: PersonSchema,
-  relationshipStatus: z.enum(['dating', 'early-marriage', 'long-marriage', 'crisis']),
+  // partner 可选：单人模式（只算个人情感画像）
+  partner: PersonSchema.optional(),
+  relationshipStatus: z.enum(['dating', 'early-marriage', 'long-marriage', 'crisis']).default('dating'),
   painPoints: z.array(z.enum(['personality', 'inlaws', 'wealth', 'children', 'private'])).default([]),
 });
 
