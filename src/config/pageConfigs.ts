@@ -221,31 +221,13 @@ export const pageConfigs: Record<string, PageConfig> = {
 
   // === 内观系列新增 5 项 (family/career/education/house/body) ===
 
-  'family': {
-    title: 'AI婚姻家庭',
-    subtitle: '解结化怨，重建亲密',
-    icon: '💞',
-    theme: '#c45a6a',
-    welcomeMessage: '一段关系，需要被看见、被理解。',
-    difyType: 'family',
-    formConfig: {
-      submitLabel: '生成关系分析',
-      fields: [
-        { name: 'relation_type', label: '关系类型', type: 'select', options: [
-          { label: '夫妻', value: 'couple' },
-          { label: '亲子', value: 'parent_child' },
-          { label: '婆媳 / 翁婿', value: 'in_laws' },
-          { label: '兄弟姐妹', value: 'siblings' },
-        ], required: true },
-        { name: 'concern', label: '目前的困扰', type: 'textarea', placeholder: '说说让你头疼或难过的事', required: true },
-        { name: 'expectation', label: '你希望达成的状态', type: 'textarea', placeholder: '理想的关系是怎样的？', required: false },
-      ],
-      reportStructure: {
-        free: ['关系现状诊断', '常见模式识别'],
-        premium: ['深层动力分析', '7 天关系修复建议', '沟通话术模板'],
-      },
-    },
-  },
+  // family 模块已迁出 pageConfigs 通用模板，改走「教育 4 件套」架构：
+  //   页面： src/app/guan/family/FamilyPageClient.tsx
+  //   规则： src/lib/marriage-rules.ts
+  //   API：  src/app/api/marriage/route.ts + src/app/api/marriage/polish/route.ts
+  // 原因：family 需要「双八字比对 + 关系状态/痛点 + 流年付费差异化」，
+  // 通用 ChatUI 模板撑不起双列表单和复杂报告结构。保留占位以避免类型报错。
+  'family': null as unknown as PageConfig,
 
   'career': {
     title: 'AI事业财富',

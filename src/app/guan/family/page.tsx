@@ -1,5 +1,5 @@
 import { getUserRole } from '@/lib/auth';
-import PageRenderer from '@/components/PageRenderer';
+import FamilyPageClient from './FamilyPageClient';
 
 export const metadata = {
   title: 'AI 婚姻家庭 · 灵境阁',
@@ -8,7 +8,7 @@ export const metadata = {
 
 export default async function FamilyPage() {
   const userRole = await getUserRole();
-  return <PageRenderer configKey="family" userRole={userRole} />;
+  return <FamilyPageClient userRole={userRole} />;
 }
 
 export const dynamic = 'force-dynamic';
