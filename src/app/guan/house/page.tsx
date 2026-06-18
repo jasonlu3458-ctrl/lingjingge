@@ -10,3 +10,5 @@ export default async function HousePage() {
   const userRole = await getUserRole();
   return <PageRenderer configKey="house" userRole={userRole} />;
 }
+
+export const dynamic = 'force-dynamic';

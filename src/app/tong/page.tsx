@@ -116,3 +116,5 @@ export default async function TongPage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

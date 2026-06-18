@@ -10,3 +10,5 @@ export default async function EducationPage() {
   const userRole = await getUserRole();
   return <EducationPageClient userRole={userRole} />;
 }
+
+export const dynamic = 'force-dynamic';

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
 
-export default function UserStatus() {
+export default function UserStatus({ immersive = false }: { immersive?: boolean } = {}) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   
@@ -58,10 +58,16 @@ export default function UserStatus() {
   if (session) {
     return (
       <div className="flex items-center space-x-4">
-        <span className="text-zen-ink font-medium">{session.user.email}</span>
+        <span className={`font-medium transition-colors duration-500 ${immersive ? 'text-white/90' : 'text-zen-ink'}`}>
+          {session.user.email}
+        </span>
         <button
           onClick={handleLogout}
-          className="px-4 py-2 bg-zen-ink text-white rounded-lg hover:bg-zen-ink/80 transition-colors text-sm font-semibold"
+          className={`px-4 py-2 rounded-lg transition-colors text-sm font-semibold ${
+            immersive
+              ? 'bg-white/10 text-white/90 hover:bg-white/20 border border-white/25'
+              : 'bg-zen-ink text-white hover:bg-zen-ink/80'
+          }`}
         >
           退出
         </button>
@@ -71,12 +77,21 @@ export default function UserStatus() {
 
   return (
     <div className="flex items-center space-x-4">
-      <a href="/tong/login" className="text-zen-ink hover:text-zen-ink/80 transition-colors font-medium">
+      <a
+        href="/tong/login"
+        className={`transition-colors font-medium ${
+          immersive ? 'text-white/85 hover:text-white' : 'text-zen-ink hover:text-zen-ink/80'
+        }`}
+      >
         登录
       </a>
-      <a 
-        href="/tong/signup" 
-        className="px-4 py-2 bg-zen-ink text-white rounded-lg hover:bg-zen-ink/80 transition-colors text-sm font-semibold"
+      <a
+        href="/tong/signup"
+        className={`px-4 py-2 rounded-lg transition-colors text-sm font-semibold ${
+          immersive
+            ? 'bg-white text-stone-900 hover:bg-white/90'
+            : 'bg-zen-ink text-white hover:bg-zen-ink/80'
+        }`}
       >
         注册
       </a>

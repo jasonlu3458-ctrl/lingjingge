@@ -17,3 +17,5 @@ export default async function BodyPage() {
   const userRole = await getUserRole();
   return <PageRenderer configKey="body" userRole={userRole} />;
 }
+
+export const dynamic = 'force-dynamic';

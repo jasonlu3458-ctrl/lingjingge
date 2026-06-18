@@ -103,3 +103,5 @@ export default async function ZangPage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

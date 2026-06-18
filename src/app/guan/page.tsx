@@ -125,3 +125,5 @@ export default async function GuanPage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

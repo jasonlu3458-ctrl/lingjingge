@@ -20,3 +20,5 @@ export default async function LightSolutionPage() {
 
   return <LightSolutionClient userRole={userRole} />;
 }
+
+export const dynamic = 'force-dynamic';

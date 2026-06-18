@@ -10,3 +10,5 @@ export default async function FamilyPage() {
   const userRole = await getUserRole();
   return <PageRenderer configKey="family" userRole={userRole} />;
 }
+
+export const dynamic = 'force-dynamic';

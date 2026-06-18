@@ -17,3 +17,4 @@ export default async function AwakeningPage() {
 
   return <PageRenderer configKey="awakening" userRole={userRole} />;
 }
+export const dynamic = 'force-dynamic';

@@ -10,3 +10,5 @@ export default async function CareerPage() {
   const userRole = await getUserRole();
   return <PageRenderer configKey="career" userRole={userRole} />;
 }
+
+export const dynamic = 'force-dynamic';

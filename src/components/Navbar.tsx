@@ -51,11 +51,22 @@ const menuItems = [
   },
 ];
 
-export default function Navbar() {
+export interface NavbarProps {
+  /** 沉浸式模式：禅意页面专用（半透明 → 滚动后纯黑） */
+  immersive?: boolean;
+}
+
+export default function Navbar({ immersive = false }: NavbarProps = {}) {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   // 用于延迟关闭菜单的定时器
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!immersive) return;
+    // 沉浸式 navbar 全程透明，背景动效由页面提供；保留此分支以便未来扩展
+    return undefined;
+  }, [immersive]);
 
   // 缓存菜单切换函数
   const handleMenuEnter = useCallback((label: string) => {
@@ -122,7 +133,13 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="bg-zen-beige border-b border-zen-gray sticky top-0 z-50">
+    <nav
+      className={`sticky top-0 z-50 transition-all duration-500 ${
+        immersive
+          ? 'bg-transparent border-b border-transparent'
+          : 'bg-zen-beige border-b border-zen-gray'
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -135,7 +152,12 @@ export default function Navbar() {
                 height={40}
                 className="rounded-full transition-transform duration-300 group-hover:scale-105"
               />
-              <span className="text-xl font-serif text-[#2c2c2c] hidden sm:inline" style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}>
+              <span
+                className={`text-xl font-serif hidden sm:inline transition-colors duration-500 ${
+                  immersive ? 'text-white/90' : 'text-[#2c2c2c]'
+                }`}
+                style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}
+              >
                 灵境阁
               </span>
             </Link>
@@ -157,14 +179,25 @@ export default function Navbar() {
                   href={menu.href}
                   prefetch={true}
                   className="px-6 py-2.5 rounded-[20px] font-medium transition-all duration-300 flex items-center gap-2"
-                  style={{
-                    backgroundColor: activeMenu === menu.label ? '#2c2c2c' : 'transparent',
-                    color: activeMenu === menu.label ? '#f5f0eb' : '#2c2c2c',
-                    border: '1px solid #2c2c2c',
-                    fontFamily: "'Ma Shan Zheng', cursive, serif",
-                    letterSpacing: '2px',
-                    fontSize: '15px',
-                  }}
+                  style={
+                    immersive
+                      ? {
+                          backgroundColor: activeMenu === menu.label ? 'rgba(255,255,255,0.92)' : 'transparent',
+                          color: activeMenu === menu.label ? '#1a1a1a' : 'rgba(255,255,255,0.92)',
+                          border: `1px solid ${activeMenu === menu.label ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.45)'}`,
+                          fontFamily: "'Ma Shan Zheng', cursive, serif",
+                          letterSpacing: '2px',
+                          fontSize: '15px',
+                        }
+                      : {
+                          backgroundColor: activeMenu === menu.label ? '#2c2c2c' : 'transparent',
+                          color: activeMenu === menu.label ? '#f5f0eb' : '#2c2c2c',
+                          border: '1px solid #2c2c2c',
+                          fontFamily: "'Ma Shan Zheng', cursive, serif",
+                          letterSpacing: '2px',
+                          fontSize: '15px',
+                        }
+                  }
                 >
                   {menu.label}
                   <span className="transition-transform duration-300 text-xs" style={{
@@ -185,7 +218,11 @@ export default function Navbar() {
                 {/* 下拉子菜单 - 用 padding-top 占位形成"桥接区"，避免按钮与菜单间的间隙触发 onMouseLeave */}
                 {activeMenu === menu.label && (
                   <div
-                    className="absolute top-full left-0 pt-2 bg-white rounded-lg shadow-xl border border-gray-200 py-4 z-50"
+                    className={`absolute top-full left-0 pt-2 rounded-lg shadow-xl border py-4 z-50 ${
+                      immersive
+                        ? 'bg-black/90 backdrop-blur-md border-white/15'
+                        : 'bg-white border-gray-200'
+                    }`}
                     style={{
                       animation: 'fadeInDown 0.2s ease-out',
                       minWidth: '280px',
@@ -210,7 +247,11 @@ export default function Navbar() {
                               key={item.href}
                               href={item.href}
                               prefetch={true}
-                              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-amber-50 transition-all duration-200 mx-2 rounded-lg"
+                              className={`flex items-center gap-3 px-4 py-2.5 text-sm mx-2 rounded-lg transition-all duration-200 ${
+                                immersive
+                                  ? 'text-white/85 hover:bg-white/10 hover:text-white'
+                                  : 'text-gray-700 hover:bg-amber-50'
+                              }`}
                               style={{
                                 fontFamily: "'Ma Shan Zheng', cursive, serif",
                                 letterSpacing: '1px',
@@ -230,7 +271,11 @@ export default function Navbar() {
                           key={(category as { href: string }).href}
                           href={(category as { href: string }).href}
                           prefetch={true}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-amber-50 transition-all duration-200 mx-2 rounded-lg"
+                          className={`flex items-center gap-3 px-4 py-2.5 text-sm mx-2 rounded-lg transition-all duration-200 ${
+                            immersive
+                              ? 'text-white/85 hover:bg-white/10 hover:text-white'
+                              : 'text-gray-700 hover:bg-amber-50'
+                          }`}
                           style={{
                             fontFamily: "'Ma Shan Zheng', cursive, serif",
                             letterSpacing: '1px',
@@ -251,15 +296,15 @@ export default function Navbar() {
             ))}
 
             {/* AI灵光 - 脉冲指示器 */}
-            <div 
+            <div
               aria-label="AI在线指示器"
               className="ml-5"
               style={{
                 width: '8px',
                 height: '8px',
                 borderRadius: '50%',
-                backgroundColor: '#2c2c2c',
-                boxShadow: '0 0 8px rgba(44, 44, 44, 0.4)',
+                backgroundColor: immersive ? 'rgba(255,255,255,0.92)' : '#2c2c2c',
+                boxShadow: immersive ? '0 0 10px rgba(255,255,255,0.5)' : '0 0 8px rgba(44, 44, 44, 0.4)',
                 animation: 'pulse 2s ease-in-out infinite',
               }}
             />
@@ -267,16 +312,23 @@ export default function Navbar() {
 
           {/* 用户状态 */}
           <div className="hidden lg:flex items-center">
-            <UserStatus />
+            <UserStatus immersive={immersive} />
           </div>
 
           {/* 移动端菜单按钮 */}
           <button
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className={`lg:hidden p-2 rounded-lg transition-colors ${
+              immersive ? 'hover:bg-white/10' : 'hover:bg-gray-100'
+            }`}
             onClick={toggleMobileMenu}
             aria-label={mobileMenuOpen ? '关闭菜单' : '打开菜单'}
           >
-            <svg className="w-6 h-6 text-[#2c2c2c]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className={`w-6 h-6 transition-colors ${immersive ? 'text-white/90' : 'text-[#2c2c2c]'}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               {mobileMenuOpen ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               ) : (
@@ -289,23 +341,42 @@ export default function Navbar() {
         {/* 移动端菜单 */}
         {mobileMenuOpen && (
           <div className="lg:hidden pb-4 animate-slideDown">
-            <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+            <div
+              className={`rounded-xl shadow-lg border overflow-hidden ${
+                immersive ? 'bg-black/90 backdrop-blur-md border-white/15' : 'bg-white border-gray-200'
+              }`}
+            >
               {menuItems.map((menu) => (
-                <div key={menu.label} className="border-b border-gray-100 last:border-b-0">
+                <div
+                  key={menu.label}
+                  className={`last:border-b-0 ${
+                    immersive ? 'border-b border-white/10' : 'border-b border-gray-100'
+                  }`}
+                >
                   <button
-                    className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+                    className={`w-full px-4 py-3 flex items-center justify-between text-left transition-colors ${
+                      immersive ? 'hover:bg-white/10' : 'hover:bg-gray-50'
+                    }`}
                     onClick={() => setActiveMenu(activeMenu === menu.label ? null : menu.label)}
                     style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}
                   >
-                    <span className="text-[#2c2c2c]">{menu.label}</span>
-                    <span className={`transition-transform duration-300 ${activeMenu === menu.label ? 'rotate-180' : ''}`}>
+                    <span className={immersive ? 'text-white/90' : 'text-[#2c2c2c]'}>{menu.label}</span>
+                    <span
+                      className={`transition-transform duration-300 ${
+                        activeMenu === menu.label ? 'rotate-180' : ''
+                      } ${immersive ? 'text-white/60' : ''}`}
+                    >
                       ▼
                     </span>
                   </button>
-                  
+
                   {/* 移动端子菜单 */}
                   {activeMenu === menu.label && (
-                    <div className="bg-gray-50 px-2 py-2 animate-fadeIn">
+                    <div
+                      className={`px-2 py-2 animate-fadeIn ${
+                        immersive ? 'bg-black/60' : 'bg-gray-50'
+                      }`}
+                    >
                       {menu.items.map((category) =>
                         'subItems' in category && Array.isArray((category as { subItems?: unknown[] }).subItems) ? (
                           <div key={category.label}>
@@ -317,7 +388,11 @@ export default function Navbar() {
                                 key={item.href}
                                 href={item.href}
                                 prefetch={true}
-                                className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-white rounded-lg transition-colors block w-full"
+                                className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-colors block w-full ${
+                                immersive
+                                  ? 'text-white/85 hover:bg-white/10 hover:text-white'
+                                  : 'text-gray-700 hover:bg-white'
+                              }`}
                                 onClick={closeMobileMenu}
                               >
                                 <span className="text-lg">{item.icon}</span>
@@ -327,12 +402,16 @@ export default function Navbar() {
                           </div>
                         ) : (
                           <Link
-                            key={(category as { href: string }).href}
-                            href={(category as { href: string }).href}
-                            prefetch={true}
-                            className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 hover:bg-white rounded-lg transition-colors block w-full"
-                            onClick={closeMobileMenu}
-                          >
+                          key={(category as { href: string }).href}
+                          href={(category as { href: string }).href}
+                          prefetch={true}
+                          className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-colors block w-full ${
+                            immersive
+                              ? 'text-white/85 hover:bg-white/10 hover:text-white'
+                              : 'text-gray-700 hover:bg-white'
+                          }`}
+                          onClick={closeMobileMenu}
+                        >
                             <span className="text-lg">{(category as { icon?: string }).icon}</span>
                             <span>{category.label}</span>
                           </Link>
@@ -344,8 +423,8 @@ export default function Navbar() {
               ))}
               
               {/* 移动端用户状态 */}
-              <div className="p-4 border-t border-gray-100">
-                <UserStatus />
+              <div className={`p-4 ${immersive ? 'border-t border-white/10' : 'border-t border-gray-100'}`}>
+                <UserStatus immersive={immersive} />
               </div>
             </div>
           </div>

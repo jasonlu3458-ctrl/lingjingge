@@ -17,3 +17,4 @@ export default async function MingliPage() {
 
   return <PageRenderer configKey="mingli" userRole={userRole} />;
 }
+export const dynamic = 'force-dynamic';

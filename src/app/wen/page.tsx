@@ -104,3 +104,5 @@ export default async function WenPage() {
     </div>
   );
 }
+
+export const dynamic = 'force-dynamic';

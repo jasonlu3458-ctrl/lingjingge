@@ -1,29 +1,24 @@
 import { getUserRole } from '@/lib/auth';
-import PageRenderer from '@/components/PageRenderer';
-import SelfHelpTools from '@/components/SelfHelpTools';
+import MindClient from './MindClient';
 
 export const metadata = {
   title: 'AI 疗愈师 · 灵境阁',
-  description: '用温暖对话，疗愈你的情绪。3 轮免费深度陪伴。',
+  description: '沉浸式情感陪伴工作坊。3 轮免费深度对话 + 7 天情绪打卡。',
 };
 
 /**
- * AI 疗愈师页面 - 三层结构
+ * AI 疗愈师（沉浸式工作坊）
  *
- * 第一层：自助工具箱（纯免费，3 个工具入口）
- * 第二层：AI 对话（免费 5 次，由 ChatUI 处理）
- * 第三层：付费报告（由 ChatUI 内部 <ReportPaywall /> 包裹，配置见 conversationConfig.reportStructure）
+ * - 顶部：极简标题 + 情绪胶囊（替代原工具箱）
+ * - 中部：双 AI 气泡开场白 + 沉浸式聊天区
+ * - 浮动 🌿 按钮 → 半屏抽屉（呼吸/观想/动作）
+ * - 右上角：今日情绪打卡（5 级表情 → Supabase）
+ * - 底部：固定输入区（44px+，placeholder 改为"此刻，你在想什么？"）
+ * - 5 次后：付费墙软着陆（不跳走，弹轻量引导）
  */
 export default async function MindPage() {
   const userRole = await getUserRole();
-
-  return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* 第一层：自助工具 */}
-      <SelfHelpTools />
-
-      {/* 第二层：AI 对话 + 第三层：付费报告（皆由 ChatUI 内部处理） */}
-      <PageRenderer configKey="mind" userRole={userRole} />
-    </div>
-  );
+  return <MindClient userRole={userRole} />;
 }
+
+export const dynamic = 'force-dynamic';

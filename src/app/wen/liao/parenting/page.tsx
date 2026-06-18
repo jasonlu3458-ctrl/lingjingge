@@ -17,3 +17,4 @@ export default async function ParentingPage() {
 
   return <PageRenderer configKey="parenting" userRole={userRole} />;
 }
+export const dynamic = 'force-dynamic';

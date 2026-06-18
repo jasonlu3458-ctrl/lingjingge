@@ -10,3 +10,5 @@ export default async function YiliPage() {
   const userRole = await getUserRole();
   return <YiliClient userRole={userRole} />;
 }
+
+export const dynamic = 'force-dynamic';

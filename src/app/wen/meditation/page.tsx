@@ -12,3 +12,5 @@ export default async function MeditationPage() {
 
   return <PageRenderer configKey="meditation" userRole={userRole} />;
 }
+
+export const dynamic = 'force-dynamic';
