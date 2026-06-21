@@ -29,8 +29,25 @@ const InputSchema = z.object({
 });
 
 function reportToInputs(report: ReturnType<typeof checkWealthRules>) {
+  const reportContext = [
+    `【用户基本信息】姓名：${report.input.name}，性别：${report.input.gender === 'female' ? '女' : '男'}，当前职业：${report.input.career}`,
+    `【八字】年柱 ${report.bazi.yearGanzhi} 月柱 ${report.bazi.monthGanzhi} 日柱 ${report.bazi.dayGanzhi}（日干 ${report.bazi.dayStem}，属${report.bazi.dayElement}），生肖：${report.bazi.yearZodiac}`,
+    `【财星方向】日干属${report.bazi.dayElement}，以「${report.wealthSource.element}」为财（财星天干 ${report.wealthSource.wealthStem}）；方位：${report.wealthSource.direction}；适配行业：${report.wealthSource.industries}`,
+    `【谋财方式】年支 ${report.bazi.yearBranch}，属${report.careerType.type}（${report.careerType.strength}）。建议工作方式：${report.careerType.workMode}——${report.careerType.workModeReason}`,
+    `【职业匹配】当前职业「${report.input.career}」与财星 ${report.wealthSource.element} 匹配度：${report.career.match}（${report.career.matchLabel}）。建议：${report.career.tip}`,
+    `【时机节点】当前季节：${report.timing.season.label}（${report.timing.season.range}），与日干${report.timing.season.type}的能量关系为「${report.timing.phase}」——${report.timing.tone}。最佳窗口：${report.timing.bestSeason}；${report.timing.bestYear}年是重点布局年。`,
+    `【免费版块】${report.free.origin.content} / ${report.free.fangxiang.content} / ${report.free.gongzhan.content} / ${report.free.shijian.content} / ${report.free.yishi.content}`,
+    `【付费·流年】${report.paid.qushi.content}`,
+    `【付费·家庭财富池】${report.paid.jiating.content}`,
+    `【付费·管理用人】${report.paid.guanli.content}`,
+    `【付费·防坑指南】${report.paid.fangkeng.content}`,
+    `【付费·3 步落地】${report.paid.zhidao.content}`,
+    `【综合评分】${report.score} / 100`,
+  ].join('\n');
+
   return {
     name: report.input.name,
+    user_name: report.input.name, // 兼容 Dify 端用 user_name 命名的输入变量
     gender: report.input.gender,
     career: report.input.career,
     solar_date: report.bazi.solarDate,
@@ -59,21 +76,12 @@ function reportToInputs(report: ReturnType<typeof checkWealthRules>) {
     // 报告类型
     report_type: 'wealth',
     // 结构化文本
-    report_context: [
-      `【用户基本信息】姓名：${report.input.name}，性别：${report.input.gender === 'female' ? '女' : '男'}，当前职业：${report.input.career}`,
-      `【八字】年柱 ${report.bazi.yearGanzhi} 月柱 ${report.bazi.monthGanzhi} 日柱 ${report.bazi.dayGanzhi}（日干 ${report.bazi.dayStem}，属${report.bazi.dayElement}），生肖：${report.bazi.yearZodiac}`,
-      `【财星方向】日干属${report.bazi.dayElement}，以「${report.wealthSource.element}」为财（财星天干 ${report.wealthSource.wealthStem}）；方位：${report.wealthSource.direction}；适配行业：${report.wealthSource.industries}`,
-      `【谋财方式】年支 ${report.bazi.yearBranch}，属${report.careerType.type}（${report.careerType.strength}）。建议工作方式：${report.careerType.workMode}——${report.careerType.workModeReason}`,
-      `【职业匹配】当前职业「${report.input.career}」与财星 ${report.wealthSource.element} 匹配度：${report.career.match}（${report.career.matchLabel}）。建议：${report.career.tip}`,
-      `【时机节点】当前季节：${report.timing.season.label}（${report.timing.season.range}），与日干${report.timing.season.type}的能量关系为「${report.timing.phase}」——${report.timing.tone}。最佳窗口：${report.timing.bestSeason}；${report.timing.bestYear}年是重点布局年。`,
-      `【免费版块】${report.free.origin.content} / ${report.free.fangxiang.content} / ${report.free.gongzhan.content} / ${report.free.shijian.content} / ${report.free.yishi.content}`,
-      `【付费·流年】${report.paid.qushi.content}`,
-      `【付费·家庭财富池】${report.paid.jiating.content}`,
-      `【付费·管理用人】${report.paid.guanli.content}`,
-      `【付费·防坑指南】${report.paid.fangkeng.content}`,
-      `【付费·3 步落地】${report.paid.zhidao.content}`,
-      `【综合评分】${report.score} / 100`,
-    ].join('\n'),
+    report_context: reportContext,
+    // Dify 端常用别名：profile_data / context / user_profile / bazi_data
+    profile_data: reportContext,
+    context: reportContext,
+    user_profile: reportContext,
+    bazi_data: reportContext,
   };
 }
 

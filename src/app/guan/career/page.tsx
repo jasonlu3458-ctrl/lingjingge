@@ -1,5 +1,5 @@
 import { getUserRole } from '@/lib/auth';
-import PageRenderer from '@/components/PageRenderer';
+import CareerPageClient from './CareerPageClient';
 
 export const metadata = {
   title: 'AI 事业财富 · 灵境阁',
@@ -8,7 +8,7 @@ export const metadata = {
 
 export default async function CareerPage() {
   const userRole = await getUserRole();
-  return <PageRenderer configKey="career" userRole={userRole} />;
+  return <CareerPageClient userRole={userRole} />;
 }
 
 export const dynamic = 'force-dynamic';

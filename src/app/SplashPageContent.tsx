@@ -152,7 +152,7 @@ export default function Page() {
               title="鉴己观我"
               description="AI帮你照见，鉴己求真"
               buttonText="去体验 →"
-              href="/guan/mingli"
+              href="/guan/lifecode"
             />
             <SplashCard
               icon="💬"

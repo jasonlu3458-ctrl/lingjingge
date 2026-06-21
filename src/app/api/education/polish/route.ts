@@ -1,13 +1,8 @@
 // ============================================================
-// /api/education/polish —— 子女学业报告 · Dify 润色接口
-// 调用真实 Dify（key: DIFY_EDUCATION_API_KEY），Dify 端把
-// 由 /api/education 计算好的八字/星位/饮食/书桌建议润色为
-// 一段通俗、温暖、可读的中文报告。
-//
-// 协议参考 /api/dify/route.ts：
-//   POST {api.dify.ai}/v1/chat-messages
-//   body: { inputs, query, response_mode, user, conversation_id? }
-//   auth:  Bearer <DIFY_EDUCATION_API_KEY>
+// /api/education/polish —— 子女学业报告 · Dify 润色接口（SSE 流式）
+// 协议参考 /api/house/polish：
+//   走 Dify streaming → 直接透传 body 给前端
+//   失败时降级到 JSON 包（前端按 content-type 识别）
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -84,20 +79,23 @@ function reportToInputs(report: ReturnType<typeof checkEducationRules>) {
   };
 }
 
-/**
- * 调 Dify。response_mode 用 'blocking' 一次性返回（前端 setPolished 一次性吃）。
- * 如果 Dify 流式响应解析失败，自动回退到本地模板。
- */
-async function callDify(inputs: Record<string, unknown>, query: string, user: string, conversationId?: string): Promise<string> {
+// —— 流式调 Dify ——
+async function callDifyStream(
+  inputs: Record<string, unknown>,
+  query: string,
+  user: string,
+  conversationId: string | undefined,
+): Promise<{ ok: true; body: ReadableStream<Uint8Array>; contentType: string }
+       | { ok: false; error: string }> {
   const apiKey = process.env.DIFY_EDUCATION_API_KEY || process.env.NEXT_PUBLIC_DIFY_EDUCATION_API_KEY;
-  if (!apiKey) throw new Error('DIFY_EDUCATION_API_KEY 未配置');
+  if (!apiKey) return { ok: false, error: 'DIFY_EDUCATION_API_KEY 未配置' };
 
   const baseUrl = (process.env.DIFY_BASE_URL || 'https://api.dify.ai').replace(/\/$/, '');
 
   const body: Record<string, unknown> = {
     inputs,
     query,
-    response_mode: 'blocking',
+    response_mode: 'streaming',
     user: user || 'lingjingge-education-user',
   };
   if (conversationId) body.conversation_id = conversationId;
@@ -113,19 +111,30 @@ async function callDify(inputs: Record<string, unknown>, query: string, user: st
 
   if (!res.ok) {
     const txt = await res.text().catch(() => '');
-    throw new Error(`Dify ${res.status}: ${txt.slice(0, 300)}`);
+    return { ok: false, error: `Dify ${res.status}: ${txt.slice(0, 300)}` };
   }
-  const data = await res.json();
-  // Dify blocking 返回字段：answer；workflow 可能用 'data.outputs' 或 'outputs'
-  const answer =
-    data?.answer ||
-    data?.data?.outputs?.answer ||
-    data?.data?.outputs?.text ||
-    data?.outputs?.answer ||
-    data?.outputs?.text ||
-    '';
-  if (!answer) throw new Error('Dify 响应中未找到 answer 字段');
-  return String(answer);
+  if (!res.body) return { ok: false, error: 'Dify returned empty body' };
+
+  return { ok: true, body: res.body, contentType: res.headers.get('content-type') || 'text/event-stream' };
+}
+
+// —— 本地模板（JSON 降级）——
+function buildFallbackText(report: ReturnType<typeof checkEducationRules>, errorMsg: string): string {
+  return [
+    `🌱 一句话总结`,
+    `${report.input.name}（${report.bazi.solarDate}，${report.bazi.yearZodiac}年），日柱 ${report.bazi.dayGanzhi}，当前${report.season.label}，是一颗有自己节律的小种子。`,
+    ``,
+    `📚 学习密码`,
+    `文昌在 ${report.free.code.wenchang} 位、学堂在 ${report.free.code.xuetang} 位——把书桌朝 ${report.free.studyRoom.deskDirection} 摆放，能更好地点燃他/她的学习兴趣。`,
+    ``,
+    `🍵 饮食配合`,
+    report.free.food.content,
+    ``,
+    `✨ 家长可做`,
+    report.paid.mindset.content,
+    ``,
+    `（注：本次未接通 Dify，已使用本地模板。原始错误：${errorMsg}）`,
+  ].join('\n');
 }
 
 export async function POST(request: NextRequest) {
@@ -146,29 +155,39 @@ export async function POST(request: NextRequest) {
     // 2. 构造 query —— 给 Dify 的明确指令
     const query = `请基于以上孩子的八字（${inputs.bazi_year} ${inputs.bazi_month} ${inputs.bazi_day}）、星位（文昌 ${inputs.code_wenchang} / 学堂 ${inputs.code_xuetang} / 华盖 ${inputs.code_huagai}）和饮食书桌建议，写一份温暖、通俗、可读的子女学业成长报告（800 字以内，分段呈现，包含一句话总结 + 5 个分点建议）。` ;
 
-    // 3. 调真实 Dify
+    // 3. 流式调 Dify（透传 SSE）
     try {
-      const polished = await callDify(inputs, query, user || `edu-${name}-${birthDate}`, conversation_id);
-      return NextResponse.json({ success: true, source: 'dify', polished, conversation_id });
+      const stream = await callDifyStream(
+        inputs,
+        query,
+        user || `edu-${name}-${birthDate}`,
+        conversation_id
+      );
+      if (stream.ok) {
+        return new Response(stream.body, {
+          status: 200,
+          headers: {
+            'Content-Type': stream.contentType,
+            'Cache-Control': 'no-cache, no-transform',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no',
+            'X-Education-Source': 'dify-streaming',
+          },
+        });
+      }
+      console.warn('[api/education/polish] Dify 流式失败，回退到 JSON:', stream.error);
+      const fb = buildFallbackText(report, stream.error);
+      return NextResponse.json(
+        { success: true, source: 'local-template', polished: fb, error: stream.error },
+        { status: 200 }
+      );
     } catch (err) {
-      console.warn('[api/education/polish] Dify 失败，回退到本地模板:', err);
-      // 降级：拼装一份本地模板
-      const fallback = [
-        `🌱 一句话总结`,
-        `${report.input.name}（${report.bazi.solarDate}，${report.bazi.yearZodiac}年），日柱 ${report.bazi.dayGanzhi}，当前${report.season.label}，是一颗有自己节律的小种子。`,
-        ``,
-        `📚 学习密码`,
-        `文昌在 ${report.free.code.wenchang} 位、学堂在 ${report.free.code.xuetang} 位——把书桌朝 ${report.free.studyRoom.deskDirection} 摆放，能更好地点燃他/她的学习兴趣。`,
-        ``,
-        `🍵 饮食配合`,
-        report.free.food.content,
-        ``,
-        `✨ 家长可做`,
-        report.paid.mindset.content,
-        ``,
-        `（注：本次未接通 Dify，已使用本地模板。原始错误：${err instanceof Error ? err.message : '未知'}）`,
-      ].join('\n');
-      return NextResponse.json({ success: true, source: 'local-template', polished: fallback });
+      console.warn('[api/education/polish] 异常，降级到 JSON:', err);
+      const fallback = buildFallbackText(report, err instanceof Error ? err.message : '未知错误');
+      return NextResponse.json(
+        { success: true, source: 'local-template', polished: fallback, error: err instanceof Error ? err.message : '未知' },
+        { status: 200 }
+      );
     }
   } catch (err) {
     console.error('[api/education/polish] 错误:', err);

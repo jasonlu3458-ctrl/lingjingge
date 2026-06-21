@@ -1,14 +1,14 @@
 import { getUserRole } from '@/lib/auth';
-import PageRenderer from '@/components/PageRenderer';
+import HousePageClient from './HousePageClient';
 
 export const metadata = {
-  title: 'AI 家居环境 · 灵境阁',
-  description: '住的舒服，是最好的风水。家，是身心的容器。',
+  title: '家居环境 · 空间能量 · 灵境阁',
+  description: '宅安则心安。好的空间布局，是家庭和睦与个人运势的稳定器。',
 };
 
 export default async function HousePage() {
   const userRole = await getUserRole();
-  return <PageRenderer configKey="house" userRole={userRole} />;
+  return <HousePageClient userRole={userRole} />;
 }
 
 export const dynamic = 'force-dynamic';

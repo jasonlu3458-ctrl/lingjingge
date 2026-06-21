@@ -180,44 +180,12 @@ export const pageConfigs: Record<string, PageConfig> = {
 
   // ===== 观心系列 (guan/) =====
 
-  'mingli': {
-    title: 'AI生命密码',
-    subtitle: '揭秘你的天赋与人生使命',
-    icon: '🔮',
-    theme: '#6a4a8a',
-    welcomeMessage: '你的出生日期，藏着你的生命密码。让我为你解读。',
-    difyType: 'mingli',
-    formConfig: {
-      submitLabel: '解读我的生命密码',
-      fields: [
-        { name: 'birth_date', label: '你的出生日期', type: 'date', required: true },
-        { name: 'birth_time', label: '出生时辰 (可选)', type: 'select', options: [
-          { label: '子时', value: 'zi' }, { label: '丑时', value: 'chou' }, { label: '寅时', value: 'yin' },
-          { label: '卯时', value: 'mao' }, { label: '辰时', value: 'chen' }, { label: '巳时', value: 'si' },
-          { label: '午时', value: 'wu' }, { label: '未时', value: 'wei' }, { label: '申时', value: 'shen' },
-          { label: '酉时', value: 'you' }, { label: '戌时', value: 'xu' }, { label: '亥时', value: 'hai' },
-        ], required: false },
-        { name: 'gender', label: '性别', type: 'select', options: [
-          { label: '男', value: 'male' }, { label: '女', value: 'female' }
-        ], required: true },
-        // 整合自原 AI取名轩：可顺便为新生儿 / 自己起一个雅名
-        { name: 'want_name', label: '是否需要名字建议', type: 'select', options: [
-          { label: '仅解读', value: 'no' },
-          { label: '顺便取名', value: 'yes' },
-        ], required: false },
-        { name: 'surname', label: '姓氏 (取名时填写)', type: 'text', placeholder: '如：李 / 王 / 张', required: false },
-        { name: 'name_style', label: '名字风格 (取名时填写)', type: 'select', options: [
-          { label: '古典', value: 'classic' },
-          { label: '现代', value: 'modern' },
-          { label: '诗意', value: 'poetic' },
-        ], required: false },
-      ],
-      reportStructure: {
-        free: ['生命灵数解析', '星座/生肖概要', '天赋潜能'],
-        premium: ['深度八字简析', '人生阶段运势', '个性化成长建议', '专属取名推荐'],
-      },
-    },
-  },
+  // mingli 已迁出 pageConfigs 通用模板，改走 lifecode 紫蓝新架构：
+  //   页面： src/app/guan/lifecode/LifeCodePageClient.tsx
+  //   规则： src/lib/lifecode-rules.ts
+  //   API：  src/app/api/lifecode/route.ts + src/app/api/lifecode/polish/route.ts
+  // 原因：lifecode 需要「日干人格 + 出生季节 + 本年流年 + Dify 流式润色」，
+  // 通用 ChatUI 模板撑不起这 5+5 的报告结构与玻璃 UI。保留占位以避免类型报错。
 
   // === 内观系列新增 5 项 (family/career/education/house/body) ===
 

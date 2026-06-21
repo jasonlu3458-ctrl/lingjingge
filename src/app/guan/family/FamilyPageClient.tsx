@@ -3,6 +3,7 @@
 import { useState, useMemo, type FormEvent, type ReactNode } from 'react';
 import type { UserRole } from '@/lib/auth';
 import ReportPaywall from '@/components/ReportPaywall';
+import { handleDifyPolishResponse } from '@/lib/sse-client';
 import type {
   MarriageReport,
   Gender,
@@ -210,11 +211,12 @@ export default function FamilyPageClient({ userRole }: FamilyPageClientProps) {
     }
   };
 
-  // Dify 润色
+  // Dify 润色（SSE 流式）
   const handlePolish = async () => {
     setPolishing(true);
     setPolished('');
-    setPolishSource('');
+    setPolishSource('streaming');
+    setErrorMsg('');
     try {
       // 单人模式不传 partner
       const body: Record<string, unknown> = {
@@ -230,13 +232,15 @@ export default function FamilyPageClient({ userRole }: FamilyPageClientProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      const json = await res.json();
-      if (!json.success) {
-        setErrorMsg(json.error || '润色失败');
+      if (!res.ok) {
+        setErrorMsg(`HTTP ${res.status}`);
         return;
       }
-      setPolished(json.polished);
-      setPolishSource(json.source);
+      await handleDifyPolishResponse(res, {
+        setPolished,
+        setPolishSource,
+        setErrorMsg,
+      });
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : '网络异常');
     } finally {

@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent, type ReactNode } from 'react';
 import type { UserRole } from '@/lib/auth';
+import { handleDifyPolishResponse } from '@/lib/sse-client';
 
 // 轻量内联 Markdown 渲染器（替换 react-markdown@10）：
 // react-markdown 是 ESM-only，Next.js 14 + RSC 静态/动态 import
@@ -210,7 +211,8 @@ export default function EducationPageClient({ userRole }: EducationPageClientPro
   const handlePolish = async () => {
     setPolishing(true);
     setPolished('');
-    setPolishSource('');
+    setPolishSource('streaming');
+    setErrorMsg('');
     try {
       const res = await fetch('/api/education/polish', {
         method: 'POST',
@@ -222,13 +224,15 @@ export default function EducationPageClient({ userRole }: EducationPageClientPro
           grade: formData.grade,
         }),
       });
-      const json = await res.json();
-      if (!json.success) {
-        setErrorMsg(json.error || '解锁失败');
+      if (!res.ok) {
+        setErrorMsg(`HTTP ${res.status}`);
         return;
       }
-      setPolished(json.polished);
-      setPolishSource(json.source);
+      await handleDifyPolishResponse(res, {
+        setPolished,
+        setPolishSource,
+        setErrorMsg,
+      });
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : '网络异常');
     } finally {

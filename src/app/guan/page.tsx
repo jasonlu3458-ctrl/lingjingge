@@ -19,7 +19,7 @@ interface Card {
 const CARDS: Card[] = [
   {
     title: 'AI 生命密码',
-    href: '/guan/mingli',
+    href: '/guan/lifecode',
     icon: '🔮',
     tagline: '揭秘你的天赋与人生使命，附赠取名建议。',
     border: 'border-purple-200',

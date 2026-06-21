@@ -7,6 +7,7 @@ import type { WealthReport, Career } from '@/lib/wealth-rules';
 
 // 主题色（与其他 guan 页面保持一致：每个模块一种主色）
 const WEALTH_THEME = '#7a5a3a';   // 暗金 · 与"财富"语义匹配
+const WEALTH_ACCENT = '#b08551';  // 暖金
 const FONT_KAI = "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif";
 
 // ============================================================
@@ -103,6 +104,541 @@ const CAREER_OPTIONS: { value: Career; label: string; emoji: string }[] = [
   { value: '其他',       label: '其他', emoji: '🌐' },
 ];
 
+// ============================================================
+// 评分仪表盘（圆形 SVG 进度环）
+// ============================================================
+function ScoreGauge({ score, label }: { score: number; label: string }) {
+  const radius = 56;
+  const circumference = 2 * Math.PI * radius;
+  const dash = (score / 100) * circumference;
+  // 颜色三档
+  const color = score >= 85 ? '#16a34a' : score >= 70 ? '#ca8a04' : score >= 50 ? '#d97706' : '#b91c1c';
+  return (
+    <div className="flex flex-col items-center">
+      <svg width="148" height="148" viewBox="0 0 148 148" className="drop-shadow-sm">
+        <circle cx="74" cy="74" r={radius} fill="none" stroke="#f5e6cf" strokeWidth="12" />
+        <circle
+          cx="74" cy="74" r={radius}
+          fill="none" stroke={color} strokeWidth="12"
+          strokeDasharray={`${dash} ${circumference - dash}`}
+          strokeDashoffset={circumference / 4}
+          strokeLinecap="round"
+          transform="rotate(-90 74 74)"
+        />
+        <text x="74" y="70" textAnchor="middle" fontSize="32" fontWeight="700" fill={color}>
+          {score}
+        </text>
+        <text x="74" y="92" textAnchor="middle" fontSize="11" fill="#7a5a3a">
+          / 100
+        </text>
+      </svg>
+      <div className="mt-1 text-xs font-semibold" style={{ color, fontFamily: FONT_KAI }}>
+        {label}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// 八字摘要栏（横向 6 chip）
+// ============================================================
+function BaziSummaryBar({ report }: { report: WealthReport }) {
+  const items: { label: string; value: string; tone?: string }[] = [
+    { label: '日柱', value: report.bazi.dayGanzhi, tone: '#7a5a3a' },
+    { label: '日干五行', value: report.bazi.dayElement, tone: '#b08551' },
+    { label: '财星', value: report.wealthSource.element, tone: '#b85a4a' },
+    { label: '谋财方式', value: report.careerType.type, tone: '#7a5a3a' },
+    { label: '当前季节', value: report.timing.season.monthLabel, tone: '#b08551' },
+    { label: '职业匹配', value: report.career.matchLabel, tone: '#7a5a3a' },
+  ];
+  return (
+    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+      {items.map((it, i) => (
+        <div
+          key={i}
+          className="rounded-lg border border-amber-200 bg-white/80 px-2 py-2 text-center"
+        >
+          <div className="text-[10px] text-gray-500" style={{ fontFamily: FONT_KAI }}>
+            {it.label}
+          </div>
+          <div
+            className="text-sm font-bold mt-0.5"
+            style={{ color: it.tone, fontFamily: FONT_KAI }}
+          >
+            {it.value}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ============================================================
+// 免费报告卡（5 张）
+// ============================================================
+const FREE_CARD_META: { key: keyof WealthReport['free']; icon: string; subtitle: string; tone: string }[] = [
+  { key: 'origin',   icon: '🧬', subtitle: '你的命格底色', tone: '#7a5a3a' },
+  { key: 'fangxiang', icon: '🧭', subtitle: '财源方向 + 适配行业', tone: '#b85a4a' },
+  { key: 'gongzhan',  icon: '⚔️', subtitle: '打工 / 创业 / 合伙', tone: '#7a5a3a' },
+  { key: 'shijian',   icon: '⏰', subtitle: '旺衰节点 + 最佳窗口', tone: '#b08551' },
+  { key: 'yishi',     icon: '💎', subtitle: '智富小语 · 一句话点题', tone: '#b85a4a' },
+];
+
+function FreeCard({
+  index,
+  meta,
+  title,
+  content,
+  source,
+}: {
+  index: number;
+  meta: typeof FREE_CARD_META[number];
+  title: string;
+  content: string;
+  source?: string;
+}) {
+  return (
+    <div className="rounded-xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-white p-4 shadow-sm hover:shadow-md transition">
+      <div className="flex items-start gap-3">
+        <div
+          className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl"
+          style={{ backgroundColor: `${meta.tone}20`, color: meta.tone }}
+        >
+          {meta.icon}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span
+              className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+              style={{ backgroundColor: meta.tone, color: 'white', fontFamily: FONT_KAI }}
+            >
+              {index + 1}
+            </span>
+            <h3
+              className="text-base font-bold"
+              style={{ color: meta.tone, fontFamily: FONT_KAI }}
+            >
+              {title}
+            </h3>
+            <span className="text-[10px] text-gray-400">· {meta.subtitle}</span>
+          </div>
+          <p
+            className="mt-2 text-sm text-gray-700 leading-relaxed"
+            style={{ fontFamily: FONT_KAI }}
+          >
+            {content}
+          </p>
+          {source && (
+            <p className="mt-2 text-[10px] text-gray-400 italic">— {source}</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// 锁定卡片（5 张付费）
+// ============================================================
+const PAID_CARD_META: { key: keyof WealthReport['paid']; icon: string; preview: string; tone: string }[] = [
+  { key: 'qushi',    icon: '📈', preview: '未来 3 年流年趋势 + 关键转折点',       tone: '#b85a4a' },
+  { key: 'jiating',  icon: '🏛️', preview: '家庭财富池 · 4 笔预算黄金比例',         tone: '#7a5a3a' },
+  { key: 'guanli',   icon: '👥', preview: '管理用人 · 命中"什么搭档"',            tone: '#b08551' },
+  { key: 'fangkeng', icon: '⚠️', preview: '防坑指南 · 3 个你一定要绕开的雷区',     tone: '#b85a4a' },
+  { key: 'zhidao',   icon: '🎯', preview: '3 步落地清单 · 7-30-90 天行动表',      tone: '#7a5a3a' },
+];
+
+function LockedCard({
+  index,
+  meta,
+  title,
+}: {
+  index: number;
+  meta: typeof PAID_CARD_META[number];
+  title: string;
+}) {
+  return (
+    <div className="relative rounded-xl border-2 border-dashed border-amber-300 bg-white/40 p-4 overflow-hidden">
+      {/* 模糊背景 */}
+      <div
+        className="absolute inset-0 opacity-30 pointer-events-none select-none"
+        style={{
+          background: `repeating-linear-gradient(45deg, transparent, transparent 8px, ${meta.tone}10 8px, ${meta.tone}10 16px)`,
+        }}
+      />
+      <div className="relative">
+        <div className="flex items-start gap-3">
+          <div
+            className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl bg-white/80"
+          >
+            {meta.icon}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-baseline gap-2 flex-wrap">
+              <span
+                className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                style={{ backgroundColor: meta.tone, color: 'white', fontFamily: FONT_KAI }}
+              >
+                付费 {index + 1}
+              </span>
+              <h3
+                className="text-base font-bold text-gray-700"
+                style={{ fontFamily: FONT_KAI }}
+              >
+                {title}
+              </h3>
+            </div>
+            <p
+              className="mt-2 text-xs text-gray-500 leading-relaxed"
+              style={{ fontFamily: FONT_KAI }}
+            >
+              {meta.preview}
+            </p>
+            <div className="mt-2 flex items-center gap-1.5 text-[10px] text-amber-700">
+              <span>🔒</span>
+              <span style={{ fontFamily: FONT_KAI }}>解锁后查看完整内容</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// AI 智富心法（Dify 润色结果）
+// ============================================================
+function DifyPolishSection({
+  polished,
+  source,
+}: {
+  polished: string;
+  source: string;
+}) {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="rounded-xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 via-white to-amber-50 p-5 shadow-sm">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between gap-3"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-xl">🤖</span>
+          <span
+            className="text-base font-bold"
+            style={{ color: WEALTH_ACCENT, fontFamily: FONT_KAI }}
+          >
+            AI 智富心法 · Dify 顾问润色
+          </span>
+          <span
+            className="text-[10px] px-1.5 py-0.5 rounded text-white"
+            style={{ backgroundColor: source === 'dify' ? '#16a34a' : '#9ca3af' }}
+          >
+            {source === 'dify' ? 'Dify' : '本地模板'}
+          </span>
+        </div>
+        <span className="text-xs text-gray-500">{open ? '收起 ▴' : '展开 ▾'}</span>
+      </button>
+      {open && (
+        <div
+          className="mt-3 text-sm text-gray-800"
+          style={{ fontFamily: FONT_KAI }}
+        >
+          <MiniMarkdown text={polished} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// 专属付费墙（5 卡片 + 价格 + 信任）
+// ============================================================
+function WealthPaywall({
+  report,
+  userRole,
+  premiumSections,
+  reportKey,
+}: {
+  report: WealthReport;
+  userRole: UserRole;
+  premiumSections: string[];
+  reportKey: string;
+}) {
+  const isPaid = userRole === 'member' || userRole === 'admin';
+
+  if (isPaid) {
+    return (
+      <div className="space-y-3">
+        {PAID_CARD_META.map((meta, i) => {
+          const content = (report.paid[meta.key] as { content: string }).content;
+          return (
+            <div
+              key={meta.key}
+              className="rounded-xl border-2 border-green-300 bg-gradient-to-br from-green-50 to-white p-4 shadow-sm"
+            >
+              <div className="flex items-start gap-3">
+                <div
+                  className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl"
+                  style={{ backgroundColor: `${meta.tone}20`, color: meta.tone }}
+                >
+                  {meta.icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-2 flex-wrap">
+                    <span
+                      className="text-[10px] font-bold px-1.5 py-0.5 rounded text-white"
+                      style={{ backgroundColor: meta.tone, fontFamily: FONT_KAI }}
+                    >
+                      深度 {i + 1}
+                    </span>
+                    <h3
+                      className="text-base font-bold"
+                      style={{ color: meta.tone, fontFamily: FONT_KAI }}
+                    >
+                      {(report.paid[meta.key] as { title: string }).title}
+                    </h3>
+                  </div>
+                  <p
+                    className="mt-2 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap"
+                    style={{ fontFamily: FONT_KAI }}
+                  >
+                    {content}
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* 5 张锁定卡 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {PAID_CARD_META.map((meta, i) => (
+          <LockedCard
+            key={meta.key}
+            index={i}
+            meta={meta}
+            title={(report.paid[meta.key] as { title: string }).title}
+          />
+        ))}
+      </div>
+
+      {/* 价格 + CTA 区域 */}
+      <div className="rounded-xl bg-gradient-to-br from-amber-700 to-amber-900 text-white p-5 shadow-lg">
+        <div className="text-center mb-4">
+          <h3
+            className="text-xl font-bold mb-1"
+            style={{ fontFamily: FONT_KAI }}
+          >
+            💎 解锁 5 大深度模块
+          </h3>
+          <p
+            className="text-sm text-amber-100"
+            style={{ fontFamily: FONT_KAI }}
+          >
+            覆盖未来 3 年流年 · 家庭财富池 · 用人 · 防坑 · 落地清单
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="bg-white/10 backdrop-blur rounded-lg p-3 text-center">
+            <div className="text-xs text-amber-100" style={{ fontFamily: FONT_KAI }}>单次解锁</div>
+            <div className="text-2xl font-bold mt-1">¥9.9</div>
+            <div className="text-[10px] text-amber-200 mt-0.5" style={{ fontFamily: FONT_KAI }}>仅限本报告</div>
+          </div>
+          <div className="bg-white/20 backdrop-blur rounded-lg p-3 text-center ring-2 ring-amber-300 relative">
+            <div
+              className="absolute -top-2 left-1/2 -translate-x-1/2 bg-amber-300 text-amber-900 text-[10px] font-bold px-2 py-0.5 rounded"
+              style={{ fontFamily: FONT_KAI }}
+            >
+              推荐
+            </div>
+            <div className="text-xs text-amber-100" style={{ fontFamily: FONT_KAI }}>月度会员</div>
+            <div className="text-2xl font-bold mt-1">¥39</div>
+            <div className="text-[10px] text-amber-200 mt-0.5" style={{ fontFamily: FONT_KAI }}>全站 6 大模块全解锁</div>
+          </div>
+        </div>
+
+        <ReportPaywall
+          userRole={userRole}
+          freePart=""
+          premiumPart={premiumSections.join('\n')}
+          premiumSections={premiumSections}
+          reportKey={reportKey}
+          accentClass="text-amber-200"
+        />
+
+        {/* 信任标识 */}
+        <div className="mt-4 grid grid-cols-3 gap-2 text-center text-[10px] text-amber-100">
+          <div>
+            <div className="text-base">🛡️</div>
+            <div style={{ fontFamily: FONT_KAI }}>支付由 Stripe 保障</div>
+          </div>
+          <div>
+            <div className="text-base">🔒</div>
+            <div style={{ fontFamily: FONT_KAI }}>八字数据本地计算</div>
+          </div>
+          <div>
+            <div className="text-base">↩️</div>
+            <div style={{ fontFamily: FONT_KAI }}>7 天无理由退款</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// 报告主区
+// ============================================================
+function WealthReportView({
+  report,
+  userRole,
+  polished,
+  polishSource,
+  polishLoading,
+  onPolish,
+}: {
+  report: WealthReport;
+  userRole: UserRole;
+  polished: string;
+  polishSource: string;
+  polishLoading: boolean;
+  onPolish: () => void;
+}) {
+  return (
+    <div id="wealth-report" className="space-y-5">
+      {/* 头部：评分仪表盘 + 八字摘要 */}
+      <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-amber-200 p-5">
+        <div className="flex flex-col md:flex-row gap-5 items-center">
+          <ScoreGauge
+            score={report.score}
+            label={report.score >= 85 ? '极佳 · 可大举进攻' : report.score >= 70 ? '较佳 · 顺势而为' : report.score >= 50 ? '中等 · 稳中求进' : '偏弱 · 宜守不宜攻'}
+          />
+          <div className="flex-1 w-full">
+            <div className="text-center md:text-left mb-3">
+              <div className="text-2xl mb-1">💎</div>
+              <h2
+                className="text-2xl font-bold text-gray-800"
+                style={{ fontFamily: FONT_KAI, color: WEALTH_THEME }}
+              >
+                {report.input.name} · 事业智富报告
+              </h2>
+              <p
+                className="text-sm text-gray-600 mt-1"
+                style={{ fontFamily: FONT_KAI }}
+              >
+                八字 <span style={{ color: WEALTH_THEME }}>{report.bazi.yearGanzhi} {report.bazi.monthGanzhi} {report.bazi.dayGanzhi}</span>
+                <span className="mx-2 text-gray-400">|</span>
+                生肖 {report.bazi.yearZodiac}
+                <span className="mx-2 text-gray-400">|</span>
+                阳历 {report.bazi.solarDate}
+              </p>
+            </div>
+            <BaziSummaryBar report={report} />
+          </div>
+        </div>
+      </div>
+
+      {/* AI 智富心法（Dify 润色） */}
+      {polished ? (
+        <DifyPolishSection polished={polished} source={polishSource} />
+      ) : (
+        <div className="text-center">
+          <button
+            onClick={onPolish}
+            disabled={polishLoading}
+            className="px-6 py-2.5 rounded-lg text-white font-semibold shadow-md transition disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{
+              background: `linear-gradient(135deg, ${WEALTH_ACCENT}, ${WEALTH_THEME})`,
+              fontFamily: FONT_KAI,
+            }}
+          >
+            {polishLoading ? '🤖 AI 润色中…' : '🤖 召唤 AI 智富心法（基于 Dify 润色 · 免费体验）'}
+          </button>
+          <p className="text-xs text-gray-400 mt-2" style={{ fontFamily: FONT_KAI }}>
+            AI 会基于你的八字 + 职业，给出一份 500-700 字的可执行破局指南
+          </p>
+        </div>
+      )}
+
+      {/* 免费 5 大模块 */}
+      <div>
+        <div className="flex items-baseline justify-between mb-3 px-1">
+          <h3
+            className="text-lg font-bold flex items-center gap-2"
+            style={{ color: WEALTH_THEME, fontFamily: FONT_KAI }}
+          >
+            <span>🎁</span>
+            <span>免费 5 大模块</span>
+          </h3>
+          <span
+            className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700"
+            style={{ fontFamily: FONT_KAI }}
+          >
+            立即可读
+          </span>
+        </div>
+        <div className="space-y-3">
+          {FREE_CARD_META.map((meta, i) => {
+            const c = report.free[meta.key];
+            return (
+              <FreeCard
+                key={meta.key}
+                index={i}
+                meta={meta}
+                title={c.title}
+                content={c.content}
+                source={'source' in c ? (c as { source?: string }).source : undefined}
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 付费墙 / 5 张深度模块 */}
+      <div>
+        <div className="flex items-baseline justify-between mb-3 px-1">
+          <h3
+            className="text-lg font-bold flex items-center gap-2"
+            style={{ color: WEALTH_THEME, fontFamily: FONT_KAI }}
+          >
+            <span>🔒</span>
+            <span>5 大深度模块</span>
+          </h3>
+          <span
+            className="text-xs px-2 py-0.5 rounded-full bg-amber-100"
+            style={{ color: WEALTH_THEME, fontFamily: FONT_KAI }}
+          >
+            会员 / 单解锁
+          </span>
+        </div>
+        <WealthPaywall
+          report={report}
+          userRole={userRole}
+          premiumSections={[
+            report.paid.qushi.title,
+            report.paid.jiating.title,
+            report.paid.guanli.title,
+            report.paid.fangkeng.title,
+            report.paid.zhidao.title,
+          ]}
+          reportKey="wealth"
+        />
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// 主页面
+// ============================================================
 interface WealthPageClientProps {
   userRole: UserRole;
 }
@@ -166,8 +702,6 @@ export default function WealthPageClient({ userRole }: WealthPageClientProps) {
   // Dify 润色
   const handlePolish = async () => {
     setPolishing(true);
-    setPolished('');
-    setPolishSource('');
     try {
       const res = await fetch('/api/wealth/polish', {
         method: 'POST',
@@ -190,44 +724,6 @@ export default function WealthPageClient({ userRole }: WealthPageClientProps) {
       setPolishing(false);
     }
   };
-
-  // 免费 / 付费内容拼接
-  const freePart = report ? [
-    report.free.origin.content,
-    '',
-    `【${report.free.fangxiang.title}】${report.free.fangxiang.content}`,
-    '',
-    `【${report.free.gongzhan.title}】${report.free.gongzhan.content}`,
-    '',
-    `【${report.free.shijian.title}】${report.free.shijian.content}`,
-    '',
-    `【${report.free.yishi.title}】${report.free.yishi.content}`,
-  ].join('\n') : '';
-
-  const premiumPart = report ? [
-    `【${report.paid.qushi.title}】`,
-    report.paid.qushi.content,
-    '',
-    `【${report.paid.jiating.title}】`,
-    report.paid.jiating.content,
-    '',
-    `【${report.paid.guanli.title}】`,
-    report.paid.guanli.content,
-    '',
-    `【${report.paid.fangkeng.title}】`,
-    report.paid.fangkeng.content,
-    '',
-    `【${report.paid.zhidao.title}】`,
-    report.paid.zhidao.content,
-  ].join('\n') : '';
-
-  const premiumSections = report ? [
-    report.paid.qushi.title,
-    report.paid.jiating.title,
-    report.paid.guanli.title,
-    report.paid.fangkeng.title,
-    report.paid.zhidao.title,
-  ] : [];
 
   return (
     <div className="flex flex-col" style={{ backgroundColor: WEALTH_THEME }}>
@@ -435,69 +931,14 @@ export default function WealthPageClient({ userRole }: WealthPageClientProps) {
 
         {/* 报告区 */}
         {report && (
-          <div id="wealth-report" className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-amber-200 p-6 mb-6">
-            <div className="text-center mb-4">
-              <div className="text-3xl mb-1">💎</div>
-              <h2 className="text-2xl font-bold text-gray-800" style={{ fontFamily: FONT_KAI }}>
-                {report.input.name} · 事业智富报告
-              </h2>
-              <p className="text-sm text-gray-500 mt-1" style={{ fontFamily: FONT_KAI }}>
-                八字：<span className="text-amber-700">{report.bazi.yearGanzhi} {report.bazi.monthGanzhi} {report.bazi.dayGanzhi}</span>
-                <span className="ml-2 text-gray-400">（{report.bazi.dayElement}）</span>
-                <span className="ml-2 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs">
-                  财星：{report.wealthSource.element}
-                </span>
-                <span className="ml-2 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs">
-                  谋财：{report.careerType.type}
-                </span>
-              </p>
-              <p className="text-xs text-gray-500 mt-1" style={{ fontFamily: FONT_KAI }}>
-                职业：<strong>{report.career.label}</strong> · 匹配度 {report.career.matchLabel}
-                <span className="mx-2">·</span>
-                当前：<strong>{report.timing.season.label}（{report.timing.phase}）</strong>
-                <span className="mx-2">·</span>
-                建议工作方式：<strong>{report.careerType.workMode}</strong>
-                <span className="ml-3 text-amber-700 font-bold">综合评分 {report.score}</span>
-              </p>
-            </div>
-
-            {/* 免费 / 付费：复用 ReportPaywall */}
-            <ReportPaywall
-              userRole={userRole}
-              freePart={polished && polishSource === 'dify'
-                ? polished
-                : freePart}
-              premiumPart={premiumPart}
-              premiumSections={premiumSections}
-              reportKey="wealth"
-              accentClass="text-amber-700"
-            />
-
-            {/* Dify 润色按钮（仅当还没润色时显示） */}
-            {!polished && (
-              <div className="mt-4 text-center">
-                <button
-                  onClick={handlePolish}
-                  disabled={polishing}
-                  className="px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-60 disabled:cursor-not-allowed"
-                  style={{ fontFamily: FONT_KAI }}
-                >
-                  {polishing ? '🤖 AI 润色中…' : '🤖 AI 智富心法润色（免费体验）'}
-                </button>
-                {polishSource && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    数据来源：{polishSource === 'dify' ? 'Dify 智富顾问' : '本地模板（兜底）'}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {polished && polishSource === 'dify' && (
-              <p className="text-xs text-gray-400 text-center mt-2">
-                报告已通过 Dify 智富顾问润色 · 可滚动查看完整内容
-              </p>
-            )}
-          </div>
+          <WealthReportView
+            report={report}
+            userRole={userRole}
+            polished={polished}
+            polishSource={polishSource}
+            polishLoading={polishing}
+            onPolish={handlePolish}
+          />
         )}
       </main>
     </div>

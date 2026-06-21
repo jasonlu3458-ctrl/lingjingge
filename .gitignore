@@ -53,3 +53,12 @@ next-env.d.ts
 /build_err.txt
 /build_out*.log
 /build_err*.log
+
+# local dev logs & scripts
+/dev-*.log
+/scripts-*.log
+/cleanup-*.ps1
+/dify-wealth-setup-guide.md
+/marriage-sample.json
+/test-*.json
+/vercel-env-paste.txt

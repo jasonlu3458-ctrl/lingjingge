@@ -21,9 +21,9 @@ const menuItems = [
     label: '内观',
     href: '/guan',
     items: [
-      { label: 'AI生命密码', href: '/guan/mingli',     icon: '🔮' },
+      { label: 'AI生命密码', href: '/guan/lifecode',   icon: '🔮' },
       { label: 'AI婚姻家庭', href: '/guan/family',     icon: '�' },
-      { label: 'AI事业财富', href: '/guan/career',     icon: '�' },
+      { label: 'AI事业财富', href: '/guan/wealth',     icon: '�' },
       { label: 'AI子女教育', href: '/guan/education',  icon: '🌱' },
       { label: 'AI家居环境', href: '/guan/house',      icon: '�' },
       { label: 'AI身心合一', href: '/guan/body',       icon: '🌿' },

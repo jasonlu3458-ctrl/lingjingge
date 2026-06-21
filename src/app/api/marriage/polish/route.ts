@@ -1,13 +1,8 @@
 // ============================================================
-// /api/marriage/polish —— 婚姻家庭合婚报告 · Dify 润色接口
-// 调用真实 Dify（key: DIFY_MARRIAGE_API_KEY），Dify 端把
-// 由 /api/marriage 计算好的双八字 / 关系状态 / 痛点润色为
-// 一段通俗、温暖、可读的中文报告。
-//
-// 协议参考 /api/education/polish/route.ts：
-//   POST {api.dify.ai}/v1/chat-messages
-//   body: { inputs, query, response_mode, user, conversation_id? }
-//   auth:  Bearer <DIFY_MARRIAGE_API_KEY>
+// /api/marriage/polish —— 婚姻家庭合婚报告 · Dify 润色接口（SSE 流式）
+// 协议参考 /api/house/polish：
+//   走 Dify streaming → 直接透传 body 给前端
+//   失败时降级到 JSON 包（前端按 content-type 识别）
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -154,20 +149,23 @@ function painPointsText(p: string[]) {
   return p.length > 0 ? p.map(x => map[x] || x).join('、') : '未指定';
 }
 
-/**
- * 调 Dify。response_mode 用 'blocking' 一次性返回。
- * 如果 Dify 流式响应解析失败，自动回退到本地模板。
- */
-async function callDify(inputs: Record<string, unknown>, query: string, user: string, conversationId?: string): Promise<string> {
+// —— 流式调 Dify ——
+async function callDifyStream(
+  inputs: Record<string, unknown>,
+  query: string,
+  user: string,
+  conversationId: string | undefined,
+): Promise<{ ok: true; body: ReadableStream<Uint8Array>; contentType: string }
+       | { ok: false; error: string }> {
   const apiKey = process.env.DIFY_MARRIAGE_API_KEY || process.env.NEXT_PUBLIC_DIFY_MARRIAGE_API_KEY;
-  if (!apiKey) throw new Error('DIFY_MARRIAGE_API_KEY 未配置');
+  if (!apiKey) return { ok: false, error: 'DIFY_MARRIAGE_API_KEY 未配置' };
 
   const baseUrl = (process.env.DIFY_BASE_URL || 'https://api.dify.ai').replace(/\/$/, '');
 
   const body: Record<string, unknown> = {
     inputs,
     query,
-    response_mode: 'blocking',
+    response_mode: 'streaming',
     user: user || 'lingjingge-marriage-user',
   };
   if (conversationId) body.conversation_id = conversationId;
@@ -183,18 +181,46 @@ async function callDify(inputs: Record<string, unknown>, query: string, user: st
 
   if (!res.ok) {
     const txt = await res.text().catch(() => '');
-    throw new Error(`Dify ${res.status}: ${txt.slice(0, 300)}`);
+    return { ok: false, error: `Dify ${res.status}: ${txt.slice(0, 300)}` };
   }
-  const data = await res.json();
-  const answer =
-    data?.answer ||
-    data?.data?.outputs?.answer ||
-    data?.data?.outputs?.text ||
-    data?.outputs?.answer ||
-    data?.outputs?.text ||
-    '';
-  if (!answer) throw new Error('Dify 响应中未找到 answer 字段');
-  return String(answer);
+  if (!res.body) return { ok: false, error: 'Dify returned empty body' };
+
+  return { ok: true, body: res.body, contentType: res.headers.get('content-type') || 'text/event-stream' };
+}
+
+// —— 本地模板（JSON 降级，单人 / 双人 分支）——
+function buildFallbackText(report: ReturnType<typeof checkMarriageRules>, errorMsg: string): string {
+  const isSingle = report.personCount === 'single';
+  if (isSingle) {
+    return [
+      `🌸 ${report.input.self.name} —— 你的姻缘密码`,
+      `${report.personal!.futureTrend.summary}`,
+      ``,
+      `【桃花星】${report.personal!.peachBlossom.label}——${report.personal!.peachBlossom.source}`,
+      `【配偶宫】日支「${report.personal!.spousePalace.branch}」：${report.personal!.spousePalace.meaning}`,
+      `【理想对象】日干 ${report.personal!.idealPartner.dayStem}（${report.personal!.idealPartner.fiveElement}），${report.personal!.idealPartner.traits.join('、')}`,
+      `【感情窗口】${report.personal!.futureTrend.window}`,
+      ``,
+      `【现阶段建议】`,
+      ...report.personal!.cautions.map((c, i) => `${i + 1}. ${c}`),
+      ``,
+      `💡 想看看未来伴侣的具体模样？解锁【双人合婚】即可。`,
+      ``,
+      `（注：本次未接通 Dify，已使用本地模板。原始错误：${errorMsg}）`,
+    ].join('\n');
+  }
+  return [
+    `💞 ${report.input.self.name} 与 ${report.input.partner!.name} —— 合婚简报`,
+    `双方缘分：${report.compatibility!.score} 分（${report.compatibility!.level}）。${report.compatibility!.levelHint}`,
+    ``,
+    `【核心匹配】`,
+    ...report.free.coreMatch.bullets.map(b => `· ${b}`),
+    ``,
+    `【相处建议】`,
+    ...report.free.tips.items.map((t, i) => `${i + 1}. ${t}`),
+    ``,
+    `（注：本次未接通 Dify，已使用本地模板。原始错误：${errorMsg}）`,
+  ].join('\n');
 }
 
 export async function POST(request: NextRequest) {
@@ -234,51 +260,43 @@ export async function POST(request: NextRequest) {
 4. 结尾用 1 句温柔鼓励；
 5. 文中必须出现：${report.input.self.name}、${report.input.partner.name}、当前关系状态、用户最关心的痛点。`;
 
-    // 3. 调真实 Dify
+    // 3. 流式调 Dify（透传 SSE）
     try {
       const userKey = user || (isSingle
         ? `single-${self.name}-${self.birthDate}`
         : `mrg-${self.name}-${partner!.name}-${self.birthDate}`);
-      const polished = await callDify(
+      const stream = await callDifyStream(
         inputs,
         query,
         userKey,
         conversation_id
       );
-      return NextResponse.json({ success: true, source: 'dify', polished, conversation_id, personCount: report.personCount });
+      if (stream.ok) {
+        return new Response(stream.body, {
+          status: 200,
+          headers: {
+            'Content-Type': stream.contentType,
+            'Cache-Control': 'no-cache, no-transform',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no',
+            'X-Marriage-Source': 'dify-streaming',
+            'X-Person-Count': report.personCount,
+          },
+        });
+      }
+      console.warn('[api/marriage/polish] Dify 流式失败，回退到 JSON:', stream.error);
+      const fb = buildFallbackText(report, stream.error);
+      return NextResponse.json(
+        { success: true, source: 'local-template', polished: fb, error: stream.error, personCount: report.personCount },
+        { status: 200 }
+      );
     } catch (err) {
-      console.warn('[api/marriage/polish] Dify 失败，回退到本地模板:', err);
-      // 降级：拼装一份本地模板（单人 / 双人）
-      const fallback = isSingle
-        ? [
-            `🌸 ${report.input.self.name} —— 你的姻缘密码`,
-            `${report.personal!.futureTrend.summary}`,
-            ``,
-            `【桃花星】${report.personal!.peachBlossom.label}——${report.personal!.peachBlossom.source}`,
-            `【配偶宫】日支「${report.personal!.spousePalace.branch}」：${report.personal!.spousePalace.meaning}`,
-            `【理想对象】日干 ${report.personal!.idealPartner.dayStem}（${report.personal!.idealPartner.fiveElement}），${report.personal!.idealPartner.traits.join('、')}`,
-            `【感情窗口】${report.personal!.futureTrend.window}`,
-            ``,
-            `【现阶段建议】`,
-            ...report.personal!.cautions.map((c, i) => `${i + 1}. ${c}`),
-            ``,
-            `💡 想看看未来伴侣的具体模样？解锁【双人合婚】即可。`,
-            ``,
-            `（注：本次未接通 Dify，已使用本地模板。原始错误：${err instanceof Error ? err.message : '未知'}）`,
-          ].join('\n')
-        : [
-            `💞 ${report.input.self.name} 与 ${report.input.partner.name} —— 合婚简报`,
-            `双方缘分：${report.compatibility!.score} 分（${report.compatibility!.level}）。${report.compatibility!.levelHint}`,
-            ``,
-            `【核心匹配】`,
-            ...report.free.coreMatch.bullets.map(b => `· ${b}`),
-            ``,
-            `【相处建议】`,
-            ...report.free.tips.items.map((t, i) => `${i + 1}. ${t}`),
-            ``,
-            `（注：本次未接通 Dify，已使用本地模板。原始错误：${err instanceof Error ? err.message : '未知'}）`,
-          ].join('\n');
-      return NextResponse.json({ success: true, source: 'local-template', polished: fallback, personCount: report.personCount });
+      console.warn('[api/marriage/polish] 异常，降级到 JSON:', err);
+      const fallback = buildFallbackText(report, err instanceof Error ? err.message : '未知错误');
+      return NextResponse.json(
+        { success: true, source: 'local-template', polished: fallback, error: err instanceof Error ? err.message : '未知', personCount: report.personCount },
+        { status: 200 }
+      );
     }
   } catch (err) {
     console.error('[api/marriage/polish] 错误:', err);
