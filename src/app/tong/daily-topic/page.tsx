@@ -158,7 +158,12 @@ export default function DailyTopicPage() {
         </div>
       </article>
 
-      <DailyTopicClient quoteText={quote.text} today={today} />
+      <DailyTopicClient
+        content={quote.text}
+        source={quote.source}
+        reflection={quote.reflection}
+        today={today}
+      />
 
       <div className="mt-8 text-center">
         <p className="text-xs text-gray-400">— 明日话头，更新 —</p>

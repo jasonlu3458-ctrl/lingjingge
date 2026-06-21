@@ -5,6 +5,18 @@ const nextConfig = {
   // 镜像体积可从 ~500MB 降至 ~150MB。
   output: 'standalone',
   reactStrictMode: true,
+  // ============================================================
+  // SEO 静态化说明（藏经阁 /zang/library/[category]/[slug]）：
+  //   App Router 下，generateStaticParams 必须由 page.tsx 导出，
+  //   不可写在 next.config.js。这里仅做以下配合：
+  //     1. trailingSlash=false  → 避免收录时出现双 URL
+  //     2. 头部加 X-Robots-Tag 友好默认值
+  //   真正预生成在 src/app/zang/library/[category]/[slug]/page.tsx 内：
+  //     - generateStaticParams()  预生成《道德经》81 章 + 金刚经 / 心经 / 坛经 / 易经
+  //     - generateMetadata()      每篇独立 title / description / keywords
+  //     - dynamicParams=true      白名单外仍可动态渲染
+  // ============================================================
+  trailingSlash: false,
   // 隐藏 Next.js dev 指示器（右下角圆形按钮）：
   // 固定在 right-0 / bottom-0，会盖住浏览器窗口右侧约 40px 的
   // 拖动/调整大小热区。在报告页（内容很长、滚动条贴近右缘）体感尤为明显。

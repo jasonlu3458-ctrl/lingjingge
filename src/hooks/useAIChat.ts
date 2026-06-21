@@ -1,9 +1,16 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useFreeTurns } from './useFreeTurns';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import type { UserRole } from '@/lib/auth';
+import {
+  fetchRemoteMessages,
+  pushRemoteMessage,
+  loadLocalMessages,
+  saveLocalMessages,
+  type PersistedMessage,
+} from '@/lib/chat-persistence';
 
 interface Message {
   id: string;
@@ -61,6 +68,98 @@ export function useAIChat({ type, userRole: serverUserRole, initialMessages = []
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // —— 对话持久化所需：user_id + conversation_id ——
+  const [userId, setUserId] = useState<string | null>(null);
+  const conversationIdRef = useRef<string>(
+    `conv-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  );
+
+  // 拉当前用户（仅 client）
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!cancelled) setUserId(user?.id ?? null);
+      } catch {
+        if (!cancelled) setUserId(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // 初始化：拉取历史（Supabase 优先，失败回退 localStorage）
+  useEffect(() => {
+    if (initialMessages.length > 0) return; // 调用方已注入
+    const convId = conversationIdRef.current;
+    let cancelled = false;
+
+    (async () => {
+      // 1) 远端
+      if (userId) {
+        const remote = await fetchRemoteMessages(userId, convId, type);
+        if (cancelled) return;
+        if (remote && remote.length > 0) {
+          setMessages(
+            remote.map((m) => ({ id: m.id, role: m.role, content: m.content }))
+          );
+          return;
+        }
+      }
+      // 2) 本地兜底
+      const local = loadLocalMessages(type, convId);
+      if (cancelled) return;
+      if (local.length > 0) {
+        setMessages(
+          local.map((m) => ({ id: m.id, role: m.role, content: m.content }))
+        );
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [userId, type]);
+
+  /**
+   * 写入持久化：远端（已登录时）+ localStorage 兜底。
+   * 静默失败（不影响聊天流）。
+   */
+  const persistMessage = useCallback(
+    async (msg: Message) => {
+      const convId = conversationIdRef.current;
+      // 远端
+      if (userId) {
+        pushRemoteMessage(userId, convId, type, msg.role, msg.content).catch(() => {});
+      }
+      // localStorage：合并到按 type 分桶的数组里
+      try {
+        const raw = typeof window !== 'undefined'
+          ? window.localStorage.getItem(`chat_history_${type}`)
+          : null;
+        const arr: Array<PersistedMessage & { conversation_id: string }> = raw
+          ? JSON.parse(raw)
+          : [];
+        // 同一 convId 内同 id 的去重
+        const without = arr.filter(
+          (m) => !(m.conversation_id === convId && m.id === msg.id)
+        );
+        without.push({
+          id: msg.id,
+          role: msg.role,
+          content: msg.content,
+          created_at: new Date().toISOString(),
+          conversation_id: convId,
+        });
+        // 总量限制：每个 type 最多保留 200 条
+        const trimmed = without.slice(-200);
+        saveLocalMessages(type, trimmed);
+      } catch {
+        /* ignore */
+      }
+    },
+    [userId, type]
+  );
+
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;
 
@@ -80,6 +179,8 @@ export function useAIChat({ type, userRole: serverUserRole, initialMessages = []
       content: content.trim(),
     };
     setMessages(prev => [...prev, userMessage]);
+    // 持久化用户消息（远端 + 本地）
+    persistMessage(userMessage);
 
     try {
       const response = await fetch('/api/dify', {
@@ -122,7 +223,7 @@ export function useAIChat({ type, userRole: serverUserRole, initialMessages = []
             if (line.startsWith('data: ')) {
               try {
                 const data = JSON.parse(line.substring(6));
-                
+
                 if ((data.event === 'message' || data.event === 'agent_message') && data.answer) {
                   fullResponse += data.answer;
                   // 更新消息内容
@@ -138,17 +239,29 @@ export function useAIChat({ type, userRole: serverUserRole, initialMessages = []
         }
       }
 
+      // 流式结束：持久化助手消息
+      if (fullResponse) {
+        const assistantMessage: Message = {
+          id: messageId,
+          role: 'assistant',
+          content: fullResponse,
+        };
+        persistMessage(assistantMessage);
+      }
+
     } catch (err) {
       setError(err instanceof Error ? err.message : '未知错误');
-      setMessages(prev => [...prev, {
+      const fallback: Message = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
         content: '抱歉，AI服务暂时不可用，请稍后重试。',
-      }]);
+      };
+      setMessages(prev => [...prev, fallback]);
+      persistMessage(fallback);
     } finally {
       setIsLoading(false);
     }
-  }, [type, isLoading, mounted, trySend]);
+  }, [type, isLoading, mounted, trySend, persistMessage]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);

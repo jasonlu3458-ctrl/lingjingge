@@ -55,10 +55,26 @@ export default function LoginPage() {
       } else if (data.user && data.user.email_confirmed_at) {
         // 强制刷新会话，确保 cookies 被正确设置
         await supabase.auth.getSession();
-        
+
+        // 处理 ?ref= 邀请绑定：localStorage 中可能缓存了 ref
+        try {
+          const refCode =
+            new URLSearchParams(window.location.search).get('ref') ||
+            localStorage.getItem('signup_ref') ||
+            '';
+          if (refCode) {
+            await fetch('/api/user/invite/apply-ref', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ref: refCode }),
+            });
+            try { localStorage.removeItem('signup_ref'); } catch {}
+          }
+        } catch { /* 静默 */ }
+
         // 等待一小段时间确保 cookies 写入完成
         await new Promise(resolve => setTimeout(resolve, 500));
-        
+
         // 使用 window.location.replace 确保 cookies 被发送
         window.location.replace(redirect);
       } else {

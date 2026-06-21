@@ -25,6 +25,36 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+
+  /* iOS 安全区适配：底部 padding 把 home indicator 横条预留出来 */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pb-safe-or-4 {
+    padding-bottom: max(env(safe-area-inset-bottom), 1rem);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  /* 移动端触控标准：44pt 最小高度（Apple HIG），48dp（Material） */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* 触摸点按反馈：按下时缩小+变淡，模拟真实按压 */
+  .touch-feedback {
+    transition: transform 150ms ease, opacity 150ms ease;
+  }
+  .touch-feedback:active {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .touch-feedback, .touch-feedback:active {
+      transition: none;
+      transform: none;
+    }
+  }
 }
 
 /* ===== 报告淡入（替代 framer-motion） ===== */
@@ -37,6 +67,52 @@ body {
 }
 @media (prefers-reduced-motion: reduce) {
   .report-fade-in { animation: none; }
+}
+
+/* ==========================================================
+   移动端排版自适应（< md / < 768px）
+   —— 用 CSS 覆盖替代逐文件改动，避免 100+ 处散改的风险
+   —— 用 !important 是因为需要压过 Tailwind utilities 加载顺序
+   ========================================================== */
+@media (max-width: 767px) {
+  /* 标题降级：避免在窄屏上显示得过于庞大笨重 */
+  .text-4xl { font-size: 1.5rem !important; line-height: 2rem !important; }
+  .text-3xl { font-size: 1.5rem !important; line-height: 2rem !important; }
+  .text-5xl { font-size: 1.875rem !important; line-height: 2.25rem !important; }
+
+  /* 内容边距缩小：py-16/py-12 → py-8 */
+  .py-16 { padding-top: 2rem !important; padding-bottom: 2rem !important; }
+  .py-12 { padding-top: 2rem !important; padding-bottom: 2rem !important; }
+}
+
+/* ==========================================================
+   移动端触控反馈（touch feedback + 44pt 最小高度）
+   —— 全部 button 自动获得点按反馈（无需逐文件加 active:scale-95）
+   —— exclude: input/select/textarea/带 [data-no-touch] 的按钮
+   ========================================================== */
+button:not([data-no-touch]):not(:disabled) {
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 150ms ease, opacity 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+button:not([data-no-touch]):not(:disabled):active {
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+@media (max-width: 767px) {
+  /* 移动端：所有可点击 button 最小 44pt 高度（Apple HIG） */
+  button:not([data-no-touch]):not(:disabled) {
+    min-height: 44px;
+  }
+  /* 小字号按钮（text-xs/text-sm）加 padding 兜底高度 */
+  button.text-xs:not([data-no-touch]):not(:disabled),
+  button.text-sm:not([data-no-touch]):not(:disabled) {
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  button:not([data-no-touch]):not(:disabled) { transition: none; }
+  button:not([data-no-touch]):not(:disabled):active { transform: none; opacity: 1; }
 }
 
 /* ===== 生命密码 · 唤醒按钮呼吸光环 ===== */

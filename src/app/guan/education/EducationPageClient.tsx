@@ -3,6 +3,7 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import type { UserRole } from '@/lib/auth';
 import { handleDifyPolishResponse } from '@/lib/sse-client';
+import ExportPDFButton from '@/components/ExportPDFButton';
 
 // 轻量内联 Markdown 渲染器（替换 react-markdown@10）：
 // react-markdown 是 ESM-only，Next.js 14 + RSC 静态/动态 import
@@ -418,7 +419,7 @@ export default function EducationPageClient({ userRole }: EducationPageClientPro
 
           {/* ====== 报告展示区 ====== */}
           {report && (
-            <div className="bg-white bg-opacity-80 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 p-6 mb-6">
+            <div id="education-report" className="bg-white bg-opacity-80 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 p-6 mb-6">
               <h2
                 className="text-xl font-bold text-gray-800 mb-2"
                 style={{ fontFamily: FONT_KAI }}
@@ -518,14 +519,6 @@ export default function EducationPageClient({ userRole }: EducationPageClientPro
                 </p>
                 <div className="mt-4 flex flex-col sm:flex-row gap-3 justify-center">
                   <button
-                    onClick={handlePolish}
-                    disabled={polishing}
-                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed"
-                    style={{ fontFamily: FONT_KAI }}
-                  >
-                    {polishing ? '🤖 润色中…' : '🤖 AI 润色完整版（免费体验）'}
-                  </button>
-                  <button
                     className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
                     style={{ fontFamily: FONT_KAI }}
                   >
@@ -538,7 +531,6 @@ export default function EducationPageClient({ userRole }: EducationPageClientPro
                     开通会员 29.9元/月
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">（开发期可点 &ldquo;AI 润色完整版&rdquo; 直接体验；上线后会接入付费墙）</p>
               </div>
 
               {/* 润色结果展示区 */}
@@ -564,6 +556,15 @@ export default function EducationPageClient({ userRole }: EducationPageClientPro
                   )}
                 </div>
               )}
+
+              {/* 导出 PDF */}
+              <div className="mt-6 text-center">
+                <ExportPDFButton
+                  targetId="education-report"
+                  filename={`学业报告-${report.input.name || '匿名'}`}
+                  tone="gray"
+                />
+              </div>
             </div>
           )}
         </main>

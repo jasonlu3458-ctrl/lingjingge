@@ -99,7 +99,7 @@ export default function CategoryPage() {
         await new Promise((r) => setTimeout(r, 200));
         const fallback = mockByCategory[categorySlug] || [];
         if (fallback.length === 0) {
-          setError(`未找到 "${categorySlug}" 的典籍，请检查 Supabase 数据库或运行建表 SQL。`);
+          setError(`暂无 "${authorName}" 的典籍收录，敬请期待。`);
         }
         setArticles(fallback);
       } catch (e: any) {
@@ -119,7 +119,7 @@ export default function CategoryPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f0eb]">
-      <main className="max-w-5xl mx-auto px-4 py-8">
+      <main className="max-w-6xl mx-auto px-4 py-8">
         <Link href="/zang/library" className="text-sm text-gray-500 hover:text-[#2c2c2c] mb-4 inline-flex items-center gap-1">
           <span>←</span>
           <span>返回藏经阁</span>
@@ -160,6 +160,14 @@ export default function CategoryPage() {
           </div>
         </div>
 
+        {/* AI 经典导读区块（顶部引导入口） */}
+        <AiIntroCard
+          authorName={meta.name}
+          articleCount={articles.length}
+          unit={isLongSeries ? '章' : '部'}
+          categorySlug={categorySlug}
+        />
+
         {isLongSeries && (
           <div className="mb-4">
             <input
@@ -180,28 +188,33 @@ export default function CategoryPage() {
         )}
 
         {!loading && filtered.length > 0 && (
-          <div className={isLongSeries ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' : 'space-y-3'}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {filtered.map((article) => (
               <Link
                 key={article.id}
                 href={`/zang/library/${categorySlug}/${article.slug}`}
-                className="group block bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all border border-gray-100"
+                className="group block rounded-2xl p-5 sm:p-6 transition-all duration-300 border border-amber-200/60 bg-[#fbf6ec]/80 hover:bg-white hover:border-[#b88a4a]/60 hover:shadow-lg hover:-translate-y-0.5"
               >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <h3
-                      className={`font-serif text-[#2c2c2c] group-hover:text-[#b88a4a] transition-colors ${isLongSeries ? 'truncate' : ''}`}
-                      style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}
-                    >
-                      {article.title}
-                    </h3>
-                    {article.content && isLongSeries && (
-                      <p className="text-xs text-gray-500 mt-1 line-clamp-1">
-                        {article.content.substring(0, 60)}...
-                      </p>
-                    )}
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center text-amber-700 text-xs font-bold tracking-widest">
+                    {String(articles.indexOf(article) + 1).padStart(2, '0')}
                   </div>
-                  <span className="text-gray-400 group-hover:text-amber-600 transition-colors flex-shrink-0">→</span>
+                  <h3
+                    className="flex-1 min-w-0 font-serif text-[#2c2c2c] group-hover:text-[#b88a4a] transition-colors leading-snug"
+                    style={{ fontFamily: "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif", fontSize: '1.15rem' }}
+                  >
+                    {article.title}
+                  </h3>
+                </div>
+                {/* 副标题：本小节第一句原文（前 15 字） */}
+                <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 min-h-[2.5rem] italic">
+                  {article.content
+                    ? article.content.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 15) + '…'
+                    : '…'}
+                </p>
+                <div className="mt-3 pt-3 border-t border-amber-100/60 flex items-center justify-between text-[11px] text-amber-700/70 tracking-widest">
+                  <span>{article.source || '典籍'}</span>
+                  <span className="group-hover:translate-x-0.5 transition-transform">展卷 →</span>
                 </div>
               </Link>
             ))}
@@ -236,3 +249,204 @@ export default function CategoryPage() {
     </div>
   );
 }
+
+/**
+ * AI 经典导读卡片
+ * 静态引导文案 + 点击按钮调 Dify 藏经 AI 助教
+ */
+function AiIntroCard({
+  authorName,
+  articleCount,
+  unit,
+  categorySlug,
+}: {
+  authorName: string;
+  articleCount: number;
+  unit: string;
+  categorySlug: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [streaming, setStreaming] = useState(false);
+  const [reply, setReply] = useState('');
+  const [err, setErr] = useState('');
+
+  // 三大核心哲思（按 category 给不同侧重）
+  const themes = AI_INTRO_THEMES[categorySlug] || AI_INTRO_THEMES.default;
+
+  async function handleGenerate() {
+    if (streaming) return;
+    setOpen(true);
+    setStreaming(true);
+    setReply('');
+    setErr('');
+
+    const prompt = `请为 ${authorName}（${articleCount}${unit}）写一段"AI 经典导读"，300-400 字。要求：\n1. 用 3 个核心哲思主题展开；\n2. 每条配一个现代生活案例；\n3. 末尾给出一句"今日可行动"建议。`;
+
+    try {
+      const res = await fetch('/api/zang/ai-assistant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          article: authorName,
+          passage: themes.summary,
+          prompt,
+          prior: '',
+        }),
+      });
+      if (!res.ok) {
+        setErr(`请求失败 ${res.status}`);
+        setStreaming(false);
+        return;
+      }
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('text/event-stream') && res.body) {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+        let acc = '';
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            let idx: number;
+            while ((idx = buffer.indexOf('\n\n')) !== -1) {
+              const raw = buffer.slice(0, idx);
+              buffer = buffer.slice(idx + 2);
+              for (const line of raw.split('\n')) {
+                if (!line.startsWith('data:')) continue;
+                const payload = line.slice(5).trim();
+                if (!payload || payload === '[DONE]') continue;
+                try {
+                  const obj = JSON.parse(payload);
+                  if (obj.event === 'message' && typeof obj.answer === 'string') {
+                    acc += obj.answer;
+                    setReply(acc);
+                  } else if (obj.event === 'message_end') {
+                    setStreaming(false);
+                  }
+                } catch { /* ignore */ }
+              }
+            }
+          }
+        } finally {
+          try { reader.releaseLock(); } catch { /* ignore */ }
+        }
+        setStreaming(false);
+      } else {
+        const json = await res.json();
+        setReply(json.content || '');
+        setStreaming(false);
+      }
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : '网络错误');
+      setStreaming(false);
+    }
+  }
+
+  return (
+    <section
+      aria-label="AI 经典导读"
+      className="mb-6 sm:mb-8 rounded-2xl border border-amber-200/70 bg-gradient-to-br from-[#fdf7e6] via-[#fbf3df] to-[#f7ebd1] p-5 sm:p-7 shadow-sm"
+    >
+      <div className="flex items-start gap-3 sm:gap-4">
+        <div className="flex-shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-2xl shadow-md">
+          📖
+        </div>
+        <div className="flex-1 min-w-0">
+          <h2
+            className="text-lg sm:text-xl font-bold text-[#5a3e1a] tracking-wide"
+            style={{ fontFamily: "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif" }}
+          >
+            AI 经典导读
+          </h2>
+          <p className="mt-2 text-sm text-amber-900/80 leading-relaxed">
+            此经典 <span className="font-bold text-amber-700">{articleCount} {unit}</span>，AI 为你提炼了三大核心哲思：
+            <span className="block mt-1.5 text-amber-800">
+              {themes.list.map((t, i) => (
+                <span key={i}>
+                  <span className="font-medium">{t.name}</span>
+                  <span className="text-amber-700/60">（{t.hint}）</span>
+                  {i < themes.list.length - 1 && <span className="mx-1.5 text-amber-400">·</span>}
+                </span>
+              ))}
+            </span>
+            <span className="block mt-2 italic text-amber-700/80">点此生成你的专属解读。</span>
+          </p>
+          <button
+            type="button"
+            onClick={handleGenerate}
+            disabled={streaming}
+            className="mt-4 inline-flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-white text-sm font-medium shadow-md hover:shadow-lg hover:from-amber-600 hover:to-amber-700 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <span>{streaming ? '生成中…' : '✨ 生成我的专属解读'}</span>
+          </button>
+        </div>
+      </div>
+
+      {open && (
+        <div className="mt-5 pt-5 border-t border-amber-300/50">
+          {err && <p className="text-sm text-amber-700 mb-2">⚠️ {err}</p>}
+          {reply ? (
+            <div
+              className="text-sm leading-relaxed text-amber-950 whitespace-pre-wrap"
+              style={{ fontFamily: "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif", fontSize: '0.95rem' }}
+            >
+              {reply}
+              {streaming && <span className="inline-block w-1.5 h-3 ml-1 bg-amber-700 animate-pulse align-middle" />}
+            </div>
+          ) : streaming ? (
+            <div className="flex items-center gap-2 text-amber-700 text-sm">
+              <div className="w-4 h-4 rounded-full border-2 border-amber-300 border-t-amber-700 animate-spin" />
+              <span>AI 正在为你解读…</span>
+            </div>
+          ) : null}
+        </div>
+      )}
+    </section>
+  );
+}
+
+/** 三大核心哲思（按经典分类） */
+const AI_INTRO_THEMES: Record<string, { summary: string; list: Array<{ name: string; hint: string }> }> = {
+  laozi: {
+    summary: '道德经五千言，核心在"道法自然"四字。',
+    list: [
+      { name: '无为而治', hint: '不强行、不妄为' },
+      { name: '柔弱胜刚强', hint: '水之哲学' },
+      { name: '少则得，多则惑', hint: '减法人生' },
+    ],
+  },
+  shijiamouni: {
+    summary: '般若系经典，核心在"破相显性"。',
+    list: [
+      { name: '诸相非相', hint: '不住于相' },
+      { name: '应无所住', hint: '心无挂碍' },
+      { name: '一切有为法', hint: '如梦幻泡影' },
+    ],
+  },
+  huineng: {
+    summary: '禅宗顿悟法门，核心在"心性本净"。',
+    list: [
+      { name: '明心见性', hint: '顿悟本心' },
+      { name: '无念为宗', hint: '不起妄念' },
+      { name: '佛法在世间', hint: '不离日用' },
+    ],
+  },
+  zhouwenwang: {
+    summary: '易经推演变化之理，核心在"时位中应"。',
+    list: [
+      { name: '穷则变', hint: '通变思维' },
+      { name: '时止则止', hint: '顺时而行' },
+      { name: '中正平和', hint: '执两用中' },
+    ],
+  },
+  default: {
+    summary: '此部经典凝聚先贤智慧。',
+    list: [
+      { name: '修身之要', hint: '内观自省' },
+      { name: '处世之道', hint: '和而不同' },
+      { name: '天地之理', hint: '天人合一' },
+    ],
+  },
+};

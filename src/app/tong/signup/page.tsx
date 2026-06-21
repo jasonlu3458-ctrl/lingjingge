@@ -13,6 +13,7 @@ function SignupForm() {
   const [loading, setLoading] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
   const [redirect, setRedirect] = useState<string>('');
+  const [refCode, setRefCode] = useState<string>('');
 
   useEffect(() => {
     // 从 URL 读 redirect 参数（未注册时存一份，验证/登录时用）
@@ -26,6 +27,20 @@ function SignupForm() {
       // 兜底：读 localStorage（页面刷新后 searchParams 可能丢失）
       const saved = localStorage.getItem('signup_redirect');
       if (saved) setRedirect(saved);
+    }
+
+    // 读 ?ref= 邀请人 ID → 缓存到 localStorage，注册成功后由后端写入 invited_by
+    const ref = searchParams.get('ref') || '';
+    if (ref) {
+      setRefCode(ref);
+      try {
+        localStorage.setItem('signup_ref', ref);
+      } catch {}
+    } else if (typeof window !== 'undefined') {
+      try {
+        const savedRef = localStorage.getItem('signup_ref');
+        if (savedRef) setRefCode(savedRef);
+      } catch {}
     }
   }, [searchParams]);
 
@@ -79,6 +94,21 @@ function SignupForm() {
       } else if (data?.user?.identities?.length === 0) {
         setError('该邮箱已被注册，请直接登录');
       } else {
+        // 注册成功 → 立即尝试把 ref 写入 profiles.invited_by
+        // 注：这里要等用户真正登录（验证邮件）后才能持久化，前端只能缓存
+        if (refCode) {
+          try {
+            await fetch('/api/user/invite/apply-ref', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ref: refCode }),
+            });
+            // 写完即清缓存，避免污染后续操作
+            try { localStorage.removeItem('signup_ref'); } catch {}
+          } catch {
+            /* 静默失败 */
+          }
+        }
         setSignupSuccess(true);
       }
     } catch (err: any) {
@@ -155,6 +185,12 @@ function SignupForm() {
         {error && (
           <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg mb-6 text-center">
             {error}
+          </div>
+        )}
+
+        {refCode && (
+          <div className="bg-amber-50 text-amber-700 border border-amber-200 px-4 py-2 rounded-lg mb-4 text-sm text-center">
+            🎁 您由同修邀请而来，注册后双方都将获得奖励
           </div>
         )}
 

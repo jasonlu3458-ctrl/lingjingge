@@ -11,6 +11,7 @@ import ScoreGauge from '@/components/wealth-report/ScoreGauge';
 import FreeCard from '@/components/wealth-report/FreeCard';
 import LockedCard from '@/components/wealth-report/LockedCard';
 import ReportPaywall from '@/components/ReportPaywall';
+import ExportPDFButton from '@/components/ExportPDFButton';
 import type { UserRole } from '@/lib/auth';
 
 // —— 主题色 ——
@@ -411,6 +412,15 @@ function HouseReportView({
             </div>
 
             <RetentionHint />
+
+            {/* 导出 PDF */}
+            <div className="pt-2 text-center">
+              <ExportPDFButton
+                targetId="house-report"
+                filename={`家宅风水报告-${report.input.name || '匿名'}`}
+                tone="emerald"
+              />
+            </div>
           </>
         )}
       </div>

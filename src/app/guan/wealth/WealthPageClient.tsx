@@ -3,6 +3,7 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import type { UserRole } from '@/lib/auth';
 import ReportPaywall from '@/components/ReportPaywall';
+import ExportPDFButton from '@/components/ExportPDFButton';
 import type { WealthReport, Career } from '@/lib/wealth-rules';
 
 // 主题色（与其他 guan 页面保持一致：每个模块一种主色）
@@ -630,6 +631,15 @@ function WealthReportView({
             report.paid.zhidao.title,
           ]}
           reportKey="wealth"
+        />
+      </div>
+
+      {/* 导出 PDF */}
+      <div className="pt-2 text-center">
+        <ExportPDFButton
+          targetId="wealth-report"
+          filename={`事业智富报告-${report.input.name || '匿名'}`}
+          tone="amber"
         />
       </div>
     </div>

@@ -1,8 +1,9 @@
 /**
- * 道德经 81 章兜底数据
+ * 道德经 81 章基础数据
  *
- * 独立文件以便 [category]/page.tsx 与 [category]/[slug]/page.tsx
- * 共同引用（Next.js 14 不允许 page.tsx 导出任意 const）。
+ * content 字段：故意留空。
+ *   - 若 Supabase 连通且 articles 表有数据 → 真实原文会覆盖此空值。
+ *   - 若 Supabase 未配置或数据缺失 → UI 显示"经典原文加载中"，不暴露技术提示。
  *
  * 数据形态与 articles 表一致；Supabase 不可用时供前端兜底渲染。
  */
@@ -18,6 +19,8 @@ export interface MockArticle {
   translated_at?: string | null;
   annotation?: string | null;
   author_note?: string | null;
+  /** 历代名家点评（会员解锁） */
+  commentaries?: string | null;
   created_at: string;
 }
 
@@ -37,7 +40,7 @@ export const mockDaoDeJing: MockArticle[] = Array.from({ length: 81 }, (_, i) =>
   id: `dj${i + 1}`,
   slug: `dao-de-jing-chapter-${i + 1}`,
   title: `道德经·第${CHINESE_NUM[i]}章`,
-  content: `道德经第 ${i + 1} 章内容（兜底数据）。请连接 Supabase 以查看完整原文。`,
+  content: '',
   source: '老子',
   category: 'classics',
   created_at: `2024-01-${String(i + 1).padStart(2, '0')}T00:00:00Z`,

@@ -12,6 +12,7 @@
 import { useState, useRef, type FormEvent, type ReactNode } from 'react';
 import type { UserRole } from '@/lib/auth';
 import ReportPaywall from '@/components/ReportPaywall';
+import ExportPDFButton from '@/components/ExportPDFButton';
 import ScoreGauge from '@/components/wealth-report/ScoreGauge';
 import FreeCard from '@/components/wealth-report/FreeCard';
 import LockedCard from '@/components/wealth-report/LockedCard';
@@ -452,10 +453,10 @@ export default function CareerPageClient({ userRole }: CareerPageClientProps) {
 
       {/* ============ AI 流式报告区 ============ */}
       {(streaming || polished) && (
-        <div className="mb-6">
-          <PolishSection polished={polished} streaming={streaming} onRetry={handleRetry} />
-        </div>
-      )}
+        <div id="career-report" className="space-y-6">
+          <div>
+            <PolishSection polished={polished} streaming={streaming} onRetry={handleRetry} />
+          </div>
 
       {/* ============ 免费 5 大模块（基于 polished 切分）============ */}
       {freeSections.length > 0 && (
@@ -655,7 +656,18 @@ export default function CareerPageClient({ userRole }: CareerPageClientProps) {
             </div>
           </>
         )}
+
+        {/* 导出 PDF */}
+        <div className="pt-2 text-center">
+          <ExportPDFButton
+            targetId="career-report"
+            filename={`AI事业财富报告-${form.name || '匿名'}`}
+            tone="amber"
+          />
+        </div>
       </div>
+    </div>
+  )}
 
       <p
         className="text-center text-xs text-amber-700 mt-6"

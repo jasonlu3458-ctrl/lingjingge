@@ -8,6 +8,7 @@ import ReportPaywall from './ReportPaywall';
 import { useFreeTurns } from '@/hooks/useFreeTurns';
 import { useConsent } from '@/hooks/useConsent';
 import type { UserRole } from '@/lib/auth';
+import ZenAvatar from './ZenAvatar';
 
 export interface StateOption {
   label: string;
@@ -631,7 +632,9 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
         <div className="flex flex-col h-screen" style={{ backgroundColor: config.theme }}>
         <div className="flex-1 flex flex-col items-center justify-center p-6">
           <div className="text-center max-w-md">
-            <div className="text-6xl mb-6">🧘</div>
+            <div className="mb-6 flex justify-center">
+              <ZenAvatar size={80} opacity={0.25} />
+            </div>
             <h2 className="text-3xl font-serif mb-4" style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}>
               {config.title}
             </h2>
@@ -673,7 +676,9 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
         <div className="flex flex-col h-screen" style={{ backgroundColor: config.theme }}>
         <div className="flex-1 flex flex-col items-center justify-center p-6">
           <div className="text-center max-w-2xl w-full">
-            <div className="text-4xl mb-4">🧘</div>
+            <div className="mb-4 flex justify-center">
+              <ZenAvatar size={56} opacity={0.22} />
+            </div>
             <h2 className="text-2xl font-serif mb-2" style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}>
               {config.title}
             </h2>
@@ -712,10 +717,12 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
         />
       )}
       <div className="flex flex-col" style={{ backgroundColor: config.theme }}>
-        <main className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 flex-1 pb-32">
+        <main className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 flex-1 pb-32 md:pb-32 pb-safe-or-4">
         {/* 页面标题 */}
         <div className="text-center mb-8">
-          <div className="text-4xl mb-2">{config.icon}</div>
+          <div className="mb-2 flex justify-center">
+            <ZenAvatar size={48} opacity={0.22} />
+          </div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2" style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}>
             {config.title}
           </h1>
@@ -837,7 +844,7 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
 
         {/* 纯对话模式的输入区域 */}
         {isPureChatMode && showForm && config.difyType !== 'awakening' && config.difyType !== 'healing' && (
-          <form onSubmit={handleChatSubmit} className="sticky bottom-0 z-20 bg-white/95 backdrop-blur-md rounded-lg shadow-[0_-4px_16px_rgba(0,0,0,0.08)] border border-gray-200 p-4 mb-4">
+          <form onSubmit={handleChatSubmit} className="sticky bottom-0 z-20 bg-white/95 backdrop-blur-md rounded-lg shadow-[0_-4px_16px_rgba(0,0,0,0.08)] border border-gray-200 p-4 mb-4 pb-safe">
             <div className="flex space-x-4">
               <input
                 type="text"
@@ -864,7 +871,9 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
         {isPureChatMode && showForm && config.difyType === 'healing' && messages.length === 0 && (
           <div className="bg-gradient-to-br from-emerald-900/80 to-teal-800/60 backdrop-blur-sm rounded-xl shadow-lg border border-emerald-500/30 p-8 mb-6">
             <div className="text-center mb-8">
-              <div className="text-4xl mb-4">💚</div>
+              <div className="mb-4 flex justify-center">
+                <ZenAvatar size={48} opacity={0.3} style={{ color: '#d1fae5' }} />
+              </div>
               <h3 className="text-xl text-emerald-100" style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", letterSpacing: '2px' }}>
                 AI疗愈师
               </h3>
@@ -1042,15 +1051,17 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
                   );
                 }
 
-                // AI疗愈师模式：特殊处方样式
+                // AI疗愈师模式：特殊处方样式（统一用 ZenAvatar 替代差异化 emoji）
                 if (config.difyType === 'healing' && msg.role === 'assistant') {
                   return (
                     <div key={msg.id} className="flex justify-center">
                       <div className="max-w-lg w-full">
                         <div className="bg-gradient-to-br from-emerald-900/80 to-teal-800/60 backdrop-blur-sm rounded-xl border border-emerald-500/30 p-6 shadow-lg">
                           <div className="text-center">
-                            <div className="text-2xl mb-4">💚</div>
-                            <p className="text-lg text-emerald-100 whitespace-pre-wrap leading-relaxed" 
+                            <div className="mb-4 flex justify-center">
+                              <ZenAvatar size={36} opacity={0.3} style={{ color: '#d1fae5' }} />
+                            </div>
+                            <p className="text-lg text-emerald-100 whitespace-pre-wrap leading-relaxed"
                                style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}>
                               {msg.content}
                             </p>
@@ -1061,15 +1072,17 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
                   );
                 }
 
-                // 觉醒日记模式：特殊回响样式
+                // 觉醒日记模式：特殊回响样式（统一用 ZenAvatar 替代差异化 emoji）
                 if (config.difyType === 'awakening' && msg.role === 'assistant') {
                   return (
                     <div key={msg.id} className="flex justify-center">
                       <div className="max-w-lg w-full">
                         <div className="bg-gradient-to-br from-purple-900/80 to-indigo-800/60 backdrop-blur-sm rounded-xl border border-purple-500/30 p-6 shadow-lg">
                           <div className="text-center">
-                            <div className="text-2xl mb-4">🌌</div>
-                            <p className="text-lg text-purple-100 whitespace-pre-wrap leading-relaxed" 
+                            <div className="mb-4 flex justify-center">
+                              <ZenAvatar size={36} opacity={0.3} style={{ color: '#e9d5ff' }} />
+                            </div>
+                            <p className="text-lg text-purple-100 whitespace-pre-wrap leading-relaxed"
                                style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}>
                               {msg.content}
                             </p>
@@ -1084,8 +1097,11 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
                 return (
                   <div
                     key={msg.id}
-                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    className={`flex gap-2 items-end ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
+                    {msg.role === 'assistant' && (
+                      <ZenAvatar size={32} opacity={0.2} className="mb-1" />
+                    )}
                     <div
                       className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-lg ${
                         msg.role === 'user'
@@ -1112,7 +1128,7 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
 
         {/* 纯对话模式的继续输入区域（排除觉醒日记和疗愈师） */}
         {isPureChatMode && messages.length > 0 && !isTyping && config.difyType !== 'awakening' && config.difyType !== 'healing' && (
-          <form onSubmit={handleChatSubmit} className="bg-white bg-opacity-80 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 p-4 mb-6">
+          <form onSubmit={handleChatSubmit} className="bg-white bg-opacity-80 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 p-4 mb-6 pb-safe">
             <div className="flex space-x-4">
               <input
                 type="text"

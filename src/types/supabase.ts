@@ -216,6 +216,33 @@ export interface Database {
         };
         Relationships: [];
       };
+      user_coins: {
+        Row: {
+          id: string;
+          user_id: string;
+          balance: number;
+          last_sign_in_date: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          balance?: number;
+          last_sign_in_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          balance?: number;
+          last_sign_in_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       report_purchases: {
         Row: {
           id: string;
@@ -300,6 +327,36 @@ export interface Database {
           user_id?: string;
           turns?: number | null;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      chat_messages: {
+        Row: {
+          id: string;
+          user_id: string;
+          conversation_id: string;
+          chat_type: string;
+          role: 'user' | 'assistant';
+          content: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          conversation_id: string;
+          chat_type: string;
+          role: 'user' | 'assistant';
+          content: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          conversation_id?: string;
+          chat_type?: string;
+          role?: 'user' | 'assistant';
+          content?: string;
+          created_at?: string;
         };
         Relationships: [];
       };

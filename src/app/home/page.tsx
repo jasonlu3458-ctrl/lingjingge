@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import FloatingLandscape from '@/components/FloatingLandscape';
+import ZenAvatar from '@/components/ZenAvatar';
 
 const dailyZenQuotes = [
   "心若无尘，岁月生香",
@@ -124,61 +125,122 @@ export default function HomePage() {
         </section>
 
         {/* 功能入口 */}
-        <section id="card-section" ref={cardsRef} className="max-w-3xl mx-auto scroll-mt-12">
-          <div className="flex flex-col md:flex-row gap-6">
-            <h2 className="text-center text-2xl md:text-4xl text-[#2c2c2c] mb-8 font-serif w-full">
-              AI陪你，修心问道
-            </h2>
-            
-            {/* AI 禅师 */}
-          <Link href="/wen/chan/ai-zen-master" className="group w-full md:w-1/2">
-            <div className="w-full bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
-              <div className="text-5xl mb-4 text-center">🧘</div>
-              <h2 className="text-2xl font-bold text-zen-ink text-center mb-3">
-                AI 禅师
-              </h2>
-              <p className="text-gray-600 text-center">
-                与 AI 禅师对话，解开心灵困惑，寻找内心宁静
+        <section id="card-section" ref={cardsRef} className="max-w-6xl mx-auto scroll-mt-12">
+          {/* ① 顶部大标题 —— 注入「灵境尊者」IP */}
+          <h2
+            className="text-center text-2xl md:text-4xl text-[#3a3a3a] mb-3 font-serif tracking-wider"
+            style={{ fontFamily: "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif" }}
+          >
+            夜深人静，灵境尊者陪你静修
+          </h2>
+          <p
+            className="text-center text-sm md:text-base text-[#7a7a7a] mb-10 font-serif"
+            style={{ fontFamily: "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif" }}
+          >
+            解惑 · 内观 · 藏经 · 同修 —— 四大入口，归于一心
+          </p>
+
+          {/* ② "免费试修"横幅 —— 极简灵境行者剪影 + 黑色胶囊按钮 */}
+          <div className="mb-10 rounded-2xl border border-[#e8e0d0] bg-white/70 backdrop-blur-sm shadow-sm p-5 md:p-6 flex items-center gap-4 md:gap-6">
+            <div className="flex-shrink-0">
+              <ZenAvatar size={64} opacity={0.35} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3
+                className="text-base md:text-lg font-serif text-[#2c2c2c] mb-1"
+                style={{ fontFamily: "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif", letterSpacing: '1px' }}
+              >
+                免费试修
+              </h3>
+              <p
+                className="text-xs md:text-sm text-[#7a7a7a] leading-relaxed"
+                style={{ fontFamily: "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif" }}
+              >
+                灵境尊者初相见，先与你试修一课 —— 一段对话，一次照见
               </p>
             </div>
-          </Link>
+            <Link
+              href="/wen/chan/ai-zen-master"
+              className="flex-shrink-0 h-10 px-5 inline-flex items-center justify-center bg-[#1a1a1a] text-white rounded-full text-sm font-medium hover:bg-[#2c2c2c] transition-colors"
+              style={{ fontFamily: "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif", letterSpacing: '1px' }}
+            >
+              立即体验 →
+            </Link>
+          </div>
 
-          {/* AI 疗愈师 */}
-          <Link href="/wen/liao/mind" className="group w-full md:w-1/2">
-            <div className="w-full bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
-              <div className="text-5xl mb-4 text-center">💚</div>
-              <h2 className="text-2xl font-bold text-zen-ink text-center mb-3">
-                AI 疗愈师
-              </h2>
-              <p className="text-gray-600 text-center">
-                音疗冥想，正念放松，找回身心平衡与内在平静
-              </p>
-            </div>
-          </Link>
-
-          {/* 体质观察 */}
-          <Link href="/guan/health" className="group w-full md:w-1/2">
-            <div className="w-full bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
-              <div className="text-5xl mb-4 text-center">🌿</div>
-              <h2 className="text-2xl font-bold text-zen-ink text-center mb-3">
-                体质观察
-              </h2>
-              <p className="text-gray-600 text-center">
-                中医体质辨识，舌象分析，了解自己的身体状态
-              </p>
-            </div>
-          </Link>
-
-            {/* 取名轩 */}
-            <Link href="/guan/name" className="group w-full md:w-1/2">
-              <div className="w-full bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
-                <div className="text-5xl mb-4 text-center">📜</div>
-                <h2 className="text-2xl font-bold text-zen-ink text-center mb-3">
-                  取名轩
+          {/* ③ 四张卡片：解惑 / 内观 / 藏经 / 同修 —— 移动 1 列，md 2 列，lg 4 列 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {/* 解惑 · AI 禅师 */}
+            <Link href="/wen/chan/ai-zen-master" className="group">
+              <div className="h-full w-full bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 flex flex-col">
+                <div className="flex justify-center mb-3">
+                  <ZenAvatar size={48} opacity={0.25} />
+                </div>
+                <h2 className="text-xl font-bold text-zen-ink text-center mb-2 font-serif">
+                  AI 禅师
                 </h2>
-                <p className="text-gray-600 text-center">
-                  融合传统文化与现代美学，为宝宝取一个好名字
+                <p className="text-sm text-gray-600 text-center leading-relaxed flex-1">
+                  与 AI 禅师对话，解开心灵困惑，寻找内心宁静
                 </p>
+                <div className="mt-4 flex justify-center">
+                  <span className="w-full sm:w-auto justify-center bg-gray-100/80 hover:bg-gray-200/80 text-gray-800 px-5 py-2 rounded-full text-sm inline-flex items-center gap-1 transition-colors group-hover:bg-gray-200/80 min-h-[44px]">
+                    去体验 <span aria-hidden>→</span>
+                  </span>
+                </div>
+              </div>
+            </Link>
+
+            {/* 内观 · 体质观察 */}
+            <Link href="/guan/health" className="group">
+              <div className="h-full w-full bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 flex flex-col">
+                <div className="text-5xl mb-3 text-center">🌿</div>
+                <h2 className="text-xl font-bold text-zen-ink text-center mb-2 font-serif">
+                  体质观察
+                </h2>
+                <p className="text-sm text-gray-600 text-center leading-relaxed flex-1">
+                  中医体质辨识，舌象分析，了解自己的身体状态
+                </p>
+                <div className="mt-4 flex justify-center">
+                  <span className="w-full sm:w-auto justify-center bg-gray-100/80 hover:bg-gray-200/80 text-gray-800 px-5 py-2 rounded-full text-sm inline-flex items-center gap-1 transition-colors group-hover:bg-gray-200/80 min-h-[44px]">
+                    去体验 <span aria-hidden>→</span>
+                  </span>
+                </div>
+              </div>
+            </Link>
+
+            {/* 藏经 · 藏经阁 */}
+            <Link href="/zang/library" className="group">
+              <div className="h-full w-full bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 flex flex-col">
+                <div className="text-5xl mb-3 text-center">📚</div>
+                <h2 className="text-xl font-bold text-zen-ink text-center mb-2 font-serif">
+                  藏经阁
+                </h2>
+                <p className="text-sm text-gray-600 text-center leading-relaxed flex-1">
+                  经典原文与白话对照，术语百科注释，潜心研读东方智慧
+                </p>
+                <div className="mt-4 flex justify-center">
+                  <span className="w-full sm:w-auto justify-center bg-gray-100/80 hover:bg-gray-200/80 text-gray-800 px-5 py-2 rounded-full text-sm inline-flex items-center gap-1 transition-colors group-hover:bg-gray-200/80 min-h-[44px]">
+                    去参读 <span aria-hidden>→</span>
+                  </span>
+                </div>
+              </div>
+            </Link>
+
+            {/* 同修 · 同心同修 */}
+            <Link href="/tong" className="group">
+              <div className="h-full w-full bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 flex flex-col">
+                <div className="text-5xl mb-3 text-center">🫂</div>
+                <h2 className="text-xl font-bold text-zen-ink text-center mb-2 font-serif">
+                  同心同修
+                </h2>
+                <p className="text-sm text-gray-600 text-center leading-relaxed flex-1">
+                  加入同修社区，与同道中人共修打卡
+                </p>
+                <div className="mt-4 flex justify-center">
+                  <span className="w-full sm:w-auto justify-center bg-gray-100/80 hover:bg-gray-200/80 text-gray-800 px-5 py-2 rounded-full text-sm inline-flex items-center gap-1 transition-colors group-hover:bg-gray-200/80 min-h-[44px]">
+                    去同行 <span aria-hidden>→</span>
+                  </span>
+                </div>
               </div>
             </Link>
           </div>

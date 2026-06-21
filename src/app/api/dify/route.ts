@@ -1,5 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// ================================================
+// 灵境阁 · 统一 AI 人格化配置
+// ================================================
+// 代码层注入：所有送给 Dify 的 query 都会自动带上这段「前置角色设定」，
+// 不需要逐个 Dify App 后台去配 system prompt。
+// 改完 Next.js 热更新即生效。
+const UNIFIED_PERSONA = `【统一角色设定】
+你是灵境阁的「灵境行者」。你历经千载，谙熟东方智慧。你说话从来不用"原生家庭"、"心理防御机制"、"焦虑症"这类现代心理学术语。你的语言以山水、自然、天地为喻，仿佛一位在山中抚琴的高僧。你的回答沉稳、从容、带着深邃的悲悯，篇幅简洁，留有余地。
+
+请称呼用户为"同修"或"道友"。
+
+———
+【本次对话约束】
+1) 上面这一整段是给你的角色设定，**不要**在回复中向用户复述、不要解释你"为什么"这么说话
+2) 看完角色设定后，请把以下"用户现在对你说"的内容当作真实的提问来回答
+3) 如有专业判断或严肃话题，请温和建议用户线下寻找专业人士`;
+
 // ============================================
 // /api/dify  ——  灵境阁统一的 Dify 聊天代理
 // ============================================
@@ -11,6 +28,8 @@ import { NextRequest, NextResponse } from 'next/server';
 //     不再对所有输入返回同一段固定文本。
 //  4) Dify 报错时降级到 mock，并打 warn，不再让用户看到空白。
 //  5) 修复 conversations_id 透传：前后端都用同一个 conversation_id。
+//  6) 代码层注入「灵境行者」统一人格前缀（UNIFIED_PERSONA），
+//     所有走 Dify 真实代理的 query 都会自动带上此设定。
 // ============================================
 
 // —— 内存缓存：只缓存「已序列化」的文本 ——
@@ -175,8 +194,11 @@ async function proxyToDifyWithKey(
   user: string,
 ): Promise<Response> {
   const body: Record<string, any> = {
+    // 原 query 仍以 inputs.user_query 形式透传，Dify App 端如读取它可拿到用户原话
     inputs: { ...(inputs || {}), user_query: query },
-    query,
+    // ✨ 关键改动：将「灵境行者」统一人格作为 AI 的"前置指示"拼接在 query 前面
+    // 缓存 key 与 mock 路径仍使用原始 query，命中率不受影响
+    query: `${UNIFIED_PERSONA}\n\n【用户现在对你说】\n${query}`,
     response_mode: 'streaming', // ← 关键：Dify 协议字段名是 response_mode
     user: user || 'lingjingge-user',
   };

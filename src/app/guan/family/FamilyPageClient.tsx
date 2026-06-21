@@ -3,6 +3,7 @@
 import { useState, useMemo, type FormEvent, type ReactNode } from 'react';
 import type { UserRole } from '@/lib/auth';
 import ReportPaywall from '@/components/ReportPaywall';
+import ExportPDFButton from '@/components/ExportPDFButton';
 import { handleDifyPolishResponse } from '@/lib/sse-client';
 import type {
   MarriageReport,
@@ -534,25 +535,6 @@ export default function FamilyPageClient({ userRole }: FamilyPageClientProps) {
               accentClass="text-rose-600"
             />
 
-            {/* Dify 润色体验按钮（开发期） */}
-            <div className="mt-6 p-4 border-2 border-rose-200 rounded-lg bg-rose-50 text-center">
-              <h3 className="text-lg font-bold text-gray-800" style={{ fontFamily: FONT_KAI }}>
-                🤖 AI 自然语言解读
-              </h3>
-              <p className="text-sm text-gray-600 mt-1" style={{ fontFamily: FONT_KAI }}>
-                调用 Dify 婚姻家庭咨询师，将以上比对数据润色为温暖可读的完整报告
-              </p>
-              <button
-                onClick={handlePolish}
-                disabled={polishing}
-                className="mt-3 px-6 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 disabled:opacity-60 disabled:cursor-not-allowed"
-                style={{ fontFamily: FONT_KAI }}
-              >
-                {polishing ? '🤖 润色中…' : '🤖 AI 润色完整版（免费体验）'}
-              </button>
-              <p className="text-xs text-gray-500 mt-2">（开发期可点此体验；上线后会接入付费墙）</p>
-            </div>
-
             {/* 润色结果 */}
             {(polishing || polished) && (
               <div className="mt-6 p-5 border rounded-lg bg-white">
@@ -573,6 +555,15 @@ export default function FamilyPageClient({ userRole }: FamilyPageClientProps) {
                 )}
               </div>
             )}
+
+            {/* 导出 PDF */}
+            <div className="mt-6 text-center">
+              <ExportPDFButton
+                targetId="family-report"
+                filename={`姻缘报告-${report.input.self.name || '匿名'}`}
+                tone="rose"
+              />
+            </div>
           </div>
         )}
       </main>

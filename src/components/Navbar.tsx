@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import UserStatus from './UserStatus';
+import CoinsBadge from './CoinsBadge';
 
 // 导航菜单数据结构
 const menuItems = [
@@ -311,13 +312,14 @@ export default function Navbar({ immersive = false }: NavbarProps = {}) {
           </div>
 
           {/* 用户状态 */}
-          <div className="hidden lg:flex items-center">
+          <div className="hidden lg:flex items-center gap-2">
+            <CoinsBadge />
             <UserStatus immersive={immersive} />
           </div>
 
           {/* 移动端菜单按钮 */}
           <button
-            className={`lg:hidden p-2 rounded-lg transition-colors ${
+            className={`lg:hidden p-2 rounded-lg transition-all duration-150 active:scale-95 active:opacity-80 min-h-[44px] min-w-[44px] flex items-center justify-center ${
               immersive ? 'hover:bg-white/10' : 'hover:bg-gray-100'
             }`}
             onClick={toggleMobileMenu}
@@ -338,14 +340,36 @@ export default function Navbar({ immersive = false }: NavbarProps = {}) {
           </button>
         </div>
 
+        {/* 移动端全屏遮罩（点击关闭菜单） */}
+        {mobileMenuOpen && (
+          <div
+            className="lg:hidden fixed inset-0 bg-black/30 z-40 animate-fadeIn"
+            onClick={closeMobileMenu}
+            aria-hidden="true"
+          />
+        )}
+
         {/* 移动端菜单 */}
         {mobileMenuOpen && (
-          <div className="lg:hidden pb-4 animate-slideDown">
+          <div className="lg:hidden pb-4 animate-slideDown relative z-50">
             <div
               className={`rounded-xl shadow-lg border overflow-hidden ${
                 immersive ? 'bg-black/90 backdrop-blur-md border-white/15' : 'bg-white border-gray-200'
               }`}
             >
+              {/* ✕ 关闭按钮 - 右上角 */}
+              <div className="flex justify-end p-2">
+                <button
+                  onClick={closeMobileMenu}
+                  aria-label="关闭菜单"
+                  className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-2xl leading-none transition-all duration-150 active:scale-95 active:opacity-80 ${
+                    immersive ? 'text-white/80 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-100'
+                  }`}
+                  style={{ fontFamily: 'sans-serif' }}
+                >
+                  ✕
+                </button>
+              </div>
               {menuItems.map((menu) => (
                 <div
                   key={menu.label}
@@ -423,7 +447,8 @@ export default function Navbar({ immersive = false }: NavbarProps = {}) {
               ))}
               
               {/* 移动端用户状态 */}
-              <div className={`p-4 ${immersive ? 'border-t border-white/10' : 'border-t border-gray-100'}`}>
+              <div className={`p-4 flex items-center gap-2 ${immersive ? 'border-t border-white/10' : 'border-t border-gray-100'}`}>
+                <CoinsBadge />
                 <UserStatus immersive={immersive} />
               </div>
             </div>

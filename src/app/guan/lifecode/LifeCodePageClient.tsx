@@ -9,6 +9,7 @@
 import { useState, useEffect, useRef, type FormEvent, type ReactNode } from 'react';
 import type { UserRole } from '@/lib/auth';
 import ReportPaywall from '@/components/ReportPaywall';
+import ExportPDFButton from '@/components/ExportPDFButton';
 import type { LifeCodeReport } from '@/lib/lifecode-rules';
 
 // ============================================================
@@ -582,6 +583,15 @@ function LifeCodePaywall({
       >
         🌠 明天的运势会自动更新，明天记得来查看哦。
       </p>
+
+      {/* 导出 PDF */}
+      <div className="pt-4 text-center">
+        <ExportPDFButton
+          targetId="lifecode-report"
+          filename={`数字修行报告-${report.input.name || '匿名'}`}
+          tone="purple"
+        />
+      </div>
     </div>
   );
 }

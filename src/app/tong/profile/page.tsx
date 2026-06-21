@@ -7,6 +7,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import ActivityStats from '@/components/ActivityStats'
 import PointsSignIn from '@/components/PointsSignIn'
 import SubscriptionStatusCard from '@/components/SubscriptionStatusCard'
+import CoinsCard from '@/components/CoinsCard'
 
 interface UserProfile {
   id: string
@@ -144,6 +145,9 @@ export default async function ProfilePage() {
 
         {/* 会员状态 */}
         <SubscriptionStatusCard />
+
+        {/* 灵境币 · 每日签到 */}
+        <CoinsCard />
 
         {/* 积分签到 */}
         <PointsSignIn userId={profile.id} />

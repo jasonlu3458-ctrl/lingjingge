@@ -33,7 +33,12 @@ export default function ScoreGauge({ score, label, themeColor, className = '' }:
   const color = colorOf(score, themeColor);
   return (
     <div className={`flex flex-col items-center ${className}`}>
-      <svg width="148" height="148" viewBox="0 0 148 148" className="drop-shadow-sm">
+      {/* 移动端 100×100，桌面 148×148。viewBox 固定 148 让内部文字 stroke 等比例缩放 */}
+      <svg
+        viewBox="0 0 148 148"
+        className="w-[100px] h-[100px] md:w-[148px] md:h-[148px] drop-shadow-sm"
+        aria-label={`评分 ${score} / 100`}
+      >
         <circle cx="74" cy="74" r={radius} fill="none" stroke="#f5e6cf" strokeWidth="12" />
         <circle
           cx="74" cy="74" r={radius}
