@@ -41,7 +41,7 @@ export async function GET() {
   );
   const { data: { user } } = await supabaseAuth.auth.getUser();
   if (!user) {
-    return NextResponse.json({ ok: false, error: '未登录' }, { status: 401 });
+    return NextResponse.json({ success: false, error: '未登录' }, { status: 401 });
   }
 
   const today = new Date().toISOString().slice(0, 10);
@@ -75,6 +75,6 @@ export async function GET() {
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'unknown';
-    return NextResponse.json({ ok: false, error: msg }, { status: 500 });
+    return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }

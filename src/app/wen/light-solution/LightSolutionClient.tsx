@@ -407,7 +407,7 @@ export default function LightSolutionClient({ userRole = 'free' }: LightSolution
             className="text-2xl sm:text-3xl font-bold text-gray-800"
             style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}
           >
-            AI 轻解忧
+            AI 解忧师
           </h1>
           <p
             className="text-gray-700 text-sm sm:text-base mt-1"
@@ -535,7 +535,7 @@ export default function LightSolutionClient({ userRole = 'free' }: LightSolution
         </main>
 
         {/* 底部：快捷按钮 + sticky 输入区 + 解锁墙 */}
-        <footer className="flex-shrink-0 sticky bottom-0 bg-blue-100/50 backdrop-blur p-4 border-t border-white/30 relative z-10">
+        <footer className="flex-shrink-0 sticky bottom-0 bg-blue-100/50 backdrop-blur p-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-white/30 relative z-10">
           <div className="max-w-3xl mx-auto">
             {/* 5 次用完：解锁墙（替换输入区） */}
             {mounted && !isExempt && remaining <= 0 ? (
@@ -576,7 +576,7 @@ export default function LightSolutionClient({ userRole = 'free' }: LightSolution
                   <button
                     type="submit"
                     disabled={isTyping || !chatInput.trim()}
-                    className="px-5 py-2.5 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
+                    className="px-5 py-2.5 bg-gray-800 text-white rounded-lg hover:bg-gray-700 active:scale-95 active:opacity-80 transition-all duration-150 disabled:bg-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
                     style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}
                   >
                     {isTyping ? '倾听中…' : '发送'}

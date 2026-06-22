@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 
 interface CoinsResponse {
-  ok: boolean;
+  success: boolean;
   balance: number;
   coins_awarded?: number;
   signed_in_today: boolean;
@@ -94,7 +94,7 @@ export default function CoinsCard() {
         }));
         return;
       }
-      if (!res.ok || !json.ok) {
+      if (!res.ok || !json.success) {
         setState((s) => ({
           ...s,
           signing: false,
@@ -106,7 +106,7 @@ export default function CoinsCard() {
         ...s,
         signing: false,
         data: {
-          ok: true,
+          success: true,
           balance: json.balance,
           signed_in_today: true,
           last_sign_in_date: json.last_sign_in_date ?? null,

@@ -27,8 +27,8 @@ export default function NewTopicPage() {
       const data = await response.json();
       return data.result || '心得';
     } catch (error) {
-      console.error('分类失败:', error);
-      return '心得'; // 默认分类
+      console.warn('分类失败：', error);
+      return '心得';
     }
   };
 
@@ -70,8 +70,6 @@ export default function NewTopicPage() {
       const data = await r.json();
       if (!r.ok || !data.success) {
         console.warn('[auto-reply] 失败：', data?.error || r.status);
-      } else {
-        console.log('[auto-reply] 已成功回复：', data.reply?.id);
       }
     } catch (e) {
       console.warn('[auto-reply] 请求异常：', e);

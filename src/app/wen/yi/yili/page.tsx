@@ -3,7 +3,7 @@ import YiliClient from './YiliClient';
 
 export const metadata = {
   title: 'AI易理师 · 灵境阁',
-  description: '以易理为镜，照见当下抉择的方向。起一卦，解你心中惑。',
+  description: '以易理为镜，照见当下抉择的方向。起一智慧指引，答你心中惑。',
 };
 
 export default async function YiliPage() {

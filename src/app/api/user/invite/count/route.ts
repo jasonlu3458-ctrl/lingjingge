@@ -37,7 +37,7 @@ export async function GET() {
   );
   const { data: { user } } = await supabaseAuth.auth.getUser();
   if (!user) {
-    return NextResponse.json({ ok: false, error: '未登录' }, { status: 401 });
+    return NextResponse.json({ success: false, error: '未登录' }, { status: 401 });
   }
 
   try {
@@ -77,6 +77,6 @@ export async function GET() {
       invited_by: me?.invited_by || null,
     });
   } catch (e: any) {
-    return NextResponse.json({ ok: false, error: e?.message || '查询失败' }, { status: 500 });
+    return NextResponse.json({ success: false, error: e?.message || '查询失败' }, { status: 500 });
   }
 }

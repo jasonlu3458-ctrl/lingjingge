@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     if (missing) {
       return NextResponse.json({ ok: true, warning: 'consent columns missing, run migration 008' });
     }
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true, version, at: new Date().toISOString() });

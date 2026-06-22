@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET() {
   if (!isSupabaseConfigured()) {
-    return NextResponse.json({ ok: true, mock: true });
+    return NextResponse.json({ success: true, mock: true });
   }
 
   try {
@@ -37,7 +37,7 @@ export async function GET() {
       data: { user },
     } = await supabaseAuth.auth.getUser();
     if (!user) {
-      return NextResponse.json({ ok: false, error: '未登录' }, { status: 401 });
+      return NextResponse.json({ success: false, error: '未登录' }, { status: 401 });
     }
 
     const supabase = createClient();
@@ -51,7 +51,7 @@ export async function GET() {
       // 字段缺失降级：返回 user.id 即可，海报仍可用
       if (error.code === '42703' || /does not exist/i.test(error.message)) {
         return NextResponse.json({
-          ok: true,
+          success: true,
           mock: true,
           user_id: user.id,
           profile: {
@@ -67,7 +67,7 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      ok: true,
+      success: true,
       user_id: user.id,
       profile: data ?? {
         id: user.id,
@@ -78,6 +78,6 @@ export async function GET() {
       },
     });
   } catch (e: any) {
-    return NextResponse.json({ ok: false, error: e?.message || '查询失败' }, { status: 500 });
+    return NextResponse.json({ success: false, error: e?.message || '查询失败' }, { status: 500 });
   }
 }

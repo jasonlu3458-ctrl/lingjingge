@@ -1,81 +1,16 @@
 'use client';
 
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useState, type FormEvent } from 'react';
 import type { UserRole } from '@/lib/auth';
 import ReportPaywall from '@/components/ReportPaywall';
-import ExportPDFButton from '@/components/ExportPDFButton';
-import ReportTTSButton from '@/components/ReportTTSButton';
+import ReportActionBar from '@/components/ReportActionBar';
+import MiniMarkdown from '@/components/MiniMarkdown';
 import type { WealthReport, Career } from '@/lib/wealth-rules';
 
 // 主题色（与其他 guan 页面保持一致：每个模块一种主色）
 const WEALTH_THEME = '#7a5a3a';   // 暗金 · 与"财富"语义匹配
 const WEALTH_ACCENT = '#b08551';  // 暖金
 const FONT_KAI = "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif";
-
-// ============================================================
-// MiniMarkdown 渲染器（与 FamilyPageClient / EducationPageClient 一致）
-// ============================================================
-function renderInline(text: string): ReactNode[] {
-  const parts: ReactNode[] = [];
-  const re = /\*\*([^*]+)\*\*/g;
-  let last = 0;
-  let m: RegExpExecArray | null;
-  let key = 0;
-  while ((m = re.exec(text)) !== null) {
-    if (m.index > last) parts.push(text.slice(last, m.index));
-    parts.push(<strong key={`b${key++}`}>{m[1]}</strong>);
-    last = m.index + m[0].length;
-  }
-  if (last < text.length) parts.push(text.slice(last));
-  return parts;
-}
-
-function MiniMarkdown({ text }: { text: string }) {
-  const lines = text.split(/\r?\n/);
-  const blocks: ReactNode[] = [];
-  let i = 0;
-  let key = 0;
-  while (i < lines.length) {
-    const line = lines[i];
-    const trimmed = line.trim();
-    if (trimmed === '') { i++; continue; }
-    const h = /^(#{1,3})\s+(.*)$/.exec(trimmed);
-    if (h) {
-      const level = h[1].length;
-      const cls = level === 1 ? 'text-lg font-bold mt-3' : level === 2 ? 'text-base font-bold mt-2' : 'text-sm font-bold mt-2';
-      const Tag = (`h${level + 2}`) as 'h3' | 'h4' | 'h5';
-      blocks.push(<Tag key={key++} className={cls}>{renderInline(h[2])}</Tag>);
-      i++;
-      continue;
-    }
-    if (/^[-*]\s+/.test(trimmed)) {
-      const items: ReactNode[] = [];
-      while (i < lines.length && /^[-*]\s+/.test(lines[i].trim())) {
-        items.push(<li key={items.length}>{renderInline(lines[i].trim().replace(/^[-*]\s+/, ''))}</li>);
-        i++;
-      }
-      blocks.push(<ul key={key++} className="list-disc pl-5 space-y-1">{items}</ul>);
-      continue;
-    }
-    if (/^\d+\.\s+/.test(trimmed)) {
-      const items: ReactNode[] = [];
-      while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) {
-        items.push(<li key={items.length}>{renderInline(lines[i].trim().replace(/^\d+\.\s+/, ''))}</li>);
-        i++;
-      }
-      blocks.push(<ol key={key++} className="list-decimal pl-5 space-y-1">{items}</ol>);
-      continue;
-    }
-    const para: string[] = [line];
-    i++;
-    while (i < lines.length && lines[i].trim() !== '' && !/^(#{1,3})\s+/.test(lines[i].trim()) && !/^[-*]\s+/.test(lines[i].trim()) && !/^\d+\.\s+/.test(lines[i].trim())) {
-      para.push(lines[i]);
-      i++;
-    }
-    blocks.push(<p key={key++} className="leading-relaxed">{renderInline(para.join(' '))}</p>);
-  }
-  return <>{blocks}</>;
-}
 
 // ============================================================
 // 常量：时辰 / 职业
@@ -331,13 +266,13 @@ function DifyPolishSection({
             className="text-base font-bold"
             style={{ color: WEALTH_ACCENT, fontFamily: FONT_KAI }}
           >
-            AI 智富心法 · Dify 顾问润色
+            ✨ 灵境尊者 · 智富心法点拨
           </span>
           <span
             className="text-[10px] px-1.5 py-0.5 rounded text-white"
             style={{ backgroundColor: source === 'dify' ? '#16a34a' : '#9ca3af' }}
           >
-            {source === 'dify' ? 'Dify' : '本地模板'}
+            {source === 'dify' ? '✨ 灵境尊者开示' : '本地模板'}
           </span>
         </div>
         <span className="text-xs text-gray-500">{open ? '收起 ▴' : '展开 ▾'}</span>
@@ -462,7 +397,7 @@ function WealthPaywall({
               推荐
             </div>
             <div className="text-xs text-amber-100" style={{ fontFamily: FONT_KAI }}>月度会员</div>
-            <div className="text-2xl font-bold mt-1">¥39</div>
+            <div className="text-2xl font-bold mt-1">¥29.9<span className="text-sm">/月</span></div>
             <div className="text-[10px] text-amber-200 mt-0.5" style={{ fontFamily: FONT_KAI }}>全站 6 大模块全解锁</div>
           </div>
         </div>
@@ -484,7 +419,7 @@ function WealthPaywall({
           </div>
           <div>
             <div className="text-base">🔒</div>
-            <div style={{ fontFamily: FONT_KAI }}>八字数据本地计算</div>
+            <div style={{ fontFamily: FONT_KAI }}>先天格局本地计算</div>
           </div>
           <div>
             <div className="text-base">↩️</div>
@@ -562,10 +497,10 @@ function WealthReportView({
               fontFamily: FONT_KAI,
             }}
           >
-            {polishLoading ? '🤖 AI 润色中…' : '🤖 召唤 AI 智富心法（基于 Dify 润色 · 免费体验）'}
+            {polishLoading ? '🤖 AI 润色中…' : '🤖 召唤 AI 智富心法'}
           </button>
           <p className="text-xs text-gray-400 mt-2" style={{ fontFamily: FONT_KAI }}>
-            AI 会基于你的八字 + 职业，给出一份 500-700 字的可执行破局指南
+            基于你的先天格局、职业方向与季节能量，生成一份专属的智富心法指南
           </p>
         </div>
       )}
@@ -635,20 +570,16 @@ function WealthReportView({
         />
       </div>
 
-      {/* 导出 PDF + 朗读 */}
-      <div className="pt-2 text-center flex flex-col sm:flex-row gap-2 sm:justify-center">
-        <ReportTTSButton
-          targetId="wealth-report"
-          title="事业智富报告"
-          tone="amber"
-          prefix="以下是您的事业智富报告。"
-        />
-        <ExportPDFButton
-          targetId="wealth-report"
-          filename={`事业智富报告-${report.input.name || '匿名'}`}
-          tone="amber"
-        />
-      </div>
+      {/* 导出 PDF + 朗读（全站统一操作栏） */}
+      <ReportActionBar
+        targetId="wealth-report"
+        ttsTitle="事业智富报告"
+        ttsTone="amber"
+        ttsPrefix="以下是您的事业智富报告。"
+        pdfFilename={`事业智富报告-${report.input.name || '匿名'}`}
+        pdfTone="amber"
+        className="pt-2"
+      />
     </div>
   );
 }
@@ -779,10 +710,10 @@ export default function WealthPageClient({ userRole }: WealthPageClientProps) {
               <h2 className="text-xl font-bold mb-4">📜 货殖智慧 · 智富渊源</h2>
               <div className="space-y-3 text-sm text-gray-700">
                 <p><strong>《史记·货殖列传》</strong>：司马迁所著，专门为工商业者立传，记录范蠡、子贡、白圭等富商之道。</p>
-                <p><strong>「天下熙熙，皆为利来；天下攘攘，皆为利往。」</strong> —— 司马迁认为求利是人之常情，不必避讳，关键是"取之有道"。</p>
+                <p><strong>「天下熙熙，皆为利来；天下攘攘，皆为利往。」</strong> —— 司马迁认为求利是人之常情，不必避讳，关键是&ldquo;取之有道&rdquo;。</p>
                 <p><strong>「人弃我取，人取我与。」</strong> —— 战国白圭的经商之道：不追风口，反向布局。</p>
                 <p><strong>「知斗则修备，时用则知物。」</strong> —— 懂得未雨绸缪、看准时机的人，才能真正聚财。</p>
-                <p className="text-xs text-gray-500">本模块将这份"货殖智慧"与八字格局结合，让你的每一步都谋定而后动。</p>
+                <p className="text-xs text-gray-500">本模块将这份&ldquo;货殖智慧&rdquo;与先天格局结合，让你的每一步都谋定而后动。</p>
               </div>
               <button
                 onClick={() => setShowModal(false)}
@@ -918,7 +849,7 @@ export default function WealthPageClient({ userRole }: WealthPageClientProps) {
                   ))}
                 </select>
                 <p className="text-xs text-gray-500 mt-1" style={{ fontFamily: FONT_KAI }}>
-                  选好职业，AI 会把它与你的财星五行做"匹配度分析"，给出更精准的行业微调建议。
+                  选好职业，AI 会把它与你的财星五行做&ldquo;匹配度分析&rdquo;，给出更精准的行业微调建议。
                 </p>
               </div>
 

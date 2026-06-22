@@ -93,7 +93,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: true, promotions: data || [] });
   } catch (e: any) {
     return NextResponse.json(
-      { ok: false, error: e?.message || '查询失败' },
+      { success: false, error: e?.message || '查询失败' },
       { status: 500 }
     );
   }

@@ -21,6 +21,11 @@ function isSupabaseConfigured(): boolean {
 }
 
 export async function getUserRole(): Promise<UserRole> {
+  // mock 模式:服务端无 Supabase 客户端,直接返回会员,保持与客户端 mock session 一致
+  // (用户始终以 tester@lingjingge.local 登录,体验连贯,付费墙默认解锁)
+  if (process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true') {
+    return 'member';
+  }
   if (!isSupabaseConfigured()) {
     console.warn('Supabase 未配置，使用默认角色 free');
     return 'free';

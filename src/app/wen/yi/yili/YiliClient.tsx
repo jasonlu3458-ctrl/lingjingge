@@ -422,7 +422,7 @@ export default function YiliClient({ userRole = 'free' }: YiliClientProps) {
             className="text-sm mt-1"
             style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", color: '#e8d8b0' }}
           >
-            起一卦，解你心中惑
+            起一智慧指引，答你心中惑
           </p>
           <p
             className="text-xs mt-2"

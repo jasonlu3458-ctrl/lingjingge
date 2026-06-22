@@ -168,25 +168,32 @@ const ZenPoster = forwardRef<HTMLDivElement, ZenPosterProps>(function ZenPoster(
       <div
         style={{
           position: 'absolute',
-          top: 460,
+          top: 440,
           left: 120,
           right: 120,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
           textAlign: 'center',
         }}
       >
         {/* 装饰大引号 */}
-        <div style={{ fontSize: 180, color: c.accent, lineHeight: 0.8, opacity: 0.5, marginBottom: 20 }}>
+        <div style={{ fontSize: 160, color: c.accent, lineHeight: '0.8em', opacity: 0.5, marginBottom: 20, fontFamily: "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif" }}>
           『
         </div>
         <div
           style={{
-            fontSize: 92,
-            lineHeight: 1.6,
+            fontSize: 88,
+            lineHeight: '1.7em',
             color: c.text,
             fontWeight: 500,
-            letterSpacing: 8,
+            letterSpacing: '6px',
             margin: '0 auto',
             maxWidth: 840,
+            wordBreak: 'break-word',
+            whiteSpace: 'pre-wrap',
+            display: 'block',
+            fontFamily: "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif",
           }}
         >
           {content}
@@ -195,20 +202,22 @@ const ZenPoster = forwardRef<HTMLDivElement, ZenPosterProps>(function ZenPoster(
           style={{
             fontSize: 36,
             color: c.soft,
-            marginTop: 60,
-            letterSpacing: 4,
+            marginTop: 56,
+            letterSpacing: '4px',
             opacity: 0.8,
+            lineHeight: '1.5em',
+            fontFamily: "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif",
           }}
         >
           —— {source} ——
         </div>
       </div>
 
-      {/* 落款：用户信息 / 八字摘要 */}
+      {/* 落款:用户信息 / 八字摘要 */}
       <div
         style={{
           position: 'absolute',
-          top: 1240,
+          top: 1340,
           left: 120,
           right: 120,
           textAlign: 'center',

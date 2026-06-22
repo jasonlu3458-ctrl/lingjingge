@@ -18,7 +18,7 @@ const SEVEN_DAY_BONUS = 30;
 export async function POST() {
   if (!isSupabaseConfigured()) {
     return NextResponse.json({
-      ok: true,
+      success: true,
       points_awarded: SIGN_IN_POINTS,
       total_points: SIGN_IN_POINTS,
       consecutive_days: 1,
@@ -61,7 +61,7 @@ export async function POST() {
     if (e1 && (e1.code === '42P01' || /does not exist/i.test(e1.message))) {
       // 表不存在 → mock
       return NextResponse.json({
-        ok: true,
+        success: true,
         points_awarded: SIGN_IN_POINTS,
         total_points: SIGN_IN_POINTS,
         consecutive_days: 1,
@@ -115,7 +115,7 @@ export async function POST() {
     const total = (allPoints || []).reduce((s, r) => s + (r.points || 0), 0);
 
     return NextResponse.json({
-      ok: true,
+      success: true,
       points_awarded: SIGN_IN_POINTS + bonus,
       total_points: total,
       consecutive_days: consecutive,

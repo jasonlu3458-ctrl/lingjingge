@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useMemo, type FormEvent, type ReactNode } from 'react';
+import { useState, useMemo, useRef, type FormEvent } from 'react';
 import type { UserRole } from '@/lib/auth';
 import ReportPaywall from '@/components/ReportPaywall';
-import ExportPDFButton from '@/components/ExportPDFButton';
-import ReportTTSButton from '@/components/ReportTTSButton';
+import ReportActionBar from '@/components/ReportActionBar';
+import MiniMarkdown from '@/components/MiniMarkdown';
 import { handleDifyPolishResponse } from '@/lib/sse-client';
 import type {
   MarriageReport,
@@ -13,72 +13,6 @@ import type {
   RelationshipStatus,
   PainPoint,
 } from '@/lib/marriage-rules';
-
-// ============================================================
-// 轻量内联 Markdown 渲染器（与 EducationPageClient 保持一致）
-// ============================================================
-function renderInline(text: string): ReactNode[] {
-  const parts: ReactNode[] = [];
-  const re = /\*\*([^*]+)\*\*/g;
-  let last = 0;
-  let m: RegExpExecArray | null;
-  let key = 0;
-  while ((m = re.exec(text)) !== null) {
-    if (m.index > last) parts.push(text.slice(last, m.index));
-    parts.push(<strong key={`b${key++}`}>{m[1]}</strong>);
-    last = m.index + m[0].length;
-  }
-  if (last < text.length) parts.push(text.slice(last));
-  return parts;
-}
-
-function MiniMarkdown({ text }: { text: string }) {
-  const lines = text.split(/\r?\n/);
-  const blocks: ReactNode[] = [];
-  let i = 0;
-  let key = 0;
-  while (i < lines.length) {
-    const line = lines[i];
-    const trimmed = line.trim();
-    if (trimmed === '') { i++; continue; }
-    const h = /^(#{1,3})\s+(.*)$/.exec(trimmed);
-    if (h) {
-      const level = h[1].length;
-      const content = h[2];
-      const cls = level === 1 ? 'text-lg font-bold mt-3' : 'text-base font-bold mt-2';
-      const Tag = (`h${level + 2}`) as 'h3' | 'h4';
-      blocks.push(<Tag key={key++} className={cls}>{renderInline(content)}</Tag>);
-      i++;
-      continue;
-    }
-    if (/^[-*]\s+/.test(trimmed)) {
-      const items: ReactNode[] = [];
-      while (i < lines.length && /^[-*]\s+/.test(lines[i].trim())) {
-        items.push(<li key={items.length}>{renderInline(lines[i].trim().replace(/^[-*]\s+/, ''))}</li>);
-        i++;
-      }
-      blocks.push(<ul key={key++} className="list-disc pl-5 space-y-1">{items}</ul>);
-      continue;
-    }
-    if (/^\d+\.\s+/.test(trimmed)) {
-      const items: ReactNode[] = [];
-      while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) {
-        items.push(<li key={items.length}>{renderInline(lines[i].trim().replace(/^\d+\.\s+/, ''))}</li>);
-        i++;
-      }
-      blocks.push(<ol key={key++} className="list-decimal pl-5 space-y-1">{items}</ol>);
-      continue;
-    }
-    const para: string[] = [line];
-    i++;
-    while (i < lines.length && lines[i].trim() !== '' && !/^(#{1,3})\s+/.test(lines[i].trim()) && !/^[-*]\s+/.test(lines[i].trim()) && !/^\d+\.\s+/.test(lines[i].trim())) {
-      para.push(lines[i]);
-      i++;
-    }
-    blocks.push(<p key={key++} className="leading-relaxed">{renderInline(para.join(' '))}</p>);
-  }
-  return <>{blocks}</>;
-}
 
 // ============================================================
 // 主题与字体（与 pageConfigs 旧 family 主题一致：玫瑰红 #c45a6a）
@@ -145,6 +79,20 @@ export default function FamilyPageClient({ userRole }: FamilyPageClientProps) {
   // 双人表单
   const [self, setSelf] = useState<PersonForm>({ ...EMPTY_PERSON, gender: 'female' });
   const [partner, setPartner] = useState<PersonForm>({ ...EMPTY_PERSON, gender: 'male' });
+
+  // 对方姓名输入框的引用（用于"补填对方信息"按钮的聚焦）
+  const partnerNameRef = useRef<HTMLInputElement>(null);
+  // 表单容器的引用（用于"补填对方信息"按钮的滚动定位）
+  const formCardRef = useRef<HTMLFormElement>(null);
+
+  // 「补填对方信息，解锁双人合婚」按钮
+  const handleUpgradeToCouple = () => {
+    formCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // 等待滚动结束后再聚焦，体验更顺滑
+    setTimeout(() => {
+      partnerNameRef.current?.focus({ preventScroll: true });
+    }, 600);
+  };
 
   // 关系状态 + 痛点
   const [relationshipStatus, setRelationshipStatus] = useState<RelationshipStatus>('dating');
@@ -340,10 +288,10 @@ export default function FamilyPageClient({ userRole }: FamilyPageClientProps) {
         {/* 仪式感引言卡 */}
         <div className="bg-white/85 backdrop-blur-sm rounded-lg p-6 mb-6 text-center border border-rose-200">
           <p className="text-lg text-rose-900" style={{ fontFamily: FONT_KAI }}>
-            "懂彼此，知进退，方可安顿一生的情与家。"
+            &ldquo;懂彼此，知进退，方可安顿一生的情与家。&rdquo;
           </p>
           <p className="text-xs text-rose-700/70 mt-2" style={{ fontFamily: FONT_KAI }}>
-            —— 献给天下男女的枕下风水秘籍
+            —— 献给天下男女的枕下空间秘籍
           </p>
         </div>
 
@@ -375,6 +323,7 @@ export default function FamilyPageClient({ userRole }: FamilyPageClientProps) {
                 onChange={setPartner}
                 accent="amber"
                 disabled={!isPartnerFilled}
+                nameInputRef={partnerNameRef}
               />
               {/* 单人模式：对方列半透明灰底 + 引导文案 */}
               {!isPartnerFilled && (
@@ -383,9 +332,9 @@ export default function FamilyPageClient({ userRole }: FamilyPageClientProps) {
                   style={{ fontFamily: FONT_KAI }}
                 >
                   <p className="text-center text-gray-700 text-sm px-6 leading-relaxed">
-                    <span className="block text-base font-semibold mb-1">🔒 双人合婚未解锁</span>
+                    <span className="block text-base font-semibold mb-1">🔒 双人关系解析未解锁</span>
                     <span className="text-xs text-gray-500">
-                      *请在下方输入对方信息，即可解锁双人合盘*
+                      *请在下方输入对方信息，即可解锁双人关系解析*
                     </span>
                     <br />
                     <span className="text-xs text-rose-600 mt-2 inline-block">
@@ -478,7 +427,7 @@ export default function FamilyPageClient({ userRole }: FamilyPageClientProps) {
             {loading
               ? '⏳ 排盘中…'
               : isPartnerFilled
-                ? '🙏 生成专属合婚报告'
+                ? '🙏 生成专属关系解析报告'
                 : '✨ 生成我的单人姻缘解析'}
           </button>
 
@@ -526,12 +475,31 @@ export default function FamilyPageClient({ userRole }: FamilyPageClientProps) {
               )}
             </div>
 
+            {/* 单人模式：引导用户补填对方信息 → 解锁双人合婚 */}
+            {isSingle && report && (
+              <div className="mt-4 p-4 rounded-lg border-2 border-rose-200 bg-gradient-to-r from-rose-50 to-amber-50 text-center">
+                <p className="text-sm text-rose-800 mb-3" style={{ fontFamily: FONT_KAI }}>
+                  💑 <strong>想知道未来伴侣的具体模样？</strong>
+                  <br />
+                  现在补填对方信息，即可解锁「<strong>双人合婚</strong>」模式。
+                </p>
+                <button
+                  type="button"
+                  onClick={handleUpgradeToCouple}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-rose-500 to-amber-500 text-white text-sm font-medium rounded-full shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all"
+                  style={{ fontFamily: FONT_KAI }}
+                >
+                  💑 现在补填对方信息，解锁「双人合婚」
+                </button>
+              </div>
+            )}
+
             {/* 免费报告 4 项 + ReportPaywall */}
             <ReportPaywall
               userRole={userRole}
               freePart={freePart}
               premiumPart={premiumPart}
-              premiumSections={['未来 3 年流年', '最佳结婚年份与月份', '婚后风水布局']}
+              premiumSections={['未来 3 年流年', '最佳结婚年份与月份', '婚后空间布局']}
               reportKey="marriage"
               accentClass="text-rose-600"
             />
@@ -544,7 +512,7 @@ export default function FamilyPageClient({ userRole }: FamilyPageClientProps) {
                     ✨ 完整版自然语言报告
                   </h3>
                   <span className="text-xs text-gray-400">
-                    来源：{polishSource === 'dify' ? '🤖 Dify 润色' : '📋 本地模板'}
+                    来源：{polishSource === 'dify' ? '✨ 灵境尊者 · 婚姻家庭开示' : '本地模板'}
                   </span>
                 </div>
                 {polishing ? (
@@ -557,20 +525,15 @@ export default function FamilyPageClient({ userRole }: FamilyPageClientProps) {
               </div>
             )}
 
-            {/* 导出 PDF + 朗读 */}
-            <div className="mt-6 text-center flex flex-col sm:flex-row gap-2 sm:justify-center">
-              <ReportTTSButton
-                targetId="family-report"
-                title="姻缘报告"
-                tone="rose"
-                prefix="以下是您的姻缘报告。"
-              />
-              <ExportPDFButton
-                targetId="family-report"
-                filename={`姻缘报告-${report.input.self.name || '匿名'}`}
-                tone="rose"
-              />
-            </div>
+            {/* 导出 PDF + 朗读（全站统一操作栏） */}
+            <ReportActionBar
+              targetId="family-report"
+              ttsTitle="姻缘报告"
+              ttsTone="rose"
+              ttsPrefix="以下是您的姻缘报告。"
+              pdfFilename={`姻缘报告-${report.input.self.name || '匿名'}`}
+              pdfTone="rose"
+            />
           </div>
         )}
       </main>
@@ -587,9 +550,10 @@ interface PersonColumnProps {
   onChange: (next: PersonForm) => void;
   accent: 'rose' | 'amber';
   disabled?: boolean;   // 单人模式：对方列半透灰
+  nameInputRef?: React.Ref<HTMLInputElement>;
 }
 
-function PersonColumn({ title, data, onChange, accent, disabled }: PersonColumnProps) {
+function PersonColumn({ title, data, onChange, accent, disabled, nameInputRef }: PersonColumnProps) {
   const borderClass = accent === 'rose' ? 'border-rose-200' : 'border-amber-200';
   const ringClass = accent === 'rose' ? 'focus:ring-rose-400' : 'focus:ring-amber-400';
 
@@ -603,6 +567,7 @@ function PersonColumn({ title, data, onChange, accent, disabled }: PersonColumnP
       <div className="mb-3">
         <label className="block text-xs text-gray-600 mb-1" style={{ fontFamily: FONT_KAI }}>姓名 *</label>
         <input
+          ref={nameInputRef}
           type="text"
           value={data.name}
           onChange={e => onChange({ ...data, name: e.target.value })}

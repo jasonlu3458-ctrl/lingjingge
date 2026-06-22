@@ -1,5 +1,5 @@
 // ============================================================
-// LifeCodePageClient —— AI 生命密码 · 天赋觉醒
+// LifeCodePageClient —— 灵境阁 · 命
 // 主题：深空紫蓝（背景 #0a0a1a→#1a1c2e；主色 #7c3aed；副色 #38bdf8）
 // 风格：毛玻璃 (bg-white/5 backdrop-blur-sm border border-white/10)
 // ============================================================
@@ -9,30 +9,14 @@
 import { useState, useEffect, useRef, type FormEvent, type ReactNode } from 'react';
 import type { UserRole } from '@/lib/auth';
 import ReportPaywall from '@/components/ReportPaywall';
-import ExportPDFButton from '@/components/ExportPDFButton';
-import ReportTTSButton from '@/components/ReportTTSButton';
+import ReportActionBar from '@/components/ReportActionBar';
 import type { LifeCodeReport } from '@/lib/lifecode-rules';
 
-// ============================================================
-// 性能埋点：模块加载基准 + 日志 helper
-// 用法: lcLog('label', { key: value })
-// 输出: [LC] +123.45ms | label | { key: value }
-// ============================================================
-const MODULE_LOAD_T0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
-const lcLog = (label: string, extra?: Record<string, unknown>) => {
-  if (typeof window === 'undefined') return; // SSR 安全
-  const t = performance.now();
-  const ms = (t - MODULE_LOAD_T0).toFixed(2);
-  if (extra) console.log(`[LC] +${ms}ms | ${label}`, extra);
-  else      console.log(`[LC] +${ms}ms | ${label}`);
-};
-// 首次模块执行即打点（不依赖组件挂载）
-if (typeof window !== 'undefined') {
-  console.log(`[LC] +0.00ms | module loaded | file=LifeCodePageClient.tsx`);
-}
+// 性能埋点：保留为 no-op，待接入 Sentry / OpenTelemetry 时再启用
+const lcLog = (_label: string, _extra?: Record<string, unknown>) => {};
 
 // ============================================================
-// BreathRing — 呼吸光环（埋点：动画启动 / 周期性 iteration）
+// BreathRing — 呼吸光环
 // ============================================================
 function BreathRing() {
   const ref = useRef<HTMLSpanElement | null>(null);
@@ -44,12 +28,11 @@ function BreathRing() {
       if (ev.animationName === 'lcBreath') {
         iter += 1;
         if (iter <= 3) {
-          lcLog(`BreathRing iteration #${iter} start`);
+          /* 呼吸节律埋点，迭代到第 3 次后停止 */
         }
       }
     };
     el.addEventListener('animationstart', onStart);
-    lcLog('BreathRing mounted (lcBreath animation registered)');
     return () => {
       el.removeEventListener('animationstart', onStart);
     };
@@ -358,7 +341,7 @@ function PolishSection({ polished, source, streaming }: { polished: string; sour
             className="text-base font-bold"
             style={{ color: C_PURPLE_SOFT, fontFamily: FONT_KAI }}
           >
-            AI 天赋觉醒 · Dify 成长顾问润色
+            ✨ 灵境尊者 · 天赋觉醒指引
           </span>
           {streaming ? (
             <span
@@ -372,7 +355,7 @@ function PolishSection({ polished, source, streaming }: { polished: string; sour
               className="text-[10px] px-1.5 py-0.5 rounded text-white"
               style={{ backgroundColor: source === 'dify' ? '#16a34a' : '#9ca3af' }}
             >
-              {source === 'dify' ? 'Dify' : '本地模板'}
+              {source === 'dify' ? '✨ 灵境尊者开示' : '本地模板'}
             </span>
           )}
         </div>
@@ -528,31 +511,6 @@ function LifeCodePaywall({
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div
-            className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-3 text-center"
-            style={{ fontFamily: FONT_KAI }}
-          >
-            <div className="text-xs" style={{ color: C_TEXT_SOFT }}>单次解锁</div>
-            <div className="text-2xl font-bold mt-1 text-white">¥9.9</div>
-            <div className="text-[10px] mt-0.5" style={{ color: C_TEXT_DIM }}>仅限本报告</div>
-          </div>
-          <div
-            className="bg-white/10 backdrop-blur-md border-2 rounded-lg p-3 text-center relative"
-            style={{ borderColor: C_PURPLE, boxShadow: '0 0 18px rgba(124,58,237,0.45)' }}
-          >
-            <div
-              className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] font-bold px-2 py-0.5 rounded text-white"
-              style={{ backgroundColor: C_PURPLE, fontFamily: FONT_KAI }}
-            >
-              推荐
-            </div>
-            <div className="text-xs" style={{ color: C_TEXT_SOFT, fontFamily: FONT_KAI }}>月度会员</div>
-            <div className="text-2xl font-bold mt-1 text-white">¥39</div>
-            <div className="text-[10px] mt-0.5" style={{ color: C_TEXT_DIM, fontFamily: FONT_KAI }}>全站 6 大模块全解锁</div>
-          </div>
-        </div>
-
         <ReportPaywall
           userRole={userRole}
           freePart=""
@@ -585,20 +543,16 @@ function LifeCodePaywall({
         🌠 明天的运势会自动更新，明天记得来查看哦。
       </p>
 
-      {/* 导出 PDF + 朗读 */}
-      <div className="pt-4 text-center flex flex-col sm:flex-row gap-2 sm:justify-center">
-        <ReportTTSButton
-          targetId="lifecode-report"
-          title="数字修行报告"
-          tone="indigo"
-          prefix="以下是您的数字修行报告。"
-        />
-        <ExportPDFButton
-          targetId="lifecode-report"
-          filename={`数字修行报告-${report.input.name || '匿名'}`}
-          tone="purple"
-        />
-      </div>
+      {/* 导出 PDF + 朗读（全站统一操作栏） */}
+      <ReportActionBar
+        targetId="lifecode-report"
+        ttsTitle="数字修行报告"
+        ttsTone="indigo"
+        ttsPrefix="以下是您的数字修行报告。"
+        pdfFilename={`数字修行报告-${report.input.name || '匿名'}`}
+        pdfTone="violet"
+        className="pt-4"
+      />
     </div>
   );
 }
@@ -623,7 +577,7 @@ function LifeCodeReportView({
 }) {
   return (
     <div id="lifecode-report" className="space-y-5">
-      {/* 头部：评分 + 八字摘要 */}
+      {/* 头部：评分 + 先天格局摘要 */}
       <div className={`${glassStrong} p-5 shadow-2xl`}>
         <div className="flex flex-col md:flex-row gap-5 items-center">
           <div
@@ -695,11 +649,11 @@ function LifeCodeReportView({
                 boxShadow: '0 0 22px rgba(124,58,237,0.45)',
               }}
             >
-              {polishLoading ? '🌌 AI 觉醒中…' : '🌌 召唤 AI 天赋觉醒心法（基于 Dify 润色 · 免费体验）'}
+              {polishLoading ? '🌌 AI 觉醒中…' : '🌌 召唤 AI 天赋觉醒心法'}
             </button>
           </div>
           <p className="text-xs mt-2" style={{ fontFamily: FONT_KAI, color: C_TEXT_DIM }}>
-            AI 会基于你的日干人格 + 季节能量 + 本年流年，给出一份 500-700 字的天赋觉醒指南
+            基于你的日干人格、季节能量与本年流年，生成一份专属的天赋觉醒指南
           </p>
         </div>
       )}
@@ -1166,7 +1120,7 @@ export default function LifeCodePageClient({ userRole }: LifeCodePageClientProps
                 <li>你的<strong style={{ color: C_PURPLE_SOFT }}>日干人格</strong>（10 种核心人格）</li>
                 <li>你的<strong style={{ color: C_CYAN_SOFT }}>出生季节</strong>（春/夏/秋/冬的能量底色）</li>
                 <li>你的<strong style={{ color: C_PURPLE_SOFT }}>本年流年</strong>（2026 丙午年 vs 日干的关系）</li>
-                <li>一份<strong style={{ color: C_CYAN_SOFT }}>个人成长地图</strong>（基于"觉醒顾问"风格）</li>
+                <li>一份<strong style={{ color: C_CYAN_SOFT }}>个人成长地图</strong>（基于&ldquo;觉醒顾问&rdquo;风格）</li>
               </ul>
 
               <div

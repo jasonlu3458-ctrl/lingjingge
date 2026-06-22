@@ -10,8 +10,8 @@ import ExerciseCard from '@/components/ExerciseCard';
 import StillnessGuide from '@/components/StillnessGuide';
 import YijinjingGuide from '@/components/YijinjingGuide';
 import { consumeDifySSE } from '@/lib/sse-client';
-import ExportPDFButton from '@/components/ExportPDFButton';
-import ReportTTSButton from '@/components/ReportTTSButton';
+import ReportActionBar from '@/components/ReportActionBar';
+import MiniMarkdown from '@/components/MiniMarkdown';
 import {
   EXERCISE_LIST,
   formatDuration,
@@ -268,14 +268,14 @@ export default function BodyPageClient({ userRole: _userRole }: BodyPageClientPr
               )}
 
               {polished && (
-                <div className="rounded-xl bg-black/30 p-5 text-sm leading-relaxed text-gray-200 whitespace-pre-wrap">
-                  {polished}
+                <div className="rounded-xl bg-black/30 p-5 text-sm leading-relaxed text-gray-200">
+                  <MiniMarkdown text={polished} className="text-gray-200 [&_strong]:text-white [&_h3]:text-white [&_h4]:text-white [&_h5]:text-white" />
                 </div>
               )}
 
               {polishSource && (
                 <p className="mt-2 text-[10px] text-gray-500 text-right">
-                  来源：{polishSource === 'dify' ? 'Dify AI' : '本地模板'}
+                  来源：{polishSource === 'dify' ? '✨ 灵境尊者 · 身心调养指引' : '本地模板'}
                 </p>
               )}
 
@@ -293,22 +293,15 @@ export default function BodyPageClient({ userRole: _userRole }: BodyPageClientPr
                 返回练习列表
               </button>
               {polished && (
-                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                  <ReportTTSButton
-                    targetId="body-report"
-                    title="身心练习报告"
-                    tone="emerald"
-                    prefix="以下是您的身心练习报告。"
-                    className="flex-1 sm:flex-none"
-                  />
-                  <ExportPDFButton
-                    targetId="body-report"
-                    filename={`身心练习报告-${ex?.name || '修行'}`}
-                    tone="purple"
-                    className="flex-1 sm:flex-none"
-                    label="📄 导出本次报告"
-                  />
-                </div>
+                <ReportActionBar
+                  targetId="body-report"
+                  ttsTitle="身心练习报告"
+                  ttsTone="emerald"
+                  ttsPrefix="以下是您的身心练习报告。"
+                  pdfFilename={`身心练习报告-${ex?.name || '修行'}`}
+                  pdfTone="violet"
+                  pdfLabel="📄 导出本次报告"
+                />
               )}
             </div>
           </div>

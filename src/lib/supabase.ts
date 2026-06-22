@@ -44,24 +44,74 @@ export function getSupabaseClient(): ReturnType<typeof createSupabaseClient<Data
 }
 
 // 为了向后兼容，导出一个代理对象
+// 注：代理的 get 必须返回"可链式调用的对象"（即 from() 返回的对象有 select/eq/... 等方法）
 export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient<Database>>, {
-  get(target, prop) {
+  get(_target, prop) {
     // 优先使用 mock 客户端（本地无 Supabase 项目时）
     if (isMockSupabaseEnabled()) {
       return (mockSupabaseClient as any)[prop];
     }
     const client = getSupabaseClient();
     if (!client) {
-      // 如果客户端未初始化，返回一个空函数避免报错
-      console.warn('Supabase 客户端未初始化，操作将被忽略');
-      return () => ({
-        data: null,
-        error: new Error('Supabase 未配置'),
-      });
+      return makeUnconfiguredProxy();
     }
     return (client as any)[prop];
-  }
+  },
 });
+
+/**
+ * 构造一个"未配置"占位 client：
+ *  - 任何方法调用都返回可链式 query / auth stub，避免上游 .from(x).select(...).is(...) 链式崩
+ *  - 终端方法（single / thenable）返回 { data: null, error }
+ */
+function makeUnconfiguredProxy(): any {
+  const chain = (): any => {
+    const fn: any = () => chain();
+    Object.assign(fn, {
+      select: () => chain(),
+      eq: () => chain(),
+      neq: () => chain(),
+      gt: () => chain(),
+      gte: () => chain(),
+      lt: () => chain(),
+      lte: () => chain(),
+      in: () => chain(),
+      is: () => chain(),
+      like: () => chain(),
+      ilike: () => chain(),
+      match: () => chain(),
+      contains: () => chain(),
+      range: () => chain(),
+      order: () => chain(),
+      limit: () => chain(),
+      single: async () => ({ data: null, error: new Error('Supabase 未配置') }),
+      maybeSingle: async () => ({ data: null, error: new Error('Supabase 未配置') }),
+      then: (resolve: any) => Promise.resolve({ data: [], error: null }).then(resolve),
+      insert: async () => ({ data: null, error: new Error('Supabase 未配置') }),
+      update: () => chain(),
+      upsert: async () => ({ data: null, error: new Error('Supabase 未配置') }),
+      delete: () => chain(),
+    });
+    return fn;
+  };
+  return {
+    from: chain,
+    auth: {
+      getUser: async () => ({ data: { user: null }, error: new Error('Supabase 未配置') }),
+      getSession: async () => ({ data: { session: null }, error: new Error('Supabase 未配置') }),
+      signInWithPassword: async () => ({ data: { user: null, session: null }, error: new Error('Supabase 未配置') }),
+      signUp: async () => ({ data: { user: null, session: null }, error: new Error('Supabase 未配置') }),
+      signInWithOAuth: async () => ({ data: { provider: null, url: null }, error: new Error('Supabase 未配置') }),
+      resend: async () => ({ data: null, error: new Error('Supabase 未配置') }),
+      resetPasswordForEmail: async () => ({ data: null, error: new Error('Supabase 未配置') }),
+      updateUser: async () => ({ data: { user: null }, error: new Error('Supabase 未配置') }),
+      signOut: async () => ({ error: new Error('Supabase 未配置') }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    },
+    storage: { from: () => chain() },
+    rpc: async () => ({ data: null, error: new Error('Supabase 未配置') }),
+  };
+}
 
 export function createClient() {
   const url = getSupabaseUrl();

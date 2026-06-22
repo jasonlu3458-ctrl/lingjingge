@@ -38,7 +38,7 @@ export async function POST() {
   );
   const { data: { user } } = await supabaseAuth.auth.getUser();
   if (!user) {
-    return NextResponse.json({ ok: false, error: '未登录' }, { status: 401 });
+    return NextResponse.json({ success: false, error: '未登录' }, { status: 401 });
   }
 
   try {
@@ -64,7 +64,7 @@ export async function POST() {
 
     const invited = count || 0;
     if (invited < 1) {
-      return NextResponse.json({ ok: false, error: '尚未邀请到同修' }, { status: 400 });
+      return NextResponse.json({ success: false, error: '尚未邀请到同修' }, { status: 400 });
     }
 
     // 2) 查自己 profile
@@ -76,7 +76,7 @@ export async function POST() {
     if (mErr) throw mErr;
 
     if (me?.reward_claimed) {
-      return NextResponse.json({ ok: false, error: '已领取过邀请奖励' }, { status: 409 });
+      return NextResponse.json({ success: false, error: '已领取过邀请奖励' }, { status: 409 });
     }
 
     // 3) 计算奖励天数（阶梯式：1→7, 3→+30, 5→+90）
@@ -110,6 +110,6 @@ export async function POST() {
       message: `已到账 ${days} 天会员，到期：${base.toLocaleDateString('zh-CN')}`,
     });
   } catch (e: any) {
-    return NextResponse.json({ ok: false, error: e?.message || '领取失败' }, { status: 500 });
+    return NextResponse.json({ success: false, error: e?.message || '领取失败' }, { status: 500 });
   }
 }

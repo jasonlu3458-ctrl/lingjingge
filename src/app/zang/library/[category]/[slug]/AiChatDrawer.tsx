@@ -208,7 +208,7 @@ export default function AiChatDrawer({ open, onClose, passage, articleTitle }: A
                 void handleSend();
               }
             }}
-            placeholder={streaming ? 'AI 正在书写…' : '追问此段，或谈谈你的理解…'}
+            placeholder={streaming ? 'AI 智能顾问正在书写…' : '追问此段，或谈谈你的理解…'}
             disabled={streaming}
             className="flex-1 text-sm px-3 py-2 rounded-full bg-gray-100 focus:bg-white focus:ring-2 focus:ring-[#b88a4a] focus:outline-none disabled:opacity-50"
           />
@@ -216,7 +216,7 @@ export default function AiChatDrawer({ open, onClose, passage, articleTitle }: A
             type="button"
             onClick={() => void handleSend()}
             disabled={streaming || !input.trim()}
-            className="px-4 py-2 rounded-full bg-[#b88a4a] text-white text-sm font-medium disabled:opacity-50 hover:bg-[#a07a3e] transition"
+            className="px-4 py-2 rounded-full bg-[#b88a4a] text-white text-sm font-medium active:scale-95 active:opacity-80 transition-all duration-150 disabled:opacity-50 hover:bg-[#a07a3e]"
           >
             发送
           </button>

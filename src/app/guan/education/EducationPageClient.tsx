@@ -1,89 +1,10 @@
 'use client';
 
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useState, type FormEvent } from 'react';
 import type { UserRole } from '@/lib/auth';
 import { handleDifyPolishResponse } from '@/lib/sse-client';
-import ExportPDFButton from '@/components/ExportPDFButton';
-import ReportTTSButton from '@/components/ReportTTSButton';
-
-// 轻量内联 Markdown 渲染器（替换 react-markdown@10）：
-// react-markdown 是 ESM-only，Next.js 14 + RSC 静态/动态 import
-// 都会在浏览器侧触发
-//   "Cannot read properties of undefined (reading 'call')"
-// 的 hydration 错误（mountLazyComponent → readChunk 失败）。
-// Dify / 本地模板返回的文本结构很有限，** / ## / 列表 / 段落就够用。
-function renderInline(text: string): ReactNode[] {
-  // 处理 **加粗** 与 \n
-  const parts: ReactNode[] = [];
-  const re = /\*\*([^*]+)\*\*/g;
-  let last = 0;
-  let m: RegExpExecArray | null;
-  let key = 0;
-  while ((m = re.exec(text)) !== null) {
-    if (m.index > last) parts.push(text.slice(last, m.index));
-    parts.push(<strong key={`b${key++}`}>{m[1]}</strong>);
-    last = m.index + m[0].length;
-  }
-  if (last < text.length) parts.push(text.slice(last));
-  return parts;
-}
-
-function MiniMarkdown({ text }: { text: string }) {
-  const lines = text.split(/\r?\n/);
-  const blocks: ReactNode[] = [];
-  let i = 0;
-  let key = 0;
-  while (i < lines.length) {
-    const line = lines[i];
-    const trimmed = line.trim();
-
-    if (trimmed === '') { i++; continue; }
-
-    // 标题
-    const h = /^(#{1,3})\s+(.*)$/.exec(trimmed);
-    if (h) {
-      const level = h[1].length;
-      const content = h[2];
-      const cls = level === 1 ? 'text-lg font-bold mt-3' : level === 2 ? 'text-base font-bold mt-2' : 'text-sm font-bold mt-2';
-      const Tag = (`h${level + 2}`) as 'h3' | 'h4' | 'h5';
-      blocks.push(<Tag key={key++} className={cls}>{renderInline(content)}</Tag>);
-      i++;
-      continue;
-    }
-
-    // 无序列表（- / * 开头）
-    if (/^[-*]\s+/.test(trimmed)) {
-      const items: ReactNode[] = [];
-      while (i < lines.length && /^[-*]\s+/.test(lines[i].trim())) {
-        items.push(<li key={items.length}>{renderInline(lines[i].trim().replace(/^[-*]\s+/, ''))}</li>);
-        i++;
-      }
-      blocks.push(<ul key={key++} className="list-disc pl-5 space-y-1">{items}</ul>);
-      continue;
-    }
-
-    // 有序列表
-    if (/^\d+\.\s+/.test(trimmed)) {
-      const items: ReactNode[] = [];
-      while (i < lines.length && /^\d+\.\s+/.test(lines[i].trim())) {
-        items.push(<li key={items.length}>{renderInline(lines[i].trim().replace(/^\d+\.\s+/, ''))}</li>);
-        i++;
-      }
-      blocks.push(<ol key={key++} className="list-decimal pl-5 space-y-1">{items}</ol>);
-      continue;
-    }
-
-    // 普通段落：合并连续非空行
-    const para: string[] = [line];
-    i++;
-    while (i < lines.length && lines[i].trim() !== '' && !/^(#{1,3})\s+/.test(lines[i].trim()) && !/^[-*]\s+/.test(lines[i].trim()) && !/^\d+\.\s+/.test(lines[i].trim())) {
-      para.push(lines[i]);
-      i++;
-    }
-    blocks.push(<p key={key++} className="leading-relaxed">{renderInline(para.join(' '))}</p>);
-  }
-  return <>{blocks}</>;
-}
+import ReportActionBar from '@/components/ReportActionBar';
+import MiniMarkdown from '@/components/MiniMarkdown';
 
 interface EducationPageClientProps {
   userRole: UserRole;
@@ -510,27 +431,62 @@ export default function EducationPageClient({ userRole }: EducationPageClientPro
                 </div>
               </div>
 
-              {/* 付费墙 / Dify 润色入口 */}
-              <div className="mt-6 p-4 border-2 border-green-200 rounded-lg bg-green-50 text-center">
-                <h3 className="text-lg font-bold text-gray-800" style={{ fontFamily: FONT_KAI }}>
-                  🔓 解锁完整报告
-                </h3>
-                <p className="text-sm text-gray-600 mt-1" style={{ fontFamily: FONT_KAI }}>
-                  获取全部 {5 + Object.keys(report.paid).length} 项深度分析（含穿搭 / 起居 / 游学 / 助旺 / 心法）
+              {/* 付费墙（统一：价格卡片 + CTA + 信任徽标） */}
+              <div className="mt-6 p-5 border border-dashed border-gray-400 rounded-lg bg-gray-50">
+                <div className="text-sm font-medium mb-3 text-amber-700">🔒 完整报告仅对会员开放</div>
+                <p className="text-sm text-gray-600 mb-3" style={{ fontFamily: FONT_KAI }}>
+                  会员可查看 {5 + Object.keys(report.paid).length} 项深度分析（含穿搭 / 起居 / 游学 / 助旺 / 心法）
                 </p>
-                <div className="mt-4 flex flex-col sm:flex-row gap-3 justify-center">
+
+                {/* 价格卡片：单次解锁 / 月度会员 并排 */}
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="rounded-lg border border-gray-200 bg-white p-3 text-center">
+                    <div className="text-xs text-gray-500">单次解锁</div>
+                    <div className="text-2xl font-bold text-gray-800 mt-1">¥9.9</div>
+                    <div className="text-[10px] text-gray-400 mt-0.5">仅限本报告</div>
+                  </div>
+                  <div className="rounded-lg border-2 border-amber-300 bg-amber-50 p-3 text-center relative">
+                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-amber-400 text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                      推荐
+                    </div>
+                    <div className="text-xs text-amber-700">月度会员</div>
+                    <div className="text-2xl font-bold text-amber-700 mt-1">¥29.9<span className="text-xs">/月</span></div>
+                    <div className="text-[10px] text-amber-600 mt-0.5">全站 6 大模块全解锁</div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-2">
                   <button
-                    className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
+                    className="flex-1 py-2 bg-white border border-[#2c2c2c] text-[#2c2c2c] rounded hover:bg-gray-50 transition-colors text-sm"
                     style={{ fontFamily: FONT_KAI }}
                   >
-                    单次解锁 9.9元
+                    单次解锁 · ¥9.9
                   </button>
                   <button
-                    className="px-6 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800"
+                    className="flex-1 py-2 bg-[#b85a4a] text-white rounded hover:bg-[#9a4a3a] transition-colors text-sm"
                     style={{ fontFamily: FONT_KAI }}
                   >
-                    开通会员 29.9元/月
+                    升级会员 · 全站解锁
                   </button>
+                </div>
+                <p className="text-xs text-gray-400 text-center mt-2" style={{ fontFamily: FONT_KAI }}>
+                  注册免费 · 7 天无理由退款
+                </p>
+
+                {/* 信任徽标：支付安全 / 本地计算 / 退款保障 */}
+                <div className="mt-4 grid grid-cols-3 gap-2 text-center text-[10px] text-gray-500">
+                  <div>
+                    <div className="text-base">🛡️</div>
+                    <div>支付由 Stripe 保障</div>
+                  </div>
+                  <div>
+                    <div className="text-base">🔒</div>
+                    <div>先天格局本地计算</div>
+                  </div>
+                  <div>
+                    <div className="text-base">↩️</div>
+                    <div>7 天无理由退款</div>
+                  </div>
                 </div>
               </div>
 
@@ -542,7 +498,7 @@ export default function EducationPageClient({ userRole }: EducationPageClientPro
                       ✨ 完整版自然语言报告
                     </h3>
                     <span className="text-xs text-gray-400">
-                      来源：{polishSource === 'dify' ? '🤖 Dify 润色' : '📋 本地模板'}
+                      来源：{polishSource === 'dify' ? '✨ 灵境尊者 · 子女教育指引' : '本地模板'}
                     </span>
                   </div>
                   {polishing ? (
@@ -558,20 +514,16 @@ export default function EducationPageClient({ userRole }: EducationPageClientPro
                 </div>
               )}
 
-              {/* 导出 PDF + 朗读 */}
-              <div className="mt-6 text-center flex flex-col sm:flex-row gap-2 sm:justify-center">
-                <ReportTTSButton
-                  targetId="education-report"
-                  title="学业报告"
-                  tone="violet"
-                  prefix="以下是您的学业报告。"
-                />
-                <ExportPDFButton
-                  targetId="education-report"
-                  filename={`学业报告-${report.input.name || '匿名'}`}
-                  tone="gray"
-                />
-              </div>
+              {/* 导出 PDF + 朗读（全站统一操作栏） */}
+              <ReportActionBar
+                targetId="education-report"
+                ttsTitle="学业报告"
+                ttsTone="violet"
+                ttsPrefix="以下是您的学业报告。"
+                pdfFilename={`学业报告-${report.input.name || '匿名'}`}
+                pdfTone="violet"
+                className="mt-6"
+              />
             </div>
           )}
         </main>

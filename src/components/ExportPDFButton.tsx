@@ -172,7 +172,7 @@ export default function ExportPDFButton({
         type="button"
         onClick={handleExport}
         disabled={exporting}
-        className={`inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium transition disabled:opacity-60 disabled:cursor-not-allowed ${
+        className={`inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-150 active:scale-95 active:opacity-80 disabled:opacity-60 disabled:cursor-not-allowed ${
           TONE_STYLES[tone]
         }`}
       >

@@ -9,7 +9,7 @@ interface CalendarHeatmapProps {
 }
 
 interface FetchResp {
-  ok: boolean;
+  success?: boolean;
   dates?: string[];
   user_id?: string;
   error?: string;
@@ -97,7 +97,7 @@ export default function CalendarHeatmap({ mockDates, className = '' }: CalendarH
         const r = await fetch('/api/user/calendar', { cache: 'no-store' });
         const data: FetchResp = await r.json();
         if (cancelled) return;
-        if (!data.ok) {
+        if (data.error && data.success !== true) {
           setErr(data.error || `HTTP ${r.status}`);
           setDates([]);
         } else {

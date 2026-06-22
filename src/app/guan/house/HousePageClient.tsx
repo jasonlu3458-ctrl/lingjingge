@@ -11,8 +11,8 @@ import ScoreGauge from '@/components/wealth-report/ScoreGauge';
 import FreeCard from '@/components/wealth-report/FreeCard';
 import LockedCard from '@/components/wealth-report/LockedCard';
 import ReportPaywall from '@/components/ReportPaywall';
-import ExportPDFButton from '@/components/ExportPDFButton';
-import ReportTTSButton from '@/components/ReportTTSButton';
+import ReportActionBar from '@/components/ReportActionBar';
+import MiniMarkdown from '@/components/MiniMarkdown';
 import type { UserRole } from '@/lib/auth';
 
 // —— 主题色 ——
@@ -215,7 +215,7 @@ function PolishSection({ polished, source, streaming }: { polished: string; sour
         <div className="flex items-center gap-2">
           <span className="text-xl">🪴</span>
           <span className="text-base font-bold" style={{ color: THEME_SECONDARY, fontFamily: FONT_KAI }}>
-            空间能量觉醒 · Dify 空间顾问润色
+            ✨ 灵境尊者 · 空间能量开示
           </span>
           {streaming ? (
             <span className="text-[10px] px-1.5 py-0.5 rounded text-white animate-pulse" style={{ backgroundColor: THEME_PRIMARY }}>
@@ -226,15 +226,17 @@ function PolishSection({ polished, source, streaming }: { polished: string; sour
               className="text-[10px] px-1.5 py-0.5 rounded text-white"
               style={{ backgroundColor: source === 'dify' ? '#16a34a' : '#9ca3af' }}
             >
-              {source === 'dify' ? 'Dify' : '本地模板'}
+              {source === 'dify' ? '✨ 灵境尊者开示' : '本地模板'}
             </span>
           )}
         </div>
         <span className="text-xs text-amber-700">{open ? '收起 ▴' : '展开 ▾'}</span>
       </button>
       {open && (
-        <div className="mt-3 text-sm whitespace-pre-wrap text-amber-900" style={{ fontFamily: FONT_KAI }}>
-          {polished ? polished : (
+        <div className="mt-3 text-sm text-amber-900" style={{ fontFamily: FONT_KAI }}>
+          {polished ? (
+            <MiniMarkdown text={polished} className="text-amber-900 [&_strong]:text-amber-950 [&_h3]:text-amber-950 [&_h4]:text-amber-950 [&_h5]:text-amber-950" />
+          ) : (
             <div className="flex items-center gap-2 text-amber-700 italic py-4">
               <span className="inline-block w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: THEME_PRIMARY }} />
               <span className="inline-block w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: THEME_PRIMARY, animationDelay: '0.2s' }} />
@@ -326,10 +328,10 @@ function HouseReportView({
             className="px-6 py-2.5 rounded-lg text-white font-semibold shadow-md transition disabled:opacity-60 disabled:cursor-not-allowed"
             style={{ background: `linear-gradient(135deg, ${THEME_PRIMARY}, ${THEME_SECONDARY})`, fontFamily: FONT_KAI }}
           >
-            {polishing ? '🪴 AI 觉醒中…' : '🪴 召唤 AI 空间能量觉醒（基于 Dify 润色 · 免费体验）'}
+            {polishing ? '🪴 AI 觉醒中…' : '🪴 召唤 AI 空间能量觉醒'}
           </button>
           <p className="text-xs text-amber-700 mt-2" style={{ fontFamily: FONT_KAI }}>
-            AI 会基于你的命卦 + 大门方位 + 户型，给出一份 500-700 字的空间调整指南
+            基于你的命卦、大门朝向与家庭结构，生成一份专属的空间能量指南
           </p>
         </div>
       )}
@@ -414,20 +416,16 @@ function HouseReportView({
 
             <RetentionHint />
 
-            {/* 导出 PDF + 朗读 */}
-            <div className="pt-2 text-center flex flex-col sm:flex-row gap-2 sm:justify-center">
-              <ReportTTSButton
-                targetId="house-report"
-                title="家宅风水报告"
-                tone="teal"
-                prefix="以下是您的家宅风水报告。"
-              />
-              <ExportPDFButton
-                targetId="house-report"
-                filename={`家宅风水报告-${report.input.name || '匿名'}`}
-                tone="emerald"
-              />
-            </div>
+            {/* 导出 PDF + 朗读（全站统一操作栏） */}
+            <ReportActionBar
+              targetId="house-report"
+              ttsTitle="家宅空间布局报告"
+              ttsTone="emerald"
+              ttsPrefix="以下是您的家宅空间布局报告。"
+              pdfFilename={`家宅空间布局报告-${report.input.name || '匿名'}`}
+              pdfTone="emerald"
+              className="pt-2"
+            />
           </>
         )}
       </div>

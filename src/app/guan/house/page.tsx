@@ -3,7 +3,7 @@ import HousePageClient from './HousePageClient';
 
 export const metadata = {
   title: '家居环境 · 空间能量 · 灵境阁',
-  description: '宅安则心安。好的空间布局，是家庭和睦与个人运势的稳定器。',
+  description: '宅安则心安。好的空间布局，是家庭和睦与个人能量节奏的稳定器。',
 };
 
 export default async function HousePage() {

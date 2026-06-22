@@ -39,7 +39,7 @@ const CARDS: Card[] = [
     title: 'AI 事业财富',
     href: '/guan/wealth',
     icon: '💎',
-    tagline: '君子爱财，取之有道 —— 算清格局，谋定后动。',
+    tagline: '君子爱财，取之有道 —— 看清格局，谋定后动。',
     border: 'border-amber-200',
     iconBg: 'bg-amber-100',
     accent: 'text-amber-700',

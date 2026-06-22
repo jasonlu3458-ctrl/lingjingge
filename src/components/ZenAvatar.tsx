@@ -3,7 +3,7 @@
 import type { CSSProperties } from 'react';
 
 /**
- * ZenAvatar —— 灵境阁统一 AI 视觉形象
+ * ZenAvatar —— 灵境尊者统一 AI 视觉形象
  *
  * 极简打坐者背影线条（轮廓式）
  *  - 半透明淡金色（amber-700/20）

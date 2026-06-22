@@ -41,10 +41,24 @@ export default function UserStatus({ immersive = false }: { immersive?: boolean 
   }, [router]);
 
   const handleLogout = async () => {
-    if (isSupabaseConfigured()) {
-      await supabase.auth.signOut();
+    // 1) 调后端 signout 路由(真 Supabase 模式:清掉 sb-* cookie)
+    try {
+      await fetch('/api/auth/signout', { method: 'POST' });
+    } catch (e) {
+      // 路由不存在或网络错误时不影响客户端 signOut
+      console.warn('[UserStatus] 调用 /api/auth/signout 失败:', e);
     }
+    // 2) 客户端 signOut(mock 模式:写 localStorage;真模式:清本地 token)
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase.auth.signOut();
+      } catch (e) {
+        console.error('[UserStatus] supabase.auth.signOut 失败:', e);
+      }
+    }
+    // 3) 强制刷新后跳回首页,清掉内存里残留的 user 引用
     router.push('/');
+    router.refresh();
   }
 
   if (loading) {

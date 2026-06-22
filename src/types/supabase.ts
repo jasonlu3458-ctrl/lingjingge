@@ -1,3 +1,10 @@
+/**
+ * Database 类型 — 与 supabase/migrations 严格对齐
+ *
+ * 字段 / 类型 / 可空性 / 默认值以最新一次 migrations 为准。
+ * 同步机制：每次新增 / 修改 migrations 时同步修改本文件，避免 supabase-js
+ * 生成错误的 Insert / Update 类型。
+ */
 export type Json =
   | string
   | number

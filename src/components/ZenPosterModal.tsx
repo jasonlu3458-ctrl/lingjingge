@@ -125,11 +125,18 @@ export default function ZenPosterModal({ content, source, today, open, onClose }
     setGenerating(true);
     setError(null);
     try {
-      // 等所有 web 字体加载完成，避免截图缺字
+      // 等所有 web 字体加载完成,避免截图缺字 / 字体降级导致 line-height 错位
       if (typeof document !== 'undefined' && (document as any).fonts) {
         await (document as any).fonts.ready;
+        // 显式触发 Ma Shan Zheng 字体加载,html2canvas 不会主动 fetch
+        try {
+          await (document as any).fonts.load('160px "Ma Shan Zheng"');
+          await (document as any).fonts.load('88px "Ma Shan Zheng"');
+          await (document as any).fonts.load('36px "Ma Shan Zheng"');
+        } catch {}
       }
-      // 额外等一帧让浏览器布局稳定
+      // 额外等两帧让浏览器布局稳定
+      await new Promise(r => requestAnimationFrame(() => r(null)));
       await new Promise(r => requestAnimationFrame(() => r(null)));
 
       const canvas = await html2canvas(el, {
@@ -141,6 +148,8 @@ export default function ZenPosterModal({ content, source, today, open, onClose }
         height: 1920,
         windowWidth: 1080,
         windowHeight: 1920,
+        // 强制 foreignObject 渲染,字体回退更可靠
+        foreignObjectRendering: false,
       });
 
       const blob: Blob | null = await new Promise((resolve) =>

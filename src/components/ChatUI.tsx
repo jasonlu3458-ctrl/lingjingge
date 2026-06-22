@@ -10,6 +10,7 @@ import { useConsent } from '@/hooks/useConsent';
 import { useTTS } from '@/hooks/useTTS';
 import type { UserRole } from '@/lib/auth';
 import ZenAvatar from './ZenAvatar';
+import MiniMarkdown from './MiniMarkdown';
 
 export interface StateOption {
   label: string;
@@ -233,7 +234,6 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
       return;
     }
 
-    // 觉醒日记模式：非流式响应，显示"回响"
     if (config.difyType === 'awakening') {
       try {
         const response = await fetch('/api/dify', {
@@ -264,7 +264,7 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
             if (done) break;
             const chunk = decoder.decode(value);
             const lines = chunk.split('\n');
-            
+
             for (const line of lines) {
               if (line.startsWith('data: ')) {
                 try {
@@ -272,15 +272,14 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
                   if ((data.event === 'message' || data.event === 'agent_message') && data.answer) {
                     fullResponse += data.answer;
                   }
-                } catch (parseError) {
-                  console.error('解析流数据失败:', parseError);
+                } catch {
+                  /* 单条流数据异常不影响后续 */
                 }
               }
             }
           }
         }
 
-        // 更新消息内容，显示"回响"
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === assistantMessageId
@@ -299,25 +298,23 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
           )
         );
       }
-      
+
       setIsTyping(false);
       return;
     }
 
-    // AI疗愈师模式：非流式响应，显示"处方"
     if (config.difyType === 'healing') {
       try {
-        // 根据场景ID获取对应的提示词
         const scenePrompts: Record<string, string> = {
-          anxiety: '用户感到焦虑不安，请给出详细的放松疗愈方案，包括呼吸练习、冥想方法和日常建议。',
-          fatigue: '用户身心疲惫，需要能量补充，请提供恢复精力的疗愈方案，包括休息建议、能量补充方法。',
-          sadness: '用户情绪低落，需要情绪疗愈，请提供温暖的安慰和情绪调节方法。',
-          stress: '用户压力很大，请提供减压方案，包括放松技巧、时间管理建议。',
-          confusion: '用户感到迷茫困惑，请提供引导性的思考问题和行动建议。',
-          loneliness: '用户感到孤独寂寞，请提供自我关怀和建立连接的建议。',
+          anxiety: '同修感到焦虑不安，请给出详细的放松疗愈方案，包括呼吸练习、冥想方法和日常建议。',
+          fatigue: '同修身心疲惫，需要能量补充，请提供恢复精力的疗愈方案，包括休息建议、能量补充方法。',
+          sadness: '同修情绪低落，需要情绪疗愈，请提供温暖的安慰和情绪调节方法。',
+          stress: '同修压力很大，请提供减压方案，包括放松技巧、时间管理建议。',
+          confusion: '同修感到迷茫困惑，请提供引导性的思考问题和行动建议。',
+          loneliness: '同修感到孤独寂寞，请提供自我关怀和建立连接的建议。',
         };
-        
-        const prompt = scenePrompts[query] || `用户状态：${query}，请给出相应的疗愈建议。`;
+
+        const prompt = scenePrompts[query] || `同修状态：${query}，请给出相应的疗愈建议。`;
 
         const response = await fetch('/api/dify', {
           method: 'POST',
@@ -347,7 +344,7 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
             if (done) break;
             const chunk = decoder.decode(value);
             const lines = chunk.split('\n');
-            
+
             for (const line of lines) {
               if (line.startsWith('data: ')) {
                 try {
@@ -355,15 +352,14 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
                   if ((data.event === 'message' || data.event === 'agent_message') && data.answer) {
                     fullResponse += data.answer;
                   }
-                } catch (parseError) {
-                  console.error('解析流数据失败:', parseError);
+                } catch {
+                  /* 单条流数据异常不影响后续 */
                 }
               }
             }
           }
         }
 
-        // 更新消息内容，显示"疗愈处方"
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === assistantMessageId
@@ -382,7 +378,7 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
           )
         );
       }
-      
+
       setIsTyping(false);
       return;
     }
@@ -429,32 +425,20 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
                 }
                 
                 if (data.event === 'message' && data.answer) {
-                  // AI禅师特殊处理 - 随机添加禅意回应
-                  if (config.difyType === 'ai-zen-master') {
-                    const zenResponses = ['棒喝！', '（默然）', '（转身而去）', '（拈花微笑）', '（拂袖）', '（合十）'];
-                    const randomResponse = zenResponses[Math.floor(Math.random() * zenResponses.length)];
-                    data.answer = randomResponse + '\n\n' + data.answer;
-                  }
                   data.answer.split('').forEach((char: string) => charQueueRef.current.push(char));
                   flushChars(assistantMessageId);
                 }
-                
+
                 if (data.event === 'agent_message' && data.answer) {
-                  // AI禅师特殊处理 - 随机添加禅意回应
-                  if (config.difyType === 'ai-zen-master') {
-                    const zenResponses = ['棒喝！', '（默然）', '（转身而去）', '（拈花微笑）', '（拂袖）', '（合十）'];
-                    const randomResponse = zenResponses[Math.floor(Math.random() * zenResponses.length)];
-                    data.answer = randomResponse + '\n\n' + data.answer;
-                  }
                   data.answer.split('').forEach((char: string) => charQueueRef.current.push(char));
                   flushChars(assistantMessageId);
                 }
-                
+
                 if (data.event === 'message_end') {
                   setIsTyping(false);
                 }
-              } catch (parseError) {
-                console.error('解析流数据失败:', parseError);
+              } catch {
+                /* 单条流数据异常不影响后续 */
               }
             }
           }
@@ -869,7 +853,7 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
           </form>
         )}
 
-        {/* AI疗愈师模式：场景选择卡片 */}
+        {/* AI 疗愈师 · 场景选择卡片 */}
         {isPureChatMode && showForm && config.difyType === 'healing' && messages.length === 0 && (
           <div className="bg-gradient-to-br from-emerald-900/80 to-teal-800/60 backdrop-blur-sm rounded-xl shadow-lg border border-emerald-500/30 p-8 mb-6">
             <div className="text-center mb-8">
@@ -877,7 +861,7 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
                 <ZenAvatar size={48} opacity={0.3} style={{ color: '#d1fae5' }} />
               </div>
               <h3 className="text-xl text-emerald-100" style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", letterSpacing: '2px' }}>
-                AI疗愈师
+                AI 疗愈师 · 智能分析
               </h3>
               <p className="text-emerald-200/70 text-sm mt-2">
                 选择您当前的状态，获取专属疗愈处方
@@ -1065,7 +1049,7 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
                             </div>
                             <p className="text-lg text-emerald-100 whitespace-pre-wrap leading-relaxed"
                                style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}>
-                              {msg.content}
+                              <MiniMarkdown text={msg.content} className="text-emerald-100 [&_strong]:text-emerald-50 [&_h3]:text-emerald-50 [&_h4]:text-emerald-50 [&_h5]:text-emerald-50" />
                             </p>
                           </div>
                         </div>
@@ -1111,9 +1095,16 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
                           : 'bg-gray-100 text-gray-800'
                       }`}
                     >
-                      <p className="text-sm md:text-base whitespace-pre-wrap" style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}>
-                        {msg.content}
-                      </p>
+                      {msg.role === 'assistant' ? (
+                        <MiniMarkdown
+                          text={msg.content}
+                          className="text-sm md:text-base text-gray-800 prose prose-sm max-w-none [&_strong]:font-bold [&_strong]:text-gray-900 [&_p]:my-1 [&_h3]:text-base [&_h3]:font-bold [&_h3]:mt-2 [&_h4]:text-sm [&_h4]:font-bold [&_h4]:mt-2 [&_h5]:text-sm [&_h5]:font-bold [&_h5]:mt-1"
+                        />
+                      ) : (
+                        <p className="text-sm md:text-base whitespace-pre-wrap" style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}>
+                          {msg.content}
+                        </p>
+                      )}
                       {msg.role === 'assistant' && msg.content && msg.content.trim() && (
                         <div className="flex justify-end items-center mt-2 -mb-1">
                           <button

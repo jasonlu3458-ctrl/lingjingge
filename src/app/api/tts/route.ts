@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   const apiKey = process.env.SILICONFLOW_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { ok: false, error: 'SILICONFLOW_API_KEY 未配置' },
+      { success: false, error: 'SILICONFLOW_API_KEY 未配置' },
       { status: 500 },
     );
   }
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     body = await req.json();
   } catch {
     return NextResponse.json(
-      { ok: false, error: '请求体不是合法 JSON' },
+      { success: false, error: '请求体不是合法 JSON' },
       { status: 400 },
     );
   }
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
   const text = (body.text || '').trim();
   if (!text) {
     return NextResponse.json(
-      { ok: false, error: 'text 不能为空' },
+      { success: false, error: 'text 不能为空' },
       { status: 400 },
     );
   }
@@ -83,7 +83,7 @@ export async function POST(req: Request) {
     // 透传音频流
     if (!r.body) {
       return NextResponse.json(
-        { ok: false, error: '上游无响应体' },
+        { success: false, error: '上游无响应体' },
         { status: 502 },
       );
     }
@@ -99,7 +99,7 @@ export async function POST(req: Request) {
     });
   } catch (e: any) {
     return NextResponse.json(
-      { ok: false, error: e?.message || 'TTS 调用失败' },
+      { success: false, error: e?.message || 'TTS 调用失败' },
       { status: 500 },
     );
   }

@@ -12,8 +12,7 @@
 import { useState, useRef, type FormEvent, type ReactNode } from 'react';
 import type { UserRole } from '@/lib/auth';
 import ReportPaywall from '@/components/ReportPaywall';
-import ExportPDFButton from '@/components/ExportPDFButton';
-import ReportTTSButton from '@/components/ReportTTSButton';
+import ReportActionBar from '@/components/ReportActionBar';
 import ScoreGauge from '@/components/wealth-report/ScoreGauge';
 import FreeCard from '@/components/wealth-report/FreeCard';
 import LockedCard from '@/components/wealth-report/LockedCard';
@@ -173,7 +172,7 @@ function PolishSection({
         <div className="flex items-center gap-2">
           <span className="text-xl">💼</span>
           <span className="text-base font-bold" style={{ color: THEME_ACCENT, fontFamily: FONT_KAI }}>
-            AI 事业财富 · Dify 顺势顾问
+            ✨ 灵境尊者 · 事业顺势指引
           </span>
           {streaming ? (
             <span
@@ -489,7 +488,7 @@ export default function CareerPageClient({ userRole }: CareerPageClientProps) {
                 }}
                 title={sec.title}
                 content={sec.content}
-                source="Dify"
+                source="灵境尊者"
               />
             ))}
           </div>
@@ -658,20 +657,16 @@ export default function CareerPageClient({ userRole }: CareerPageClientProps) {
           </>
         )}
 
-        {/* 导出 PDF + 朗读 */}
-        <div className="pt-2 text-center flex flex-col sm:flex-row gap-2 sm:justify-center">
-          <ReportTTSButton
-            targetId="career-report"
-            title="AI 事业财富报告"
-            tone="amber"
-            prefix="以下是您的 AI 事业财富报告。"
-          />
-          <ExportPDFButton
-            targetId="career-report"
-            filename={`AI事业财富报告-${form.name || '匿名'}`}
-            tone="amber"
-          />
-        </div>
+        {/* 导出 PDF + 朗读（全站统一操作栏） */}
+        <ReportActionBar
+          targetId="career-report"
+          ttsTitle="AI 事业财富报告"
+          ttsTone="amber"
+          ttsPrefix="以下是您的 AI 事业财富报告。"
+          pdfFilename={`AI事业财富报告-${form.name || '匿名'}`}
+          pdfTone="amber"
+          className="pt-2"
+        />
       </div>
     </div>
   )}

@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
   if (!isSupabaseConfigured()) {
     return NextResponse.json(
-      { ok: false, error: 'Supabase 未配置' },
+      { success: false, error: 'Supabase 未配置' },
       { status: 200 }, // 不报错，前端静默
     );
   }
@@ -35,12 +35,12 @@ export async function POST(req: Request) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ ok: false, error: 'invalid json' }, { status: 200 });
+    return NextResponse.json({ success: false, error: 'invalid json' }, { status: 200 });
   }
 
   const activity_type = (body.activity_type || '').trim();
   if (!activity_type) {
-    return NextResponse.json({ ok: false, error: 'activity_type required' }, { status: 200 });
+    return NextResponse.json({ success: false, error: 'activity_type required' }, { status: 200 });
   }
 
   // 限制枚举，避免被刷脏数据
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
   ]);
   if (!ALLOWED.has(activity_type)) {
     return NextResponse.json(
-      { ok: false, error: `unknown activity_type: ${activity_type}` },
+      { success: false, error: `unknown activity_type: ${activity_type}` },
       { status: 200 },
     );
   }
@@ -77,7 +77,7 @@ export async function POST(req: Request) {
     );
     const { data: { user } } = await supabaseAuth.auth.getUser();
     if (!user) {
-      return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
+      return NextResponse.json({ success: false, error: 'unauthorized' }, { status: 401 });
     }
 
     const supabase = createClient();
@@ -102,12 +102,12 @@ export async function POST(req: Request) {
       .single();
 
     if (error) {
-      return NextResponse.json({ ok: false, error: error.message }, { status: 200 });
+      return NextResponse.json({ success: false, error: error.message }, { status: 200 });
     }
     return NextResponse.json({ ok: true, id: data?.id });
   } catch (e: any) {
     return NextResponse.json(
-      { ok: false, error: e?.message || 'server error' },
+      { success: false, error: e?.message || 'server error' },
       { status: 200 },
     );
   }

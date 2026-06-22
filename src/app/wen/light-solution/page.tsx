@@ -2,12 +2,12 @@ import { getUserRole } from '@/lib/auth';
 import LightSolutionClient from './LightSolutionClient';
 
 export const metadata = {
-  title: 'AI 轻解忧 · 灵境阁',
+  title: '解忧师 · 灵境阁',
   description: '说一句你现在的烦恼，让 AI 陪你理一理。3 轮免费陪伴。',
 };
 
 /**
- * AI 轻解忧页面 - 沉浸式对话流
+ * AI 解忧师页面 - 沉浸式对话流
  *
  * 内部由 LightSolutionClient 完成：
  *  - 顶部：标题 + 副标题 + AI 开场白

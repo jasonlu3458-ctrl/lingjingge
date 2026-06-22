@@ -18,7 +18,7 @@ interface Card {
 
 const CARDS: Card[] = [
   {
-    title: 'AI 轻解忧',
+    title: '解忧师',
     href: '/wen/light-solution',
     icon: '💭',
     tagline: '说一句你现在的烦恼，让 AI 陪你理一理。',
@@ -30,7 +30,7 @@ const CARDS: Card[] = [
     title: 'AI 易理师',
     href: '/wen/yi/yili',
     icon: '☯️',
-    tagline: '起一卦，问你心中犹豫之事。',
+    tagline: '起一智慧指引，问你心中犹豫之事。',
     accent: 'text-amber-700',
     border: 'border-amber-200',
     iconBg: 'bg-amber-100',

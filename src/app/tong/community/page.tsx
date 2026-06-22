@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { isMockSupabaseEnabled, seedTopics } from '@/lib/mock-supabase';
 
 interface TopicRow {
   id: number;
@@ -248,7 +249,37 @@ export default function CommunityPage() {
         {!dailyPost && !weeklyPost && !guidePost && !loading && (
           <div className="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-6 mb-6 text-center text-sm text-gray-500">
             <p className="mb-2">📭 社区暂无置顶内容</p>
-            <p>管理员可访问 <code className="px-1.5 py-0.5 bg-gray-100 rounded text-xs">POST /api/community/seed</code> 一次性植入</p>
+            <p className="mb-3">点击下方按钮一键植入 3 条置顶帖（每日参究 / 本周话题 / 新手必读）</p>
+            <button
+              type="button"
+              onClick={async () => {
+                if (isMockSupabaseEnabled()) {
+                  // mock 模式：直接写 localStorage
+                  const r = seedTopics();
+                  alert(`已植入 ${r.inserted} 条，跳过 ${r.skipped} 条。`);
+                  load();
+                } else {
+                  // 真实 Supabase：调 API
+                  try {
+                    const res = await fetch('/api/community/seed', { method: 'POST' });
+                    const json = await res.json();
+                    if (!res.ok) {
+                      alert(`植入失败：${json.error || res.status}`);
+                    } else {
+                      alert(
+                        `已植入 ${json.summary?.inserted ?? 0} 条，跳过 ${json.summary?.skipped ?? 0} 条。`
+                      );
+                      load();
+                    }
+                  } catch (e) {
+                    alert(`请求失败：${e instanceof Error ? e.message : String(e)}`);
+                  }
+                }
+              }}
+              className="px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+            >
+              🌱 一次性植入
+            </button>
           </div>
         )}
 

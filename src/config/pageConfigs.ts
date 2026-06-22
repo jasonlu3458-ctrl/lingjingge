@@ -54,7 +54,7 @@ export const pageConfigs: Record<string, PageConfig> = {
   },
 
   'light-solution': {
-    title: 'AI轻解忧',
+    title: '解忧师',
     subtitle: '把心事说出来，答案就藏在你心里',
     icon: '💭',
     theme: '#a8c4d4',
@@ -160,13 +160,13 @@ export const pageConfigs: Record<string, PageConfig> = {
 
   'yili': {
     title: 'AI易理师',
-    subtitle: '起一卦，解你心中惑',
+    subtitle: '起一智慧指引，答你心中惑',
     icon: '☯️',
     theme: '#8a7a4a',
-    welcomeMessage: '心诚则灵。你心中默念所问之事，我为你起卦。',
+    welcomeMessage: '心诚则灵。你心中默念所问之事，我为你智慧指引。',
     difyType: 'yili',
     formConfig: {
-      submitLabel: '起卦问事',
+      submitLabel: '智慧指引问事',
       fields: [
         { name: 'real_name', label: '你的姓名', type: 'text', placeholder: '请输入姓名', required: true },
         { name: 'question', label: '你想问什么事？', type: 'textarea', placeholder: '例如：我该不该跳槽？', required: true },
@@ -246,7 +246,7 @@ export const pageConfigs: Record<string, PageConfig> = {
 
   'house': {
     title: 'AI家居环境',
-    subtitle: '住的舒服，是最好的风水',
+    subtitle: '住的舒服，是最好的空间布局',
     icon: '🏠',
     theme: '#6a7a8a',
     welcomeMessage: '家，是身心的容器。',

@@ -126,12 +126,12 @@ export default function HomePage() {
 
         {/* 功能入口 */}
         <section id="card-section" ref={cardsRef} className="max-w-6xl mx-auto scroll-mt-12">
-          {/* ① 顶部大标题 —— 注入「灵境尊者」IP */}
+          {/* ① 顶部大标题 —— 注入「灵境阁」IP */}
           <h2
             className="text-center text-2xl md:text-4xl text-[#3a3a3a] mb-3 font-serif tracking-wider"
             style={{ fontFamily: "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif" }}
           >
-            夜深人静，灵境尊者陪你静修
+            夜深人静，AI 智能顾问陪你静修
           </h2>
           <p
             className="text-center text-sm md:text-base text-[#7a7a7a] mb-10 font-serif"
@@ -156,7 +156,7 @@ export default function HomePage() {
                 className="text-xs md:text-sm text-[#7a7a7a] leading-relaxed"
                 style={{ fontFamily: "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif" }}
               >
-                灵境尊者初相见，先与你试修一课 —— 一段对话，一次照见
+                AI 智能顾问初相见，先与你试修一课 —— 一段对话，一次照见
               </p>
             </div>
             <Link

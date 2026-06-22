@@ -25,7 +25,7 @@ export async function GET() {
 
   if (!isSupabaseConfigured()) {
     return NextResponse.json(
-      { ok: false, error: 'Supabase 未配置' },
+      { success: false, error: 'Supabase 未配置' },
       { status: 503 },
     );
   }
@@ -45,7 +45,7 @@ export async function GET() {
     );
     const { data: { user } } = await supabaseAuth.auth.getUser();
     if (!user) {
-      return NextResponse.json({ ok: false, error: '未登录' }, { status: 401 });
+      return NextResponse.json({ success: false, error: '未登录' }, { status: 401 });
     }
 
     // 最近 365 天
@@ -63,7 +63,7 @@ export async function GET() {
 
     if (error) {
       return NextResponse.json(
-        { ok: false, error: error.message },
+        { success: false, error: error.message },
         { status: 500 },
       );
     }
@@ -75,7 +75,7 @@ export async function GET() {
     return NextResponse.json({ ok: true, dates, user_id: user.id });
   } catch (e: any) {
     return NextResponse.json(
-      { ok: false, error: e?.message || 'server error' },
+      { success: false, error: e?.message || 'server error' },
       { status: 500 },
     );
   }

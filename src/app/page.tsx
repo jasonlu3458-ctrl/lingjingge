@@ -60,11 +60,11 @@ export default function SplashPage() {
 
   // 解析禅机：分隔主句与出处
   const parsedZen = (() => {
-    if (!dailyZen?.zen) return { text: '心若止水，万象自明。', source: '灵境尊者' };
+    if (!dailyZen?.zen) return { text: '心若止水，万象自明。', source: '灵境阁' };
     const parts = dailyZen.zen.split(/——|—/);
     return {
       text: parts[0]?.trim() || dailyZen.zen,
-      source: parts[1]?.trim() || dailyZen.source || '灵境尊者',
+      source: parts[1]?.trim() || dailyZen.source || '灵境阁',
     };
   })();
 
@@ -231,7 +231,7 @@ export default function SplashPage() {
         `}</style>
       </div>
 
-      {/* ===== 第二屏：四张卡片 + 灵境尊者 IP ===== */}
+      {/* ===== 第二屏：四张卡片 + 灵境阁 IP ===== */}
       <section id="card-section" className="min-h-screen bg-[#faf8f5] py-20 flex flex-col justify-center">
         <div className="max-w-6xl mx-auto px-4">
           <FadeIn>
@@ -268,7 +268,7 @@ export default function SplashPage() {
                     免费试修
                   </div>
                   <div className="text-xs md:text-sm text-[#5a5a5a] leading-relaxed">
-                    灵境尊者初相见，先与你试修一课 —— 一段对话，一次照见
+                    AI 智能顾问初相见，先与你试修一课 —— 一段对话，一次照见
                   </div>
                 </div>
               </div>
@@ -344,7 +344,7 @@ export default function SplashPage() {
         <div className="max-w-3xl mx-auto text-center">
           <FadeIn>
             <div className="text-xs tracking-[6px] text-[#8a8a8a] mb-4" style={{ fontFamily: "'Ma Shan Zheng', serif" }}>
-              {lunarLabel} · 灵境尊者言
+              {lunarLabel} · 灵境阁言
             </div>
             <div className="w-16 h-px bg-gradient-to-r from-transparent via-[#2c2c2c] to-transparent mx-auto mb-8 opacity-40" />
             <blockquote

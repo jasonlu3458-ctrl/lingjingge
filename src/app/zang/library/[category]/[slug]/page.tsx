@@ -25,14 +25,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = params;
   const article = await getArticleBySlug(slug);
   if (!article) {
-    return { title: '未找到 | 灵景阁·藏经阁' };
+    return { title: '未找到 | 灵境阁·藏经阁' };
   }
   const description = (article.translation || article.content)
     .replace(/<[^>]+>/g, '')
     .replace(/\s+/g, ' ')
     .slice(0, 120);
   return {
-    title: `${article.title} | 灵景阁·藏经阁`,
+    title: `${article.title} | 灵境阁·藏经阁`,
     description,
     keywords: [article.title, article.source || '典籍', '藏经阁', '古文', '经典'],
   };

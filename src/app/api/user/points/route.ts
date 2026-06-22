@@ -16,7 +16,7 @@ export async function GET() {
   // 1) Supabase 未配置 → mock
   if (!isSupabaseConfigured()) {
     return NextResponse.json({
-      ok: true,
+      success: true,
       total_points: 0,
       signed_in_today: false,
       consecutive_days: 0,
@@ -57,7 +57,7 @@ export async function GET() {
       // 表不存在（42P01）等降级
       if (pErr.code === '42P01' || /does not exist/i.test(pErr.message)) {
         return NextResponse.json({
-          ok: true,
+          success: true,
           total_points: 0,
           signed_in_today: false,
           consecutive_days: 0,
@@ -95,7 +95,7 @@ export async function GET() {
     );
 
     return NextResponse.json({
-      ok: true,
+      success: true,
       total_points: total,
       signed_in_today: Boolean(todayRow),
       consecutive_days: consecutive,

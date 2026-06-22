@@ -91,12 +91,29 @@ export default function ReportPaywall({
       <div className="whitespace-pre-wrap">{freePart}</div>
       {premiumPart && (
         <div className="mt-4 p-4 border border-dashed border-gray-400 rounded bg-gray-50">
-          <div className={`text-sm font-medium mb-2 ${accentClass}`}>🔒 完整报告仅对会员开放</div>
+          <div className={`text-sm font-medium mb-3 ${accentClass}`}>🔒 完整报告仅对会员开放</div>
           <div className="text-sm text-gray-600 mb-3">
             会员可查看：{premiumSections.join('、')}
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3">
+          {/* 价格卡片：单次解锁 / 月度会员 并排 */}
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <div className="rounded-lg border border-gray-200 bg-white p-3 text-center">
+              <div className="text-xs text-gray-500" style={{ fontFamily: 'inherit' }}>单次解锁</div>
+              <div className="text-2xl font-bold text-gray-800 mt-1">¥9.9</div>
+              <div className="text-[10px] text-gray-400 mt-0.5">仅限本报告</div>
+            </div>
+            <div className="rounded-lg border-2 border-amber-300 bg-amber-50 p-3 text-center relative">
+              <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-amber-400 text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                推荐
+              </div>
+              <div className="text-xs text-amber-700">月度会员</div>
+              <div className="text-2xl font-bold text-amber-700 mt-1">¥29.9<span className="text-xs">/月</span></div>
+              <div className="text-[10px] text-amber-600 mt-0.5">全站 6 大模块全解锁</div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2">
             {/* 未登录访客：主推「免费注册」 */}
             {!isAuthenticated ? (
               <Link
@@ -107,20 +124,20 @@ export default function ReportPaywall({
               </Link>
             ) : (
               <>
-                {/* 已登录免费用户：推单次解锁 + 升级会员 */}
+                {/* 已登录免费用户：单次解锁 + 升级会员 按钮 */}
                 <button
                   onClick={() =>
                     guarded(() => {
                       window.location.href = `/api/create-checkout-session?type=single&report=${reportKey}`;
                     })
                   }
-                  className="flex-1 py-2 bg-white border border-[#2c2c2c] text-[#2c2c2c] rounded hover:bg-gray-50 transition-colors"
+                  className="flex-1 py-2 bg-white border border-[#2c2c2c] text-[#2c2c2c] rounded hover:bg-gray-50 transition-colors text-sm"
                 >
                   单次解锁 · ¥9.9
                 </button>
                 <Link
                   href="/tong/pricing"
-                  className="flex-1 py-2 bg-[#b85a4a] text-white text-center rounded hover:bg-[#9a4a3a] transition-colors"
+                  className="flex-1 py-2 bg-[#b85a4a] text-white text-center rounded hover:bg-[#9a4a3a] transition-colors text-sm"
                 >
                   升级会员 · 全站解锁
                 </Link>
@@ -131,6 +148,22 @@ export default function ReportPaywall({
             {!isAuthenticated
               ? '注册免费，注册后可继续体验其他工具'
               : '单次解锁仅限当前报告，会员可查看所有深度内容'}
+          </div>
+
+          {/* 信任徽标：支付安全 / 本地计算 / 退款保障 */}
+          <div className="mt-4 grid grid-cols-3 gap-2 text-center text-[10px] text-gray-500">
+            <div>
+              <div className="text-base">🛡️</div>
+              <div>支付由 Stripe 保障</div>
+            </div>
+            <div>
+              <div className="text-base">🔒</div>
+              <div>先天格局本地计算</div>
+            </div>
+            <div>
+              <div className="text-base">↩️</div>
+              <div>7 天无理由退款</div>
+            </div>
           </div>
         </div>
       )}

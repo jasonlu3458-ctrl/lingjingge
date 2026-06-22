@@ -25,7 +25,7 @@ export async function POST() {
   // 1) mock 模式（Supabase 未配置）
   if (!isSupabaseConfigured()) {
     return NextResponse.json({
-      ok: true,
+      success: true,
       balance: SIGN_IN_REWARD,
       coins_awarded: SIGN_IN_REWARD,
       signed_in_today: true,
@@ -67,7 +67,7 @@ export async function POST() {
     // 表不存在 → mock
     if (readErr && (readErr.code === '42P01' || /does not exist/i.test(readErr.message))) {
       return NextResponse.json({
-        ok: true,
+        success: true,
         balance: SIGN_IN_REWARD,
         coins_awarded: SIGN_IN_REWARD,
         signed_in_today: true,
@@ -114,7 +114,7 @@ export async function POST() {
         throw insErr;
       }
       return NextResponse.json({
-        ok: true,
+        success: true,
         balance: ins?.balance ?? SIGN_IN_REWARD,
         coins_awarded: SIGN_IN_REWARD,
         signed_in_today: true,
@@ -152,7 +152,7 @@ export async function POST() {
     }
 
     return NextResponse.json({
-      ok: true,
+      success: true,
       balance: updated.balance,
       coins_awarded: SIGN_IN_REWARD,
       signed_in_today: true,
