@@ -2,6 +2,7 @@
 
 import { createClient as createSupabaseClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
+import { isMockSupabaseEnabled, mockSupabaseClient } from './mock-supabase';
 
 // 获取环境变量
 function getSupabaseUrl(): string | undefined {
@@ -45,6 +46,10 @@ export function getSupabaseClient(): ReturnType<typeof createSupabaseClient<Data
 // 为了向后兼容，导出一个代理对象
 export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient<Database>>, {
   get(target, prop) {
+    // 优先使用 mock 客户端（本地无 Supabase 项目时）
+    if (isMockSupabaseEnabled()) {
+      return (mockSupabaseClient as any)[prop];
+    }
     const client = getSupabaseClient();
     if (!client) {
       // 如果客户端未初始化，返回一个空函数避免报错
@@ -70,6 +75,11 @@ export function createClient() {
 }
 
 export function isSupabaseConfigured(): boolean {
+  // mock 模式视为「已配置」，让上层逻辑走完持久化流程
+  if (typeof window !== 'undefined') {
+    const { isMockSupabaseEnabled } = require('./mock-supabase') as typeof import('./mock-supabase');
+    if (isMockSupabaseEnabled()) return true;
+  }
   return Boolean(getSupabaseUrl() && getSupabaseAnonKey());
 }
 

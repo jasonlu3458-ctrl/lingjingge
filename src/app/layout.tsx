@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import NavbarWrapper from "@/components/NavbarWrapper";
+import MockBootstrap from "@/components/MockBootstrap";
 
 // 中文字体：当前环境无法访问 Google Fonts CDN，因此直接使用系统字体栈。
 // 浏览器在无 Ma Shan Zheng 时自动 fallback 到 STKaiti / KaiTi / serif，
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body className="flex flex-col min-h-screen">
         <NavbarWrapper />
         <div className="flex-1">{children}</div>
+        <MockBootstrap />
         <footer className="text-xs text-gray-400 text-center py-2 border-t border-gray-100">
           <div>
             ⚠️ 本平台内容仅供传统文化交流与娱乐参考，不构成专业建议。
