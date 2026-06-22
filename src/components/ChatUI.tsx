@@ -7,6 +7,7 @@ import ConsentModal from './ConsentModal';
 import ReportPaywall from './ReportPaywall';
 import { useFreeTurns } from '@/hooks/useFreeTurns';
 import { useConsent } from '@/hooks/useConsent';
+import { useTTS } from '@/hooks/useTTS';
 import type { UserRole } from '@/lib/auth';
 import ZenAvatar from './ZenAvatar';
 
@@ -77,6 +78,7 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
   // 同意弹窗：未同意时开屏显示，同意后写 localStorage 不再弹
   // - requireConsent !== false 才弹（默认 true），藏经阁原文等非关键页面跳过
   const { hasConsented, giveConsent, hydrated } = useConsent();
+  const { speak, stop, isSpeaking, isLoading: isTTSLoading, error: ttsError } = useTTS();
   const [showConsent, setShowConsent] = useState(false);
   useEffect(() => {
     if (hydrated && config.requireConsent !== false && !hasConsented) {
@@ -1103,7 +1105,7 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
                       <ZenAvatar size={32} opacity={0.2} className="mb-1" />
                     )}
                     <div
-                      className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-lg ${
+                      className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-lg flex flex-col ${
                         msg.role === 'user'
                           ? 'bg-gray-800 text-white'
                           : 'bg-gray-100 text-gray-800'
@@ -1112,6 +1114,45 @@ export default function ChatUI({ config, userRole = 'free' }: ChatUIProps) {
                       <p className="text-sm md:text-base whitespace-pre-wrap" style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}>
                         {msg.content}
                       </p>
+                      {msg.role === 'assistant' && msg.content && msg.content.trim() && (
+                        <div className="flex justify-end items-center mt-2 -mb-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (isSpeaking) {
+                                stop();
+                              } else {
+                                speak(msg.content);
+                              }
+                            }}
+                            disabled={isTTSLoading}
+                            className={`text-xs px-2 py-1 rounded-md flex items-center gap-1 transition-colors ${
+                              isSpeaking
+                                ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                : 'text-gray-500 hover:text-gray-800 hover:bg-gray-200/60'
+                            } disabled:opacity-50 disabled:cursor-wait`}
+                            aria-label={isSpeaking ? '停止朗读' : '朗读这条消息'}
+                            title={isSpeaking ? '停止朗读' : (ttsError ? `朗读失败：${ttsError}` : '点击朗读这条消息')}
+                          >
+                            {isTTSLoading ? (
+                              <>
+                                <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                <span>准备中</span>
+                              </>
+                            ) : isSpeaking ? (
+                              <>
+                                <span>⏹</span>
+                                <span>停止</span>
+                              </>
+                            ) : (
+                              <>
+                                <span>🔊</span>
+                                <span>朗读</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
