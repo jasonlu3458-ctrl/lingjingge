@@ -8,6 +8,7 @@ import ActivityStats from '@/components/ActivityStats'
 import PointsSignIn from '@/components/PointsSignIn'
 import SubscriptionStatusCard from '@/components/SubscriptionStatusCard'
 import CoinsCard from '@/components/CoinsCard'
+import CalendarHeatmap from '@/components/CalendarHeatmap'
 
 interface UserProfile {
   id: string
@@ -45,6 +46,19 @@ async function getUserProfile(): Promise<UserProfile | null> {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     console.warn('Supabase 环境变量未配置')
     return null
+  }
+
+  // —— Mock 模式：直接返回 mock profile，让本地能进 profile 页 ——
+  if (process.env.NEXT_PUBLIC_USE_MOCK_SUPABASE === 'true') {
+    return {
+      id: 'mock-user-001',
+      email: 'tester@lingjingge.local',
+      role: 'monthly',
+      created_at: new Date().toISOString(),
+      subscription_status: 'active',
+      subscription_start: new Date().toISOString(),
+      subscription_end: new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString(),
+    };
   }
 
   const cookieStore = cookies()
@@ -148,6 +162,11 @@ export default async function ProfilePage() {
 
         {/* 灵境币 · 每日签到 */}
         <CoinsCard />
+
+        {/* 修行日历（GitHub 风格热力图） */}
+        <div className="mb-6">
+          <CalendarHeatmap />
+        </div>
 
         {/* 积分签到 */}
         <PointsSignIn userId={profile.id} />

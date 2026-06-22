@@ -360,6 +360,33 @@ export interface Database {
         };
         Relationships: [];
       };
+      user_activities: {
+        Row: {
+          id: string;
+          user_id: string;
+          activity_type: string;
+          activity_date: string;
+          metadata: Record<string, any> | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          activity_type: string;
+          activity_date?: string;
+          metadata?: Record<string, any> | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          activity_type?: string;
+          activity_date?: string;
+          metadata?: Record<string, any> | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
