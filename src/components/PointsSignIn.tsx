@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { trackActivity } from '@/lib/activity-tracker';
 
 interface PointsResponse {
   ok: boolean;
@@ -69,6 +70,12 @@ export default function PointsSignIn({ userId }: Props) {
         setTotal(d.total_points ?? total + (d.points_awarded || 0));
         setConsecutive(d.consecutive_days ?? consecutive + 1);
         setRewardMsg(d.message || `签到成功 +${d.points_awarded || 5} 积分`);
+        // 活动埋点：签到完成
+        trackActivity('sign_in', undefined, {
+          points_awarded: d.points_awarded,
+          total_points: d.total_points,
+          consecutive_days: d.consecutive_days,
+        }).catch(() => undefined);
         // 触发软刷新让 profile 区域可能出现的"积分配套"数据更新
         router.refresh();
       } else {

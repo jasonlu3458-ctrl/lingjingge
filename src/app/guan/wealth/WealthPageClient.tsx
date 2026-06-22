@@ -4,6 +4,7 @@ import { useState, type FormEvent, type ReactNode } from 'react';
 import type { UserRole } from '@/lib/auth';
 import ReportPaywall from '@/components/ReportPaywall';
 import ExportPDFButton from '@/components/ExportPDFButton';
+import ReportTTSButton from '@/components/ReportTTSButton';
 import type { WealthReport, Career } from '@/lib/wealth-rules';
 
 // 主题色（与其他 guan 页面保持一致：每个模块一种主色）
@@ -634,8 +635,14 @@ function WealthReportView({
         />
       </div>
 
-      {/* 导出 PDF */}
-      <div className="pt-2 text-center">
+      {/* 导出 PDF + 朗读 */}
+      <div className="pt-2 text-center flex flex-col sm:flex-row gap-2 sm:justify-center">
+        <ReportTTSButton
+          targetId="wealth-report"
+          title="事业智富报告"
+          tone="amber"
+          prefix="以下是您的事业智富报告。"
+        />
         <ExportPDFButton
           targetId="wealth-report"
           filename={`事业智富报告-${report.input.name || '匿名'}`}

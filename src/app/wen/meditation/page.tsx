@@ -1,16 +1,17 @@
 import { getUserRole } from '@/lib/auth';
-import PageRenderer from '@/components/PageRenderer';
+import MeditationPageClient from './MeditationPageClient';
 
 /**
- * 正念冥想页面 - 使用 PageRenderer 组件
+ * 正念冥想页面
  *
- * 这是使用 PageRenderer 组件的示例页面
- * 所有配置都集中在 src/config/pageConfigs.ts 中管理
+ * 不再走 PageRenderer / ChatUI（这些是"对答"形态，不适合冥想）。
+ * 改用自包含的 MeditationPageClient：选静功方案 → TTS 引导词 + 倒计时 → 完成埋点。
  */
 export default async function MeditationPage() {
   const userRole = await getUserRole();
-
-  return <PageRenderer configKey="meditation" userRole={userRole} />;
+  // userRole 留作未来鉴权使用（仅会员解锁长方案）
+  void userRole;
+  return <MeditationPageClient />;
 }
 
 export const dynamic = 'force-dynamic';

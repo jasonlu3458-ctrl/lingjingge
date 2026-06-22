@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import UserStatus from './UserStatus';
 import CoinsBadge from './CoinsBadge';
+import ZenSoundToggle from './ZenSoundToggle';
 
 // 导航菜单数据结构
 const menuItems = [
@@ -313,6 +314,7 @@ export default function Navbar({ immersive = false }: NavbarProps = {}) {
 
           {/* 用户状态 */}
           <div className="hidden lg:flex items-center gap-2">
+            <ZenSoundToggle immersive={immersive} />
             <CoinsBadge />
             <UserStatus immersive={immersive} />
           </div>
@@ -448,6 +450,7 @@ export default function Navbar({ immersive = false }: NavbarProps = {}) {
               
               {/* 移动端用户状态 */}
               <div className={`p-4 flex items-center gap-2 ${immersive ? 'border-t border-white/10' : 'border-t border-gray-100'}`}>
+                <ZenSoundToggle immersive={immersive} />
                 <CoinsBadge />
                 <UserStatus immersive={immersive} />
               </div>

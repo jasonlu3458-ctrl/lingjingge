@@ -4,6 +4,7 @@ import { useState, type FormEvent, type ReactNode } from 'react';
 import type { UserRole } from '@/lib/auth';
 import { handleDifyPolishResponse } from '@/lib/sse-client';
 import ExportPDFButton from '@/components/ExportPDFButton';
+import ReportTTSButton from '@/components/ReportTTSButton';
 
 // 轻量内联 Markdown 渲染器（替换 react-markdown@10）：
 // react-markdown 是 ESM-only，Next.js 14 + RSC 静态/动态 import
@@ -557,8 +558,14 @@ export default function EducationPageClient({ userRole }: EducationPageClientPro
                 </div>
               )}
 
-              {/* 导出 PDF */}
-              <div className="mt-6 text-center">
+              {/* 导出 PDF + 朗读 */}
+              <div className="mt-6 text-center flex flex-col sm:flex-row gap-2 sm:justify-center">
+                <ReportTTSButton
+                  targetId="education-report"
+                  title="学业报告"
+                  tone="violet"
+                  prefix="以下是您的学业报告。"
+                />
                 <ExportPDFButton
                   targetId="education-report"
                   filename={`学业报告-${report.input.name || '匿名'}`}

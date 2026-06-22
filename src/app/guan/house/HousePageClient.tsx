@@ -12,6 +12,7 @@ import FreeCard from '@/components/wealth-report/FreeCard';
 import LockedCard from '@/components/wealth-report/LockedCard';
 import ReportPaywall from '@/components/ReportPaywall';
 import ExportPDFButton from '@/components/ExportPDFButton';
+import ReportTTSButton from '@/components/ReportTTSButton';
 import type { UserRole } from '@/lib/auth';
 
 // —— 主题色 ——
@@ -413,8 +414,14 @@ function HouseReportView({
 
             <RetentionHint />
 
-            {/* 导出 PDF */}
-            <div className="pt-2 text-center">
+            {/* 导出 PDF + 朗读 */}
+            <div className="pt-2 text-center flex flex-col sm:flex-row gap-2 sm:justify-center">
+              <ReportTTSButton
+                targetId="house-report"
+                title="家宅风水报告"
+                tone="teal"
+                prefix="以下是您的家宅风水报告。"
+              />
               <ExportPDFButton
                 targetId="house-report"
                 filename={`家宅风水报告-${report.input.name || '匿名'}`}

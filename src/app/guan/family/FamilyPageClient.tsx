@@ -4,6 +4,7 @@ import { useState, useMemo, type FormEvent, type ReactNode } from 'react';
 import type { UserRole } from '@/lib/auth';
 import ReportPaywall from '@/components/ReportPaywall';
 import ExportPDFButton from '@/components/ExportPDFButton';
+import ReportTTSButton from '@/components/ReportTTSButton';
 import { handleDifyPolishResponse } from '@/lib/sse-client';
 import type {
   MarriageReport,
@@ -556,8 +557,14 @@ export default function FamilyPageClient({ userRole }: FamilyPageClientProps) {
               </div>
             )}
 
-            {/* 导出 PDF */}
-            <div className="mt-6 text-center">
+            {/* 导出 PDF + 朗读 */}
+            <div className="mt-6 text-center flex flex-col sm:flex-row gap-2 sm:justify-center">
+              <ReportTTSButton
+                targetId="family-report"
+                title="姻缘报告"
+                tone="rose"
+                prefix="以下是您的姻缘报告。"
+              />
               <ExportPDFButton
                 targetId="family-report"
                 filename={`姻缘报告-${report.input.self.name || '匿名'}`}

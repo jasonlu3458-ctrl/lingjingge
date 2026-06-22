@@ -13,6 +13,7 @@ import { useState, useRef, type FormEvent, type ReactNode } from 'react';
 import type { UserRole } from '@/lib/auth';
 import ReportPaywall from '@/components/ReportPaywall';
 import ExportPDFButton from '@/components/ExportPDFButton';
+import ReportTTSButton from '@/components/ReportTTSButton';
 import ScoreGauge from '@/components/wealth-report/ScoreGauge';
 import FreeCard from '@/components/wealth-report/FreeCard';
 import LockedCard from '@/components/wealth-report/LockedCard';
@@ -657,8 +658,14 @@ export default function CareerPageClient({ userRole }: CareerPageClientProps) {
           </>
         )}
 
-        {/* 导出 PDF */}
-        <div className="pt-2 text-center">
+        {/* 导出 PDF + 朗读 */}
+        <div className="pt-2 text-center flex flex-col sm:flex-row gap-2 sm:justify-center">
+          <ReportTTSButton
+            targetId="career-report"
+            title="AI 事业财富报告"
+            tone="amber"
+            prefix="以下是您的 AI 事业财富报告。"
+          />
           <ExportPDFButton
             targetId="career-report"
             filename={`AI事业财富报告-${form.name || '匿名'}`}

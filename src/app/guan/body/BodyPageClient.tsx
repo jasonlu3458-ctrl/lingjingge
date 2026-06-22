@@ -11,6 +11,7 @@ import StillnessGuide from '@/components/StillnessGuide';
 import YijinjingGuide from '@/components/YijinjingGuide';
 import { consumeDifySSE } from '@/lib/sse-client';
 import ExportPDFButton from '@/components/ExportPDFButton';
+import ReportTTSButton from '@/components/ReportTTSButton';
 import {
   EXERCISE_LIST,
   formatDuration,
@@ -292,13 +293,22 @@ export default function BodyPageClient({ userRole: _userRole }: BodyPageClientPr
                 返回练习列表
               </button>
               {polished && (
-                <ExportPDFButton
-                  targetId="body-report"
-                  filename={`身心练习报告-${ex?.name || '修行'}`}
-                  tone="purple"
-                  className="flex-1 sm:flex-none"
-                  label="📄 导出本次报告"
-                />
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <ReportTTSButton
+                    targetId="body-report"
+                    title="身心练习报告"
+                    tone="emerald"
+                    prefix="以下是您的身心练习报告。"
+                    className="flex-1 sm:flex-none"
+                  />
+                  <ExportPDFButton
+                    targetId="body-report"
+                    filename={`身心练习报告-${ex?.name || '修行'}`}
+                    tone="purple"
+                    className="flex-1 sm:flex-none"
+                    label="📄 导出本次报告"
+                  />
+                </div>
               )}
             </div>
           </div>

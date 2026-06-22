@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useFreeTurns } from './useFreeTurns';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import type { UserRole } from '@/lib/auth';
+import { trackActivity } from '@/lib/activity-tracker';
 import {
   fetchRemoteMessages,
   pushRemoteMessage,
@@ -247,6 +248,12 @@ export function useAIChat({ type, userRole: serverUserRole, initialMessages = []
           content: fullResponse,
         };
         persistMessage(assistantMessage);
+        // 活动埋点：AI 对话完成
+        trackActivity('ask', undefined, {
+          module: type,
+          question_length: (content || '').length,
+          answer_length: fullResponse.length,
+        }).catch(() => undefined);
       }
 
     } catch (err) {
