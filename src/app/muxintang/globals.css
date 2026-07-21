@@ -1,0 +1,71 @@
+.muxintang-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.muxintang-section {
+  padding: 60px 0;
+}
+
+.muxintang-title {
+  font-family: 'Ma Shan Zheng', cursive, serif;
+  color: #D4AF37;
+  letter-spacing: 2px;
+}
+
+.muxintang-card {
+  background: linear-gradient(145deg, #1a1a1a, #242424);
+  border: 1px solid #333333;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.muxintang-card:hover {
+  border-color: #D4AF37;
+  box-shadow: 0 8px 32px rgba(212, 175, 55, 0.1);
+}
+
+.muxintang-btn {
+  background: linear-gradient(135deg, #8B4513, #A0522D);
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-family: 'Ma Shan Zheng', cursive, serif;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+}
+
+.muxintang-btn:hover {
+  background: linear-gradient(135deg, #A0522D, #8B4513);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.4);
+}
+
+.muxintang-btn-outline {
+  background: transparent;
+  color: #D4AF37;
+  border: 1px solid #D4AF37;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-family: 'Ma Shan Zheng', cursive, serif;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+}
+
+.muxintang-btn-outline:hover {
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.muxintang-gold-text {
+  color: #D4AF37;
+}
+
+.muxintang-dark-bg {
+  background-color: #0a0a0a;
+}
+
+.muxintang-card-bg {
+  background-color: #1a1a1a;
+}

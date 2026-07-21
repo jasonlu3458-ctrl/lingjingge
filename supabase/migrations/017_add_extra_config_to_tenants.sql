@@ -1,0 +1,1 @@
+ALTER TABLE tenants ADD COLUMN IF NOT EXISTS extra_config JSONB DEFAULT '{}'::JSONB;

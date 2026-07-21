@@ -1,0 +1,480 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 44, 44, 44;
+  --background-start-rgb: 245, 240, 235;
+  --background-end-rgb: 245, 240, 235;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+  /* 防止报告内容（长 URL、长无空格中文）横向溢出，
+     避免出现“不可见”的横向滚动条占用右侧拖动热区。 */
+  overflow-x: hidden;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* iOS 安全区适配：底部 padding 把 home indicator 横条预留出来 */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pb-safe-or-4 {
+    padding-bottom: max(env(safe-area-inset-bottom), 1rem);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  /* 移动端触控标准：44pt 最小高度（Apple HIG），48dp（Material） */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* 触摸点按反馈：按下时缩小+变淡，模拟真实按压 */
+  .touch-feedback {
+    transition: transform 150ms ease, opacity 150ms ease;
+  }
+  .touch-feedback:active {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .touch-feedback, .touch-feedback:active {
+      transition: none;
+      transform: none;
+    }
+  }
+}
+
+/* ===== 报告淡入（替代 framer-motion） ===== */
+.report-fade-in {
+  animation: reportFadeIn 0.5s ease-out;
+}
+@keyframes reportFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .report-fade-in { animation: none; }
+}
+
+/* ==========================================================
+   移动端排版自适应（< md / < 768px）
+   —— 用 CSS 覆盖替代逐文件改动，避免 100+ 处散改的风险
+   —— 用 !important 是因为需要压过 Tailwind utilities 加载顺序
+   ========================================================== */
+@media (max-width: 767px) {
+  /* 标题降级：避免在窄屏上显示得过于庞大笨重 */
+  .text-4xl { font-size: 1.5rem !important; line-height: 2rem !important; }
+  .text-3xl { font-size: 1.5rem !important; line-height: 2rem !important; }
+  .text-5xl { font-size: 1.875rem !important; line-height: 2.25rem !important; }
+
+  /* 内容边距缩小：py-16/py-12 → py-8 */
+  .py-16 { padding-top: 2rem !important; padding-bottom: 2rem !important; }
+  .py-12 { padding-top: 2rem !important; padding-bottom: 2rem !important; }
+}
+
+/* ==========================================================
+   移动端触控反馈（touch feedback + 44pt 最小高度）
+   —— 全部 button 自动获得点按反馈（无需逐文件加 active:scale-95）
+   —— exclude: input/select/textarea/带 [data-no-touch] 的按钮
+   ========================================================== */
+button:not([data-no-touch]):not(:disabled) {
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 150ms ease, opacity 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+button:not([data-no-touch]):not(:disabled):active {
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+@media (max-width: 767px) {
+  /* 移动端：所有可点击 button 最小 44pt 高度（Apple HIG） */
+  button:not([data-no-touch]):not(:disabled) {
+    min-height: 44px;
+  }
+  /* 小字号按钮（text-xs/text-sm）加 padding 兜底高度 */
+  button.text-xs:not([data-no-touch]):not(:disabled),
+  button.text-sm:not([data-no-touch]):not(:disabled) {
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  button:not([data-no-touch]):not(:disabled) { transition: none; }
+  button:not([data-no-touch]):not(:disabled):active { transform: none; opacity: 1; }
+}
+
+/* ===== 生命密码 · 唤醒按钮呼吸光环 ===== */
+@keyframes lcBreath {
+  0%   { box-shadow: 0 0 0 0 rgba(167,139,250,0.6), 0 0 16px 2px rgba(124,58,237,0.3); opacity: 0.85; }
+  50%  { box-shadow: 0 0 0 10px rgba(167,139,250,0.0), 0 0 32px 10px rgba(124,58,237,0.5); opacity: 1; }
+  100% { box-shadow: 0 0 0 0 rgba(167,139,250,0.6), 0 0 16px 2px rgba(124,58,237,0.3); opacity: 0.85; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [style*="lcBreath"] { animation: none !important; }
+}
+
+/* ===== 水墨开场动画 ===== */
+
+/* 水墨滴落动画 */
+@keyframes inkDrop {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(0.3);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(0.6);
+  }
+  60% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  80% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+/* 水墨晕染动画 */
+@keyframes inkSpread {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(0deg);
+  }
+  30% {
+    opacity: 0.8;
+    transform: scale(0.5) rotate(5deg);
+  }
+  60% {
+    opacity: 0.6;
+    transform: scale(1) rotate(-3deg);
+  }
+  100% {
+    opacity: 0.3;
+    transform: scale(1.5) rotate(0deg);
+  }
+}
+
+/* 文字浮现动画 */
+@keyframes textReveal {
+  0% {
+    opacity: 0;
+    filter: blur(10px);
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 0.5;
+    filter: blur(5px);
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+}
+
+/* 按钮淡入动画 */
+@keyframes buttonFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 水墨滴落元素 */
+.ink-drop {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, rgba(44, 44, 44, 0.8) 0%, rgba(44, 44, 44, 0.4) 40%, transparent 70%);
+  border-radius: 50%;
+  animation: inkDrop 2s ease-out forwards;
+}
+
+.ink-drop-1 {
+  top: 30%;
+  left: 45%;
+  animation-delay: 0s;
+}
+
+.ink-drop-2 {
+  top: 35%;
+  left: 50%;
+  animation-delay: 0.3s;
+}
+
+.ink-drop-3 {
+  top: 40%;
+  left: 48%;
+  animation-delay: 0.6s;
+}
+
+/* 水墨晕染元素 */
+.ink-spread {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(ellipse, rgba(44, 44, 44, 0.3) 0%, rgba(44, 44, 44, 0.1) 50%, transparent 80%);
+  border-radius: 50%;
+  animation: inkSpread 3s ease-out forwards;
+}
+
+.ink-spread-1 {
+  top: 25%;
+  left: 40%;
+  animation-delay: 0.5s;
+}
+
+.ink-spread-2 {
+  top: 30%;
+  left: 50%;
+  animation-delay: 1s;
+}
+
+/* 文字浮现 */
+.text-reveal {
+  animation: textReveal 1.5s ease-out 2s forwards;
+  opacity: 0;
+}
+
+/* 按钮淡入 */
+.button-fade-in {
+  animation: buttonFadeIn 0.8s ease-out 3s forwards;
+  opacity: 0;
+}
+
+/* ===== 原有禅意动画 ===== */
+
+/* 禅意淡入动画 */
+@keyframes zenFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.zen-fade-in {
+  animation: zenFadeIn 2s ease-out forwards;
+}
+
+.zen-fade-in-delay-1 {
+  animation: zenFadeIn 2s ease-out 0.3s forwards;
+  opacity: 0;
+}
+
+.zen-fade-in-delay-2 {
+  animation: zenFadeIn 2s ease-out 0.6s forwards;
+  opacity: 0;
+}
+
+/* 毛笔笔触分隔线 */
+.ink-brush-line {
+  position: relative;
+  width: 120px;
+  height: 4px;
+  margin: 0 auto;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgb(44, 44, 44) 20%,
+    rgb(44, 44, 44) 80%,
+    transparent
+  );
+  border-radius: 2px;
+}
+
+.ink-brush-line::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 8px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgb(44, 44, 44) 50%,
+    transparent
+  );
+  border-radius: 4px;
+  opacity: 0.6;
+}
+
+.ink-brush-line::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 8px;
+  background: linear-gradient(
+    to left,
+    transparent,
+    rgb(44, 44, 44) 50%,
+    transparent
+  );
+  border-radius: 4px;
+  opacity: 0.6;
+}
+
+/* 禅意卡片效果 */
+.zen-card {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(232, 228, 224, 0.8);
+  box-shadow: 
+    0 4px 6px rgba(44, 44, 44, 0.05),
+    0 10px 20px rgba(44, 44, 44, 0.08);
+  transition: all 0.3s ease;
+}
+
+.zen-card:hover {
+  box-shadow: 
+    0 6px 12px rgba(44, 44, 44, 0.08),
+    0 15px 30px rgba(44, 44, 44, 0.12);
+}
+
+/* AI 引路人动画 */
+@keyframes slideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out forwards;
+}
+
+/* 悬浮按钮脉冲效果 */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2s ease-in-out infinite;
+}
+
+/* ===== 冥想发光动画 ===== */
+
+.meditation-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(90, 138, 106, 0.15), transparent 70%);
+  border-radius: 50%;
+  animation: breatheGlow 4s ease-in-out infinite;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes breatheGlow {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
+  50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+}
+
+/* ===== 首页水墨开场 keyframes（从 page.tsx 移出，避免 body 内 <style> 触发 hydration 警告） ===== */
+@keyframes coreForm {
+  0%   { width: 0; height: 0; opacity: 1; }
+  50%  { opacity: 1; }
+  100% { width: 20px; height: 20px; opacity: 0.8; }
+}
+@keyframes rippleExpand1 {
+  0%   { width: 0; height: 0; opacity: 1; }
+  100% { width: 300px; height: 300px; opacity: 0; }
+}
+@keyframes rippleExpand2 {
+  0%   { width: 0; height: 0; opacity: 0.8; }
+  100% { width: 450px; height: 450px; opacity: 0; }
+}
+@keyframes rippleExpand3 {
+  0%   { width: 0; height: 0; opacity: 0.6; }
+  100% { width: 600px; height: 600px; opacity: 0; }
+}
+@keyframes rippleExpand4 {
+  0%   { width: 0; height: 0; opacity: 0.4; }
+  100% { width: 750px; height: 750px; opacity: 0; }
+}
+@keyframes dropExpand1 {
+  0%   { width: 0; height: 0; opacity: 0.8; }
+  100% { width: 200px; height: 200px; opacity: 0; }
+}
+@keyframes dropExpand2 {
+  0%   { width: 0; height: 0; opacity: 0.7; }
+  100% { width: 250px; height: 250px; opacity: 0; }
+}
+@keyframes dropExpand3 {
+  0%   { width: 0; height: 0; opacity: 0.6; }
+  100% { width: 180px; height: 180px; opacity: 0; }
+}
+@keyframes dropExpand4 {
+  0%   { width: 0; height: 0; opacity: 0.5; }
+  100% { width: 220px; height: 220px; opacity: 0; }
+}
+@keyframes dropExpand5 {
+  0%   { width: 0; height: 0; opacity: 0.65; }
+  100% { width: 150px; height: 150px; opacity: 0; }
+}
+@keyframes splash1 {
+  0%   { width: 4px; height: 4px; opacity: 0.8; transform: translate(-50%, -50%); }
+  100% { width: 8px; height: 8px; opacity: 0; transform: translate(-150%, -100%); }
+}
+@keyframes splash2 {
+  0%   { width: 3px; height: 3px; opacity: 0.7; transform: translate(-50%, -50%); }
+  100% { width: 6px; height: 6px; opacity: 0; transform: translate(50%, -150%); }
+}
+@keyframes splash3 {
+  0%   { width: 5px; height: 5px; opacity: 0.9; transform: translate(-50%, -50%); }
+  100% { width: 10px; height: 10px; opacity: 0; transform: translate(100%, 50%); }
+}
+@keyframes btnFadeIn {
+  from { opacity: 0; transform: translateY(25px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

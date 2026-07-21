@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>灵境阁 - AI赋能传统文化传承平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            amber: {
+              50: '#fffbeb',
+              100: '#fef3c7',
+              200: '#fde68a',
+              300: '#fcd34d',
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706',
+              700: '#b45309',
+              800: '#92400e',
+              900: '#78350f',
+            },
+            stone: {
+              50: '#fafaf9',
+              100: '#f5f5f4',
+              200: '#e7e5e4',
+              300: '#d6d3d1',
+              400: '#a8a29e',
+              500: '#78716c',
+              600: '#57534e',
+              700: '#44403c',
+              800: '#292524',
+              900: '#1c1917',
+            },
+          },
+          fontFamily: {
+            sans: ['Noto Sans SC', 'system-ui', 'sans-serif'],
+            serif: ['Noto Serif SC', 'Georgia', 'serif'],
+          },
+        },
+      },
+    };
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+    .font-serif {
+      font-family: 'Noto Serif SC', serif;
+    }
+    .animate-float {
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.6s ease-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-slide-in {
+      animation: slideIn 0.5s ease-out forwards;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-stone-50 text-stone-800 min-h-screen">
+  <nav class="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md shadow-sm z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center">
+          <span class="text-white font-serif text-xl">灵</span>
+        </div>
+        <span class="font-serif text-xl font-semibold text-stone-800">灵境阁</span>
+      </div>
+      <div class="hidden md:flex items-center gap-6">
+        <a href="#home" class="text-stone-600 hover:text-amber-600 transition-colors">首页</a>
+        <a href="#zang" class="text-stone-600 hover:text-amber-600 transition-colors">藏经阁</a>
+        <a href="#wushu" class="text-stone-600 hover:text-amber-600 transition-colors">武脉真传</a>
+        <a href="#ai" class="text-stone-600 hover:text-amber-600 transition-colors">AI助手</a>
+        <a href="#shicheng" class="text-stone-600 hover:text-amber-600 transition-colors">师承谱</a>
+      </div>
+      <button class="bg-amber-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors">
+        立即体验
+      </button>
+    </div>
+  </nav>
+
+  <section id="home" class="pt-24 pb-16 bg-gradient-to-b from-amber-50 via-stone-50 to-stone-100">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="text-center mb-12 animate-fade-in">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full mb-6 animate-float">
+          <span class="text-white font-serif text-3xl">灵</span>
+        </div>
+        <h1 class="text-4xl md:text-5xl font-bold text-stone-800 mb-4">灵境阁</h1>
+        <p class="text-xl text-stone-600 mb-2">AI赋能传统文化传承平台</p>
+        <p class="text-stone-500 max-w-2xl mx-auto">
+          融合禅修、武术、经典典籍于一体，用AI技术让传统文化焕发新生，
+          帮助现代人在快节奏生活中找到内心的宁静与力量。
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-stone-100 hover:shadow-md transition-shadow animate-slide-in" style="animation-delay: 0.1s;">
+          <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center mb-4">
+            <span class="text-2xl">📚</span>
+          </div>
+          <h3 class="font-semibold text-stone-800 mb-2">藏经阁</h3>
+          <p class="text-sm text-stone-500">经典典籍，AI解读</p>
+        </div>
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-stone-100 hover:shadow-md transition-shadow animate-slide-in" style="animation-delay: 0.2s;">
+          <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center mb-4">
+            <span class="text-2xl">🥋</span>
+          </div>
+          <h3 class="font-semibold text-stone-800 mb-2">武脉真传</h3>
+          <p class="text-sm text-stone-500">传统武术，AI正形</p>
+        </div>
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-stone-100 hover:shadow-md transition-shadow animate-slide-in" style="animation-delay: 0.3s;">
+          <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center mb-4">
+            <span class="text-2xl">🤖</span>
+          </div>
+          <h3 class="font-semibold text-stone-800 mb-2">AI助手</h3>
+          <p class="text-sm text-stone-500">智能问答，随时解惑</p>
+        </div>
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-stone-100 hover:shadow-md transition-shadow animate-slide-in" style="animation-delay: 0.4s;">
+          <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center mb-4">
+            <span class="text-2xl">👥</span>
+          </div>
+          <h3 class="font-semibold text-stone-800 mb-2">同修社区</h3>
+          <p class="text-sm text-stone-500">交流心得，共同成长</p>
+        </div>
+      </div>
+
+      <div class="bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-8 text-white text-center">
+        <h3 class="text-xl font-semibold mb-4">每日禅语</h3>
+        <p class="text-lg font-serif italic">
+          "力从地起，拳由心发"——李紫剑
+        </p>
+        <p class="text-amber-100 text-sm mt-2">今日已有 1,234 位同修阅读</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="zang" class="py-16 bg-white">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold text-stone-800 mb-4">藏经阁</h2>
+        <p class="text-stone-600">千年经典，智慧传承</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-stone-50 rounded-xl p-6 border border-stone-100 hover:border-amber-200 transition-colors cursor-pointer">
+          <div class="w-full h-40 bg-gradient-to-br from-stone-200 to-stone-300 rounded-lg mb-4 flex items-center justify-center">
+            <span class="text-4xl">📖</span>
+          </div>
+          <h3 class="font-semibold text-lg text-stone-800 mb-2">道德经</h3>
+          <p class="text-sm text-stone-500 mb-3">老子 · 81章</p>
+          <div class="flex items-center gap-2 text-sm text-amber-600">
+            <span>阅读全文</span>
+            <span>→</span>
+          </div>
+        </div>
+        <div class="bg-stone-50 rounded-xl p-6 border border-stone-100 hover:border-amber-200 transition-colors cursor-pointer">
+          <div class="w-full h-40 bg-gradient-to-br from-amber-100 to-amber-200 rounded-lg mb-4 flex items-center justify-center">
+            <span class="text-4xl">📜</span>
+          </div>
+          <h3 class="font-semibold text-lg text-stone-800 mb-2">金刚经</h3>
+          <p class="text-sm text-stone-500 mb-3">鸠摩罗什译</p>
+          <div class="flex items-center gap-2 text-sm text-amber-600">
+            <span>阅读全文</span>
+            <span>→</span>
+          </div>
+        </div>
+        <div class="bg-stone-50 rounded-xl p-6 border border-stone-100 hover:border-amber-200 transition-colors cursor-pointer">
+          <div class="w-full h-40 bg-gradient-to-br from-orange-100 to-orange-200 rounded-lg mb-4 flex items-center justify-center">
+            <span class="text-4xl">📕</span>
+          </div>
+          <h3 class="font-semibold text-lg text-stone-800 mb-2">心经</h3>
+          <p class="text-sm text-stone-500 mb-3">玄奘译 · 260字</p>
+          <div class="flex items-center gap-2 text-sm text-amber-600">
+            <span>阅读全文</span>
+            <span>→</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-gradient-to-br from-stone-800 to-stone-900 rounded-2xl p-8 text-white">
+        <div class="flex flex-col md:flex-row gap-6">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-4">
+              <span class="bg-amber-500 px-3 py-1 rounded text-sm">道德经 · 第一章</span>
+            </div>
+            <h3 class="text-xl font-serif font-semibold mb-4">道可道，非常道；名可名，非常名</h3>
+            <div class="space-y-3 text-stone-200 font-serif leading-relaxed">
+              <p>道可道，非常道；名可名，非常名。</p>
+              <p>无名，天地之始；有名，万物之母。</p>
+              <p>故常无欲，以观其妙；常有欲，以观其徼。</p>
+              <p>此两者，同出而异名，同谓之玄。</p>
+              <p>玄之又玄，众妙之门。</p>
+            </div>
+          </div>
+          <div class="md:w-80 bg-stone-700/50 rounded-xl p-6">
+            <h4 class="font-semibold mb-3">AI 解读</h4>
+            <p class="text-stone-300 text-sm leading-relaxed">
+              本章是《道德经》的总纲，阐述了"道"的本质。"道"是宇宙的本源和规律，它无法用语言完全描述，
+              但可以通过观察和体验来领悟。有与无、名与无名，都是"道"的不同表现形式。
+            </p>
+            <button class="mt-4 w-full bg-amber-500 hover:bg-amber-600 text-white py-2 rounded-lg text-sm font-medium transition-colors">
+              查看更多解读
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="wushu" class="py-16 bg-gradient-to-b from-stone-100 to-amber-50/30">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold text-stone-800 mb-4">武脉真传</h2>
+        <p class="text-stone-600">传统武术，AI正形</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-stone-100">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+              <span class="text-xl">📖</span>
+            </div>
+            <div>
+              <h3 class="font-semibold text-stone-800">经典阁</h3>
+              <p class="text-sm text-stone-500">易筋经、八段锦等内功心法</p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <div class="flex-1 bg-stone-50 rounded-lg p-4 text-center cursor-pointer hover:bg-amber-50 transition-colors">
+              <span class="text-lg">易筋经</span>
+            </div>
+            <div class="flex-1 bg-stone-50 rounded-lg p-4 text-center cursor-pointer hover:bg-amber-50 transition-colors">
+              <span class="text-lg">八段锦</span>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-stone-100">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+              <span class="text-xl">🥋</span>
+            </div>
+            <div>
+              <h3 class="font-semibold text-stone-800">拳谱库</h3>
+              <p class="text-sm text-stone-500">招式详解，多角度演示</p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <div class="flex-1 bg-stone-50 rounded-lg p-4 text-center cursor-pointer hover:bg-amber-50 transition-colors">
+              <span class="text-lg">云手</span>
+            </div>
+            <div class="flex-1 bg-stone-50 rounded-lg p-4 text-center cursor-pointer hover:bg-amber-50 transition-colors">
+              <span class="text-lg">冲拳</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-8 shadow-sm border border-stone-100">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center">
+            <span class="text-white text-xl">☁️</span>
+          </div>
+          <div>
+            <h3 class="text-xl font-semibold text-stone-800">云手</h3>
+            <p class="text-stone-500">太极拳经典招式</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-6">
+          <div class="flex-1">
+            <div class="bg-stone-100 rounded-xl overflow-hidden mb-4">
+              <img id="move-image" src="https://neeko-copilot.bytedance.net/api/text2image?prompt=chinese%20tai%20chi%20cloud%20hand%20movement%20front%20view%20skeleton%20diagram%20white%20background%20clean%20minimal&image_size=portrait_4_3" alt="云手正面" class="w-full h-64 object-cover">
+            </div>
+            <div class="flex gap-2">
+              <button onclick="changeAngle('front')" class="flex-1 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors">正面</button>
+              <button onclick="changeAngle('side')" class="flex-1 py-2 bg-stone-100 text-stone-600 rounded-lg text-sm font-medium hover:bg-stone-200 transition-colors">侧面</button>
+              <button onclick="changeAngle('back')" class="flex-1 py-2 bg-stone-100 text-stone-600 rounded-lg text-sm font-medium hover:bg-stone-200 transition-colors">背面</button>
+            </div>
+          </div>
+          <div class="md:w-80">
+            <div class="space-y-4">
+              <div>
+                <h4 class="font-medium text-stone-700 mb-2">动作要领</h4>
+                <ul class="text-sm text-stone-500 space-y-1">
+                  <li>• 身体保持中正，重心平稳</li>
+                  <li>• 双手如行云流水，圆转如意</li>
+                  <li>• 步法虚实分明，进退有序</li>
+                  <li>• 呼吸自然，气沉丹田</li>
+                </ul>
+              </div>
+              <div>
+                <h4 class="font-medium text-stone-700 mb-2">练习次数</h4>
+                <span class="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-sm">左右各 3-5 次</span>
+              </div>
+              <div>
+                <h4 class="font-medium text-stone-700 mb-2">难度等级</h4>
+                <div class="flex gap-1">
+                  <span class="text-amber-500">★</span>
+                  <span class="text-amber-500">★</span>
+                  <span class="text-amber-500">★</span>
+                  <span class="text-stone-300">★</span>
+                  <span class="text-stone-300">★</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="ai" class="py-16 bg-white">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold text-stone-800 mb-4">AI 拳架正形</h2>
+        <p class="text-stone-600">用 AI 看清你的拳架，传承千年武学精华</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 text-center">
+          <div class="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center mx-auto mb-4">
+            <span class="text-3xl">🤖</span>
+          </div>
+          <h3 class="font-semibold text-stone-800 mb-2">AI 实时纠错</h3>
+          <p class="text-sm text-stone-500">通过摄像头实时捕捉动作，AI 精准分析关节角度与位置</p>
+        </div>
+        <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 text-center">
+          <div class="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center mx-auto mb-4">
+            <span class="text-3xl">📊</span>
+          </div>
+          <h3 class="font-semibold text-stone-800 mb-2">动作分析报告</h3>
+          <p class="text-sm text-stone-500">每次练习后生成详细报告，记录进步轨迹</p>
+        </div>
+        <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 text-center">
+          <div class="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center mx-auto mb-4">
+            <span class="text-3xl">🎯</span>
+          </div>
+          <h3 class="font-semibold text-stone-800 mb-2">个性化训练计划</h3>
+          <p class="text-sm text-stone-500">根据水平和目标，AI 定制专属训练计划</p>
+        </div>
+        <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 text-center">
+          <div class="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center mx-auto mb-4">
+            <span class="text-3xl">👨‍🏫</span>
+          </div>
+          <h3 class="font-semibold text-stone-800 mb-2">名师视频对比</h3>
+          <p class="text-sm text-stone-500">与李紫剑先生标准动作对比，直观看到差距</p>
+        </div>
+      </div>
+
+      <div class="bg-stone-800 rounded-2xl p-8 text-white">
+        <div class="flex flex-col md:flex-row items-center gap-8">
+          <div class="flex-1">
+            <h3 class="text-xl font-semibold mb-4">扫码下载小程序</h3>
+            <p class="text-stone-300 mb-6">体验 AI 拳架纠错功能，让每一次练习都有进步</p>
+            <button class="bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 rounded-xl font-medium transition-colors">
+              点击跳转小程序
+            </button>
+            <p class="text-stone-400 text-sm mt-3">（配置：weixin://dl/business/?t=xxx）</p>
+          </div>
+          <div class="bg-white p-4 rounded-xl">
+            <div class="w-40 h-40 bg-stone-100 rounded-lg flex items-center justify-center">
+              <div class="text-center">
+                <div class="text-3xl mb-2">QR</div>
+                <div class="text-xs text-stone-500">小程序码</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="shicheng" class="py-16 bg-gradient-to-b from-amber-50/30 to-stone-100">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold text-stone-800 mb-4">师承谱</h2>
+        <p class="text-stone-600">记录轨迹拳学传承脉络，缅怀历代宗师</p>
+      </div>
+
+      <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-8 mb-8">
+        <h3 class="text-lg font-semibold text-stone-800 mb-4">关于轨迹拳学</h3>
+        <p class="text-stone-600 leading-relaxed mb-4">
+          轨迹拳学是李紫剑先生经过数十年的研究与实践，创立的一种全新的武学体系。它以科学的视角重新诠释传统武术，
+          将复杂的拳术动作归纳为简单的运动轨迹。核心思想是"轨迹即拳"——一切拳术动作，本质上都是身体各部位在空间中的运动轨迹。
+        </p>
+        <p class="text-stone-600 leading-relaxed">
+          李紫剑先生常说："力从地起，拳由心发。"这句话深刻地揭示了力量的来源和动作的本质。
+        </p>
+      </div>
+
+      <div class="space-y-4">
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-stone-100">
+          <div class="flex items-center gap-6">
+            <div class="w-20 h-20 bg-gradient-to-br from-amber-100 to-amber-200 rounded-full flex items-center justify-center">
+              <span class="text-3xl">👤</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="text-xl font-semibold text-stone-800">李紫剑</h3>
+                <span class="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded">第1代</span>
+              </div>
+              <p class="text-amber-600 font-medium mb-2">轨迹拳学创始人</p>
+              <div class="flex flex-wrap gap-4 text-sm text-stone-500">
+                <span>📍 河南洛阳</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-center">
+          <div class="w-0.5 h-8 bg-gradient-to-b from-amber-300 to-amber-100"></div>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-stone-100">
+          <div class="flex items-center gap-6">
+            <div class="w-20 h-20 bg-gradient-to-br from-amber-100 to-amber-200 rounded-full flex items-center justify-center">
+              <span class="text-3xl">👤</span>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="text-xl font-semibold text-stone-800">传承弟子</h3>
+                <span class="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded">第2代</span>
+              </div>
+              <p class="text-amber-600 font-medium mb-2">轨迹拳学传承人</p>
+              <div class="flex flex-wrap gap-2 mt-3">
+                <span class="bg-stone-100 text-stone-600 text-xs px-3 py-1 rounded-full">各门派弟子</span>
+                <span class="bg-stone-100 text-stone-600 text-xs px-3 py-1 rounded-full">研习者</span>
+                <span class="bg-stone-100 text-stone-600 text-xs px-3 py-1 rounded-full">爱好者</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="bg-stone-800 text-white py-12">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center">
+              <span class="text-white font-serif text-xl">灵</span>
+            </div>
+            <span class="font-serif text-xl font-semibold">灵境阁</span>
+          </div>
+          <p class="text-stone-400 text-sm">AI赋能传统文化传承平台</p>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">产品服务</h4>
+          <ul class="space-y-2 text-sm text-stone-400">
+            <li><a href="#" class="hover:text-amber-400 transition-colors">藏经阁</a></li>
+            <li><a href="#" class="hover:text-amber-400 transition-colors">武脉真传</a></li>
+            <li><a href="#" class="hover:text-amber-400 transition-colors">AI助手</a></li>
+            <li><a href="#" class="hover:text-amber-400 transition-colors">同修社区</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">关于我们</h4>
+          <ul class="space-y-2 text-sm text-stone-400">
+            <li><a href="#" class="hover:text-amber-400 transition-colors">团队介绍</a></li>
+            <li><a href="#" class="hover:text-amber-400 transition-colors">联系我们</a></li>
+            <li><a href="#" class="hover:text-amber-400 transition-colors">加入我们</a></li>
+            <li><a href="#" class="hover:text-amber-400 transition-colors">合作伙伴</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold mb-4">法律条款</h4>
+          <ul class="space-y-2 text-sm text-stone-400">
+            <li><a href="#" class="hover:text-amber-400 transition-colors">服务条款</a></li>
+            <li><a href="#" class="hover:text-amber-400 transition-colors">隐私政策</a></li>
+            <li><a href="#" class="hover:text-amber-400 transition-colors">用户协议</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-stone-700 mt-8 pt-8 text-center text-stone-500 text-sm">
+        <p>© 2026 灵境阁 版权所有</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function changeAngle(angle) {
+      const img = document.getElementById('move-image');
+      const prompts = {
+        front: 'chinese%20tai%20chi%20cloud%20hand%20movement%20front%20view%20skeleton%20diagram%20white%20background%20clean%20minimal',
+        side: 'chinese%20tai%20chi%20cloud%20hand%20movement%20side%20view%20skeleton%20diagram%20white%20background%20clean%20minimal',
+        back: 'chinese%20tai%20chi%20cloud%20hand%20movement%20back%20view%20skeleton%20diagram%20white%20background%20clean%20minimal'
+      };
+      img.src = `https://neeko-copilot.bytedance.net/api/text2image?prompt=${prompts[angle]}&image_size=portrait_4_3`;
+      
+      const buttons = document.querySelectorAll('button[onclick^="changeAngle"]');
+      buttons.forEach(btn => {
+        if (btn.getAttribute('onclick').includes(angle)) {
+          btn.classList.remove('bg-stone-100', 'text-stone-600', 'hover:bg-stone-200');
+          btn.classList.add('bg-amber-500', 'text-white', 'hover:bg-amber-600');
+        } else {
+          btn.classList.remove('bg-amber-500', 'text-white', 'hover:bg-amber-600');
+          btn.classList.add('bg-stone-100', 'text-stone-600', 'hover:bg-stone-200');
+        }
+      });
+    }
+  </script>
+</body>
+</html>

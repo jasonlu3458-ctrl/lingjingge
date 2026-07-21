@@ -1,0 +1,10 @@
+ALTER TABLE IF EXISTS tenants 
+ADD COLUMN IF NOT EXISTS shenmi_config JSONB DEFAULT '{}';
+
+ALTER TABLE IF EXISTS tenants 
+ADD COLUMN IF NOT EXISTS yimi_config JSONB DEFAULT '{}';
+
+ALTER TABLE IF EXISTS tenants 
+ADD COLUMN IF NOT EXISTS koumi_config JSONB DEFAULT '{}';
+
+NOTIFY pgrst, 'reload schema';
