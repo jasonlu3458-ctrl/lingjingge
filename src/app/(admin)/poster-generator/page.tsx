@@ -1,3 +1,5 @@
+'use client';
+
 import PosterGenerator from '@/components/admin/PosterGenerator';
 
 export default function PosterGeneratorPage() {
