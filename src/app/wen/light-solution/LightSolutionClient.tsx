@@ -287,7 +287,7 @@ export default function LightSolutionClient({ userRole = 'free' }: LightSolution
         );
       }
     },
-    [conversationId, flushChars, isTyping, mounted, trySend],
+    [conversationId, flushChars, isTyping, mounted, trySend], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const handleSubmit = (e: React.FormEvent) => {

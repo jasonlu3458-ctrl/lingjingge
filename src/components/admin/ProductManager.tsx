@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 interface Product {
   id: string;
@@ -192,7 +193,7 @@ export default function ProductManager() {
             <div key={product.id} className="bg-[#242424] rounded-lg p-4">
               <div className="flex items-start justify-between mb-3">
                 {product.image_url && (
-                  <img src={product.image_url} alt={product.name} className="w-16 h-16 rounded object-cover" />
+                  <Image src={product.image_url} alt={product.name} width={64} height={64} className="rounded object-cover" />
                 )}
                 <span className={`px-2 py-1 rounded text-xs ${
                   product.status === 'active'

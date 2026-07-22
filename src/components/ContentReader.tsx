@@ -47,16 +47,19 @@ export default function ContentReader({ articleId, tenantId, initialArticle }: C
     if (!initialArticle) {
       fetchArticle();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [articleId, tenantId]);
 
   useEffect(() => {
     if (article) {
       checkAccess();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [article, hasPaid]);
 
   useEffect(() => {
     fetchKoumiConfig();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenantId]);
 
   const fetchKoumiConfig = async () => {

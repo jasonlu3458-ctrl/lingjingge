@@ -49,7 +49,7 @@ export default function AiChatDrawer({ open, onClose, passage, articleTitle }: A
         '',
       );
     }
-  }, [open, passage, articleTitle]);
+  }, [open, passage, articleTitle]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 自动滚到底
   useEffect(() => {

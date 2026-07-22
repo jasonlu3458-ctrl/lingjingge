@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { ProductList } from '@/components/Merchant';
 import type { Product } from '@/lib/merchant-engine';
 
@@ -128,11 +129,12 @@ export default function AuspiciousPage() {
             </div>
             
             {wallpaperImage && (
-              <div className="relative rounded-lg overflow-hidden border border-[#333333]">
-                <img 
+              <div className="relative rounded-lg overflow-hidden border border-[#333333] h-64">
+                <Image 
                   src={wallpaperImage} 
                   alt="吉祥壁纸"
-                  className="w-full h-64 object-cover"
+                  fill
+                  className="object-cover"
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
                   <p className="text-[#D4AF37] text-sm">长按保存到手机</p>
@@ -169,10 +171,12 @@ export default function AuspiciousPage() {
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
           <div className="muxintang-card p-8 max-w-md w-full">
             <div className="flex items-center gap-4 mb-6">
-              <img
+              <Image
                 src={selectedProduct.image}
                 alt={selectedProduct.name}
-                className="w-20 h-20 rounded-lg object-cover"
+                width={80}
+                height={80}
+                className="rounded-lg object-cover"
               />
               <div>
                 <h3 className="text-xl font-semibold text-white">{selectedProduct.name}</h3>
