@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 // ============================================================
 // /api/marriage/polish —— 婚姻家庭合婚报告 · Dify 润色接口（SSE 流式）
 // 协议参考 /api/house/polish：

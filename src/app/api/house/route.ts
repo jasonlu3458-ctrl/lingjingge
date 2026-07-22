@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 // ============================================================
 // /api/house —— 家居环境 · 命卦与方位基础计算
 // 接收：name, gender, birthYear, doorDirection, area, familyStructure

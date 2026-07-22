@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 // ============================================================
 // /api/wealth/polish —— 事业财富报告 · Dify 润色接口
 // 调真实 Dify（key 复用 DIFY_MARRIAGE_API_KEY），Dify 端把

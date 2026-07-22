@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 // ============================================================
 // /api/house/polish —— 家居环境 · Dify 润色接口（SSE 流式）
 // 协议参考 /api/lifecode/polish：

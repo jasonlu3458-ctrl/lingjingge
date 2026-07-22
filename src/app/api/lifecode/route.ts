@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 // ============================================================
 // /api/lifecode —— AI 生命密码报告生成（基础版）
 // 入参：{ name, gender, birthDate, birthHour, calendarType }

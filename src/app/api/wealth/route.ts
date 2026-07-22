@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 // ============================================================
 // /api/wealth —— 事业财富报告生成（基础版）
 // 入参：{ name, gender, birthDate, birthHour, calendarType, career }

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 // ============================================================
 // /api/zang/ai-assistant —— 藏经 AI 助教（段落参详）
 // 调用 Dify「藏经 AI 助教」应用，prompt 负责做现代案例解读
@@ -9,7 +11,6 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
 
 const InputSchema = z.object({
   article: z.string().max(200),

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase-server';
 import { getConversationMemory, saveConversationMemory } from '@/lib/muxintang/memory';

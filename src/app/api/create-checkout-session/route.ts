@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import { Polar } from '@polar-sh/sdk';
 import { getPolarProductId, type PolarPlan } from '@/lib/polar-constants';

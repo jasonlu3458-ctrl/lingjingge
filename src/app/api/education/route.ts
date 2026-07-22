@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 // ============================================================
 // /api/education —— 子女学业报告生成（基础版）
 // 入参：{ name, birthDate, calendarType, grade? }

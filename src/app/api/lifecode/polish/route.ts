@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 // ============================================================
 // /api/lifecode/polish —— AI 生命密码 · Dify 润色接口
 // 调真实 Dify（key 来自 DIFY_LIFECODE_API_KEY，Dify 端把

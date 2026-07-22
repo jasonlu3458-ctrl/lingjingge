@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 // ============================================================
 // /api/education/polish —— 子女学业报告 · Dify 润色接口（SSE 流式）
 // 协议参考 /api/house/polish：
