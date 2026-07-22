@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { getProductsByTenant, type Product } from '@/lib/merchant-engine';
 
 interface ProductListProps {
@@ -85,10 +86,11 @@ export default function ProductList({ tenantId, onAddToCart }: ProductListProps)
           >
             <div className="relative aspect-square overflow-hidden bg-[#1a1a1a]">
               {product.image ? (
-                <img
+                <Image
                   src={product.image}
                   alt={product.name}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-[#444]">

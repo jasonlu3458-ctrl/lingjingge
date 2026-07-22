@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 
 export default function PosterGenerator() {
   const [loading, setLoading] = useState(false);
@@ -112,10 +113,11 @@ export default function PosterGenerator() {
                   <span className="text-xs text-[#666]">{poster.date}</span>
                 </div>
                 <div className="relative aspect-[9/16] bg-[#0a0a0a] rounded-lg overflow-hidden">
-                  <img
+                  <Image
                     src={poster.imageUrl}
                     alt="生成的海报"
-                    className="w-full h-full object-contain"
+                    fill
+                    className="object-contain"
                   />
                 </div>
                 <div className="mt-4">
@@ -147,11 +149,12 @@ export default function PosterGenerator() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {history.map((item, index) => (
             <div key={index} className="bg-[#0a0a0a] rounded-lg overflow-hidden">
-              <div className="aspect-[9/16]">
-                <img
+              <div className="aspect-[9/16] relative">
+                <Image
                   src={item.imageUrl}
                   alt={item.theme}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
               </div>
               <div className="p-3">

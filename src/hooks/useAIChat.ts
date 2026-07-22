@@ -123,7 +123,7 @@ export function useAIChat({ type, userRole: serverUserRole, initialMessages = []
     })();
 
     return () => { cancelled = true; };
-  }, [userId, type]);
+  }, [userId, type, initialMessages.length]);
 
   /**
    * 写入持久化：远端（已登录时）+ localStorage 兜底。
