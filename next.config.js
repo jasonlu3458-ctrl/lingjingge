@@ -4,10 +4,6 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // 独立输出：生成 .next/standalone/，Docker 部署仅需 copy
-  // 必要文件（standalone 目录 + public + .next/static），
-  // 镜像体积可从 ~500MB 降至 ~150MB。
-  output: 'standalone',
   reactStrictMode: true,
   // ============================================================
   // SEO 静态化说明（藏经阁 /zang/library/[category]/[slug]）：
