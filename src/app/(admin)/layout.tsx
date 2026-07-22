@@ -1,8 +1,10 @@
-import AdminSidebar from '@/components/admin/AdminSidebar';
-import { getTenantConfig } from '@/lib/tenant';
+'use client';
 
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const tenant = getTenantConfig();
+import AdminSidebar from '@/components/admin/AdminSidebar';
+import { getTenantConfigClient } from '@/lib/tenant-client';
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const tenant = getTenantConfigClient();
 
   return (
     <div className="flex min-h-screen bg-[#0a0a0a]">

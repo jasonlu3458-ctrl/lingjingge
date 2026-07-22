@@ -18,3 +18,4 @@ export function getTenantConfig(): TenantConfig {
     aiPersonaPrefix: cookieStore.get('tenant_ai_persona_prefix')?.value || null,
   };
 }
+
