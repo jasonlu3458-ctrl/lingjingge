@@ -266,7 +266,7 @@ export function generateBaziResult(input: LegacyBaziInput): string {
   const yearGanzhi = eightChar.getYear();
   const monthGanzhi = eightChar.getMonth();
   const dayGanzhi = eightChar.getDay();
-  const hourGanzhi = (lunarObj as any).getTimeInGanZhi(parseInt(input.hour) || 0);
+  const hourGanzhi = lunarObj.getTimeInGanZhi(parseInt(input.hour) || 0);
 
   const yearBranch = yearGanzhi.charAt(1);
   const dayStem = dayGanzhi.charAt(0);

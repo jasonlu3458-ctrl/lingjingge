@@ -19,6 +19,7 @@ declare module 'lunar-javascript' {
     getDayInChinese(): string;
     getYearShengXiao(): string;
     getEightChar(): EightChar;
+    getTimeInGanZhi(hour: number): string;
   }
   export class EightChar {
     getYear(): string;
