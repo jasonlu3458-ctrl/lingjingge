@@ -31,47 +31,28 @@ interface LayoutConfig {
 }
 
 async function fetchTenantConfig(): Promise<LayoutConfig> {
-  if (!isSupabaseConfigured()) {
-    return {
-      theme: DEFAULT_TENANT_CONFIG.theme_config,
-      menuItems: DEFAULT_TENANT_CONFIG.enabled_features,
-      tenantName: DEFAULT_TENANT_CONFIG.name,
-      extraConfig: {},
-    };
-  }
-
   try {
-    const sb = createClient();
-    const { data: tenants, error } = await (sb as any)
-      .from('tenants')
-      .select('id, name, slug, theme_config, enabled_features, extra_config')
-      .eq('slug', 'muxintang')
-      .single();
-
-    if (error || !tenants) {
-      return {
-        theme: DEFAULT_TENANT_CONFIG.theme_config,
-        menuItems: DEFAULT_TENANT_CONFIG.enabled_features,
-        tenantName: DEFAULT_TENANT_CONFIG.name,
-        extraConfig: {},
-      };
+    const res = await fetch('/api/admin/tenant-config');
+    const data = await res.json();
+    
+    if (data.success && data.data) {
+      const d = data.data as any;
+      const theme = parseThemeConfig(d.theme_config);
+      const menuItems = parseEnabledFeatures(d.enabled_features);
+      const tenantName = typeof d.name === 'string' ? d.name : DEFAULT_TENANT_CONFIG.name;
+      const extraConfig = typeof d.extra_config === 'object' ? d.extra_config : {};
+      return { theme, menuItems, tenantName, extraConfig };
     }
-
-    const d = tenants as any;
-    const theme = parseThemeConfig(d.theme_config);
-    const menuItems = parseEnabledFeatures(d.enabled_features);
-    const tenantName = typeof d.name === 'string' ? d.name : DEFAULT_TENANT_CONFIG.name;
-    const extraConfig = typeof d.extra_config === 'object' ? d.extra_config : {};
-
-    return { theme, menuItems, tenantName, extraConfig };
   } catch {
-    return {
-      theme: DEFAULT_TENANT_CONFIG.theme_config,
-      menuItems: DEFAULT_TENANT_CONFIG.enabled_features,
-      tenantName: DEFAULT_TENANT_CONFIG.name,
-      extraConfig: {},
-    };
+    // API fetch failed, fall back to defaults
   }
+
+  return {
+    theme: DEFAULT_TENANT_CONFIG.theme_config,
+    menuItems: DEFAULT_TENANT_CONFIG.enabled_features,
+    tenantName: DEFAULT_TENANT_CONFIG.name,
+    extraConfig: {},
+  };
 }
 
 export default function MuxintangLayout({

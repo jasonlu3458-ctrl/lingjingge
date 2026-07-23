@@ -57,6 +57,18 @@ function getMuxintangTenantConfig() {
 }
 
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+
+  if (
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/images/') ||
+    pathname.startsWith('/fonts/') ||
+    pathname.startsWith('/favicon.ico') ||
+    pathname.startsWith('/robots.txt')
+  ) {
+    return NextResponse.next();
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -73,7 +85,6 @@ export async function middleware(request: NextRequest) {
   }
 
   const host = request.headers.get('host') || '';
-  const pathname = request.nextUrl.pathname;
 
   let tenantId: string | null = null;
   let tenantName: string | null = null;
