@@ -1,8 +1,17 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+function checkCronAuth(request: NextRequest): boolean {
+  const expected = process.env.CRON_SECRET;
+  if (!expected) return true;
+  return request.headers.get('authorization') === `Bearer ${expected}`;
+}
+
+export async function GET(request: NextRequest) {
+  if (!checkCronAuth(request)) {
+    return NextResponse.json({ error: '未授权' }, { status: 401 });
+  }
   return NextResponse.json({
     success: true,
     message: 'Daily zen notification cron endpoint',
@@ -10,7 +19,10 @@ export async function GET() {
   });
 }
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  if (!checkCronAuth(request)) {
+    return NextResponse.json({ error: '未授权' }, { status: 401 });
+  }
   return NextResponse.json({
     success: true,
     message: 'Daily zen notification cron triggered',

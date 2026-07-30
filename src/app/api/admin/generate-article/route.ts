@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { requireAdminAuth, isAuthError } from '@/lib/admin-auth';
+import { GenerateArticleSchema, parseRequestBody } from '@/lib/validators/api-schemas';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
+    // P0 安全加固：生成付费文章必须先校验 admin 身份
+    const auth = await requireAdminAuth();
+    if (isAuthError(auth)) return auth;
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -24,13 +30,16 @@ export async function POST(request: NextRequest) {
     });
 
     const body = await request.json();
-    const { notes, title: customTitle, tenantId = 'muxintang' } = body;
 
-    if (!notes || typeof notes !== 'string' || notes.trim().length < 50) {
-      return NextResponse.json({
-        success: false,
-        error: '笔记内容至少需要50字',
-      }, { status: 400 });
+    // Zod 校验：notes ≥ 50 字、title 可选
+    const parsed = parseRequestBody(GenerateArticleSchema, body);
+    if (parsed instanceof NextResponse) return parsed;
+    const { notes, title: customTitle } = parsed.data;
+
+    // 强制使用 auth.tenantId，忽略请求体中的 tenantId（防越权）
+    const tenantId = auth.tenantId;
+    if (!tenantId) {
+      return NextResponse.json({ success: false, error: '缺少租户标识' }, { status: 400 });
     }
 
     const articleContent = await generateLongArticle(notes, customTitle);

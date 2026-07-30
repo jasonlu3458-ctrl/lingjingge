@@ -1,8 +1,11 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { requireAdminAuth, isAuthError } from '@/lib/admin-auth';
+import { FeaturesConfigUpdateSchema, parseRequestBody } from '@/lib/validators/api-schemas';
+import { invalidateTenantConfig } from '@/lib/tenant-config-server';
 
 export async function GET() {
   try {
@@ -46,8 +49,12 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // P0 安全加固：写入租户配置必须先校验 admin/acharya 身份
+    const auth = await requireAdminAuth();
+    if (isAuthError(auth)) return auth;
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -63,19 +70,19 @@ export async function POST(request: Request) {
       },
     });
 
-    const cookieStore = cookies();
-    const tenantId = cookieStore.get('tenant_id')?.value;
+    // 优先使用 auth.tenantId（来自 admin 用户的会话），避免被请求头伪造
+    const tenantId = auth.tenantId || cookies().get('tenant_id')?.value;
 
     if (!tenantId) {
       return NextResponse.json({ success: false, error: 'Tenant ID not found' }, { status: 400 });
     }
 
     const body = await request.json();
-    const { extra_config } = body;
 
-    if (!extra_config || typeof extra_config !== 'object') {
-      return NextResponse.json({ success: false, error: 'Invalid config' }, { status: 400 });
-    }
+    // Zod 校验：只允许 5 个已知 feature flag，防止注入任意键
+    const parsed = parseRequestBody(FeaturesConfigUpdateSchema, body);
+    if (parsed instanceof NextResponse) return parsed;
+    const { extra_config } = parsed.data;
 
     const { error } = await supabase
       .from('tenants')
@@ -85,6 +92,9 @@ export async function POST(request: Request) {
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
+
+    // 失效进程内租户配置缓存
+    invalidateTenantConfig(tenantId);
 
     return NextResponse.json({ success: true });
   } catch (error) {

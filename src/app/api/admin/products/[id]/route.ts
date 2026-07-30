@@ -1,10 +1,16 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { requireAdminAuth, isAuthError } from '@/lib/admin-auth';
+import { PromotionUpdateSchema, parseRequestBody } from '@/lib/validators/api-schemas';
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    // P0 安全加固
+    const auth = await requireAdminAuth();
+    if (isAuthError(auth)) return auth;
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -21,18 +27,29 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     });
 
     const body = await request.json();
-    const { name, price, description, category, status } = body;
+
+    // Zod 校验：拒绝脏数据进入数据库
+    const parsed = parseRequestBody(PromotionUpdateSchema, body);
+    if (parsed instanceof NextResponse) return parsed;
+    const { name, price, description, category, status } = parsed.data;
 
     const updateData: Record<string, unknown> = {};
     if (name !== undefined) updateData.name = name;
     if (price !== undefined) updateData.discount_value = price;
     if (description !== undefined) updateData.description = description;
     if (category !== undefined) updateData.product_id = category;
+    if (status !== undefined) updateData.status = status;
 
-    const { error } = await supabase
-      .from('promotions')
-      .update(updateData)
-      .eq('id', params.id);
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: '没有可更新的字段' }, { status: 400 });
+    }
+
+    let scopedQuery = supabase.from('promotions').update(updateData).eq('id', params.id);
+    if (auth.tenantId) {
+      scopedQuery = scopedQuery.eq('tenant_id', auth.tenantId);
+    }
+
+    const { error } = await scopedQuery;
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -44,8 +61,12 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    // P0 安全加固
+    const auth = await requireAdminAuth();
+    if (isAuthError(auth)) return auth;
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -61,10 +82,12 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
       },
     });
 
-    const { error } = await supabase
-      .from('promotions')
-      .delete()
-      .eq('id', params.id);
+    let scopedQuery = supabase.from('promotions').delete().eq('id', params.id);
+    if (auth.tenantId) {
+      scopedQuery = scopedQuery.eq('tenant_id', auth.tenantId);
+    }
+
+    const { error } = await scopedQuery;
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

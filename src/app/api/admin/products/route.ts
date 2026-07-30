@@ -2,6 +2,12 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { requireAdminAuth, isAuthError } from '@/lib/admin-auth';
+import {
+  ProductCreateSchema,
+  ProductUpdateSchema,
+  parseRequestBody,
+} from '@/lib/validators/api-schemas';
 
 export async function GET(request: NextRequest) {
   try {
@@ -47,6 +53,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // P0 安全加固：商品写入必须先校验 admin/acharya 身份
+    const auth = await requireAdminAuth();
+    if (isAuthError(auth)) return auth;
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -62,29 +72,43 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const tenantId = request.headers.get('x-tenant-id') || '';
-    
+    // 优先使用 auth.tenantId，避免被 x-tenant-id 请求头伪造
+    const tenantId = auth.tenantId || request.headers.get('x-tenant-id') || '';
+
     if (!tenantId) {
       return NextResponse.json({ error: '缺少租户标识' }, { status: 400 });
     }
 
     const body = await request.json();
-    const { title, price, description, image_url, category, status } = body;
 
-    if (!title || !price) {
-      return NextResponse.json({ error: '缺少必填字段（标题、价格）' }, { status: 400 });
-    }
+    // Zod 校验：拒绝脏数据进入数据库
+    const parsed = parseRequestBody(ProductCreateSchema, body);
+    if (parsed instanceof NextResponse) return parsed;
+    const {
+      title,
+      price,
+      description,
+      image_url,
+      category,
+      product_type,
+      status,
+      stock_quantity,
+      digital_file_url,
+    } = parsed.data;
 
     const { data: product, error } = await supabase
       .from('merchant_products')
-      .insert({ 
+      .insert({
         tenant_id: tenantId,
-        title, 
-        price: Number(price),
-        description: description || '',
-        image_url: image_url || '',
-        category: category || 'default',
-        status: status || 'active',
+        title,
+        price,
+        description: description ?? '',
+        image_url: image_url ?? '',
+        category,
+        product_type,
+        status: status ?? 'active',
+        stock_quantity: stock_quantity ?? null,
+        digital_file_url: digital_file_url ?? null,
       })
       .select('*')
       .single();
@@ -103,6 +127,10 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    // P0 安全加固
+    const auth = await requireAdminAuth();
+    if (isAuthError(auth)) return auth;
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -119,26 +147,31 @@ export async function PUT(request: NextRequest) {
     });
 
     const body = await request.json();
-    const { id, title, price, description, image_url, category, status } = body;
 
-    if (!id) {
-      return NextResponse.json({ error: '缺少商品ID' }, { status: 400 });
+    // Zod 校验：拒绝脏数据进入数据库
+    const parsed = parseRequestBody(ProductUpdateSchema, body);
+    if (parsed instanceof NextResponse) return parsed;
+    const { id, ...rest } = parsed.data;
+
+    const updateData: Record<string, unknown> = {};
+    if (rest.title !== undefined) updateData.title = rest.title;
+    if (rest.price !== undefined) updateData.price = rest.price;
+    if (rest.description !== undefined) updateData.description = rest.description;
+    if (rest.image_url !== undefined) updateData.image_url = rest.image_url;
+    if (rest.category !== undefined) updateData.category = rest.category;
+    if (rest.product_type !== undefined) updateData.product_type = rest.product_type;
+    if (rest.status !== undefined) updateData.status = rest.status;
+    if (rest.stock_quantity !== undefined) updateData.stock_quantity = rest.stock_quantity;
+    if (rest.digital_file_url !== undefined) updateData.digital_file_url = rest.digital_file_url;
+
+    // 限制只能改本租户的商品
+    const tenantId = auth.tenantId;
+    let scopedQuery = supabase.from('merchant_products').update(updateData).eq('id', id);
+    if (tenantId) {
+      scopedQuery = scopedQuery.eq('tenant_id', tenantId);
     }
 
-    const updateData: Record<string, any> = {};
-    if (title !== undefined) updateData.title = title;
-    if (price !== undefined) updateData.price = Number(price);
-    if (description !== undefined) updateData.description = description;
-    if (image_url !== undefined) updateData.image_url = image_url;
-    if (category !== undefined) updateData.category = category;
-    if (status !== undefined) updateData.status = status;
-
-    const { data: product, error } = await supabase
-      .from('merchant_products')
-      .update(updateData)
-      .eq('id', id)
-      .select('*')
-      .single();
+    const { data: product, error } = await scopedQuery.select('*').single();
 
     if (error) {
       console.error('[products] PUT error:', error);
@@ -154,6 +187,10 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    // P0 安全加固
+    const auth = await requireAdminAuth();
+    if (isAuthError(auth)) return auth;
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -176,10 +213,14 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: '缺少商品ID' }, { status: 400 });
     }
 
-    const { error } = await supabase
-      .from('merchant_products')
-      .delete()
-      .eq('id', id);
+    // 限制只能删本租户的商品
+    const tenantId = auth.tenantId;
+    let scopedQuery = supabase.from('merchant_products').delete().eq('id', id);
+    if (tenantId) {
+      scopedQuery = scopedQuery.eq('tenant_id', tenantId);
+    }
+
+    const { error } = await scopedQuery;
 
     if (error) {
       console.error('[products] DELETE error:', error);

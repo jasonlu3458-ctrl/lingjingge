@@ -18,7 +18,20 @@ function getTodayTheme(): { theme: string; keywords: string[] } {
   return THEMES[index];
 }
 
+function checkCronAuth(request: NextRequest): boolean {
+  const expected = process.env.CRON_SECRET;
+  if (!expected) {
+    // 未配置 CRON_SECRET 时跳过校验（开发模式）
+    return true;
+  }
+  const authHeader = request.headers.get('authorization');
+  return authHeader === `Bearer ${expected}`;
+}
+
 export async function GET(request: NextRequest) {
+  if (!checkCronAuth(request)) {
+    return NextResponse.json({ error: '未授权' }, { status: 401 });
+  }
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

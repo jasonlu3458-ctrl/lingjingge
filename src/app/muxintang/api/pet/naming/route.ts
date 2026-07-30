@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateNameResult } from '@/lib/muxintang/bazi-engine';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { petName, petType, gender, birthDate, ownerWish } = await request.json();

@@ -1,31 +1,39 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAdminAuth, isAuthError } from '@/lib/admin-auth';
+import { AcharyaAIConfigUpdateSchema, parseRequestBody } from '@/lib/validators/api-schemas';
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const body = await request.json();
-    const { acharya_id, acharya_name, dify_api_key, system_prompt, knowledge_base_ids } = body;
+    // P0 安全加固
+    const auth = await requireAdminAuth();
+    if (isAuthError(auth)) return auth;
 
-    const updateData: Record<string, unknown> = {};
-    if (acharya_id !== undefined) updateData.acharya_id = acharya_id;
-    if (acharya_name !== undefined) updateData.acharya_name = acharya_name;
-    if (dify_api_key !== undefined) updateData.dify_api_key = dify_api_key;
-    if (system_prompt !== undefined) updateData.system_prompt = system_prompt;
-    if (knowledge_base_ids !== undefined) updateData.knowledge_base_ids = knowledge_base_ids;
+    const body = await request.json();
+
+    // Zod 校验（PUT 所有字段可选）
+    const parsed = parseRequestBody(AcharyaAIConfigUpdateSchema, body);
+    if (parsed instanceof NextResponse) return parsed;
+    const updateData = parsed.data;
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ error: '没有可更新的字段' }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true });
+    // 当前为 mock 实现，仅回显校验通过的字段
+    return NextResponse.json({ success: true, id: params.id, updated: updateData });
   } catch (error) {
     return NextResponse.json({ error: '服务器错误' }, { status: 500 });
   }
 }
 
-export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    // P0 安全加固
+    const auth = await requireAdminAuth();
+    if (isAuthError(auth)) return auth;
+
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: '服务器错误' }, { status: 500 });

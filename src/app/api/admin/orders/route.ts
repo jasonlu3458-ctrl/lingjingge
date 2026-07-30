@@ -2,9 +2,14 @@ export const dynamic = 'force-dynamic';
 
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { requireAdminAuth, isAuthError } from '@/lib/admin-auth';
 
 export async function GET() {
   try {
+    // P0 安全加固：订单列表只允许 admin/acharya 读取
+    const auth = await requireAdminAuth();
+    if (isAuthError(auth)) return auth;
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -20,10 +25,16 @@ export async function GET() {
       },
     });
 
-    const { data: purchases, error } = await supabase
+    // 限制只能查本租户订单
+    let query = supabase
       .from('report_purchases')
-      .select('id, user_id, report_type, price, purchased_at')
+      .select('id, user_id, report_type, price, purchased_at, tenant_id')
       .order('purchased_at', { ascending: false });
+    if (auth.tenantId) {
+      query = query.eq('tenant_id', auth.tenantId);
+    }
+
+    const { data: purchases, error } = await query;
 
     if (error) {
       return NextResponse.json({ orders: [] });

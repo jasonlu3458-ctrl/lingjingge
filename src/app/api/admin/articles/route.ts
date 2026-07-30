@@ -1,7 +1,9 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { requireAdminAuth, isAuthError } from '@/lib/admin-auth';
+import { ArticleCreateSchema, parseRequestBody } from '@/lib/validators/api-schemas';
 
 export async function GET() {
   try {
@@ -35,8 +37,12 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // P0 安全加固
+    const auth = await requireAdminAuth();
+    if (isAuthError(auth)) return auth;
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -53,15 +59,20 @@ export async function POST(request: Request) {
     });
 
     const body = await request.json();
-    const { slug, title, content, source, category } = body;
 
-    if (!slug || !title || !content) {
-      return NextResponse.json({ error: '缺少必填字段' }, { status: 400 });
-    }
+    // Zod 校验
+    const parsed = parseRequestBody(ArticleCreateSchema, body);
+    if (parsed instanceof NextResponse) return parsed;
+    const { slug, title, content, source, category } = parsed.data;
+
+    const insertData: Record<string, unknown> = { slug, title, content };
+    if (source !== undefined) insertData.source = source;
+    if (category !== undefined) insertData.category = category;
+    if (auth.tenantId) insertData.tenant_id = auth.tenantId;
 
     const { error } = await supabase
       .from('articles')
-      .insert({ slug, title, content, source, category });
+      .insert(insertData);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

@@ -1,6 +1,8 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAdminAuth, isAuthError } from '@/lib/admin-auth';
+import { AcharyaAIConfigCreateSchema, parseRequestBody } from '@/lib/validators/api-schemas';
 
 const mockConfigs = [
   {
@@ -18,16 +20,20 @@ export async function GET() {
   return NextResponse.json({ configs: mockConfigs });
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // P0 安全加固：写入 AI 配置必须先校验 admin/acharya 身份
+    const auth = await requireAdminAuth();
+    if (isAuthError(auth)) return auth;
+
     const body = await request.json();
-    const { acharya_id, acharya_name, dify_api_key, system_prompt, knowledge_base_ids } = body;
 
-    if (!acharya_id || !acharya_name || !dify_api_key || !system_prompt) {
-      return NextResponse.json({ error: '缺少必填字段' }, { status: 400 });
-    }
+    // Zod 校验
+    const parsed = parseRequestBody(AcharyaAIConfigCreateSchema, body);
+    if (parsed instanceof NextResponse) return parsed;
+    const { acharya_id, acharya_name, dify_api_key, system_prompt, knowledge_base_ids } = parsed.data;
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
       config: {
         id: Date.now().toString(),
@@ -35,7 +41,7 @@ export async function POST(request: Request) {
         acharya_name,
         dify_api_key,
         system_prompt,
-        knowledge_base_ids: knowledge_base_ids || [],
+        knowledge_base_ids: knowledge_base_ids ?? [],
         created_at: new Date().toISOString(),
       },
     });

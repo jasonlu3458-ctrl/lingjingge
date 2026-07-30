@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateBaziResult, calculateBazi } from '@/lib/muxintang/bazi-engine';
 import { callDifyForTool } from '@/lib/muxintang/dify-proxy';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { name, gender, year, month, day, hour } = await request.json();

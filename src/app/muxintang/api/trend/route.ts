@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateTrendResult } from '@/lib/muxintang/bazi-engine';
 import { callDifyForTool } from '@/lib/muxintang/dify-proxy';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { year, month } = await request.json();

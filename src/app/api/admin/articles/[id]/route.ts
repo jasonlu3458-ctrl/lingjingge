@@ -1,10 +1,15 @@
 export const dynamic = 'force-dynamic';
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { requireAdminAuth, isAuthError } from '@/lib/admin-auth';
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    // P0 安全加固
+    const auth = await requireAdminAuth();
+    if (isAuthError(auth)) return auth;
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -30,10 +35,12 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     if (source !== undefined) updateData.source = source;
     if (category !== undefined) updateData.category = category;
 
-    const { error } = await supabase
-      .from('articles')
-      .update(updateData)
-      .eq('id', params.id);
+    let scopedQuery = supabase.from('articles').update(updateData).eq('id', params.id);
+    if (auth.tenantId) {
+      scopedQuery = scopedQuery.eq('tenant_id', auth.tenantId);
+    }
+
+    const { error } = await scopedQuery;
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -45,8 +52,12 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(_request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    // P0 安全加固
+    const auth = await requireAdminAuth();
+    if (isAuthError(auth)) return auth;
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -62,10 +73,12 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
       },
     });
 
-    const { error } = await supabase
-      .from('articles')
-      .delete()
-      .eq('id', params.id);
+    let scopedQuery = supabase.from('articles').delete().eq('id', params.id);
+    if (auth.tenantId) {
+      scopedQuery = scopedQuery.eq('tenant_id', auth.tenantId);
+    }
+
+    const { error } = await scopedQuery;
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
