@@ -157,13 +157,13 @@ export default function EbookDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] py-12">
-      <div className="max-w-3xl mx-auto px-4">
-        <ContentReader 
+      <div className="max-w-full md:max-w-3xl mx-auto px-4 leading-loose md:leading-normal">
+        <ContentReader
           articleId={id as string}
           tenantId="muxintang"
           initialArticle={initialArticle}
         />
-        
+
         <div className="mt-8 flex justify-center gap-4">
           <button
             onClick={() => router.back()}

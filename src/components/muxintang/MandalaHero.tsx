@@ -9,7 +9,10 @@ export function MandalaHero() {
   };
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 flex items-center justify-center overflow-hidden">
+    <div
+      aria-hidden
+      className="fixed inset-0 pointer-events-none -z-10 flex items-center justify-center overflow-hidden"
+    >
       <motion.div
         className="absolute w-[120%] h-[120%] rounded-full bg-[#D4AF37]/5 blur-[80px]"
         animate={{

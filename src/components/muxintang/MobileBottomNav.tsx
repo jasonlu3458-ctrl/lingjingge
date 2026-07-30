@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import type { TenantThemeConfig } from '@/lib/tenant-config';
+import { withAlpha } from '@/lib/tenant-config';
 
 interface MobileBottomNavProps {
   theme?: TenantThemeConfig;
@@ -40,7 +41,7 @@ export default function MobileBottomNav({ theme, extraConfig = {} }: MobileBotto
   return (
     <nav 
       className="md:hidden fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md border-t pb-safe"
-      style={{ backgroundColor: `${bgDark}/98`, borderColor }}
+      style={{ backgroundColor: withAlpha(bgDark, 0.98), borderColor }}
     >
       <div className="flex items-center justify-around h-16">
         {navItems.map((item) => {

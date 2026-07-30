@@ -121,3 +121,17 @@ export function buildThemeCSS(theme: TenantThemeConfig): string {
     }
   `;
 }
+
+/**
+ * 将 #RRGGBB 转为带 alpha 的 rgba(...)
+ * 注意：Tailwind 的 bg-xxx/95 语法只对类名有效，inline style 必须用 rgba。
+ */
+export function withAlpha(hex: string, alpha: number): string {
+  if (typeof hex !== 'string') return hex;
+  const m = hex.replace('#', '').match(/^([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (!m) return hex;
+  const r = parseInt(m[1], 16);
+  const g = parseInt(m[2], 16);
+  const b = parseInt(m[3], 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}

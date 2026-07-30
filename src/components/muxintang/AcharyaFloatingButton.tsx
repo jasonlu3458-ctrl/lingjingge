@@ -1,22 +1,64 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import ChatUI from '@/components/ChatUI';
-import Link from 'next/link';
-import { useIsAuthenticated } from '@/hooks/useIsAuthenticated';
+import { useUserRole } from '@/hooks/useUserRole';
 
 export function AcharyaFloatingButton() {
-  const [showChat, setShowChat] = useState(false);
+  // 未登录用户也能直接开 ChatUI 吃 5 次免费；
+  // 会员/管理员走 useUserRole 自动免限；useFreeTurns 在 ChatUI 内部用 trySend 守门
   const [showBottomChat, setShowBottomChat] = useState(false);
-  const isAuthenticated = useIsAuthenticated();
+  const [pageContext, setPageContext] = useState<{ path: string; title: string }>({ path: '', title: '' });
+  const [pendingMessage, setPendingMessage] = useState<string | undefined>(undefined);
+  const userRole = useUserRole();
+  const pathname = usePathname();
+
+  // 浮层打开时刷新一次页面上下文（保证 title 拿到的是当前页最新值）
+  useEffect(() => {
+    if (showBottomChat && typeof window !== 'undefined') {
+      setPageContext({
+        path: pathname || window.location.pathname,
+        title: document.title || '',
+      });
+    }
+  }, [showBottomChat, pathname]);
+
+  // 三个快捷胶囊：根据当前页面拼装 prefill 文案
+  const quickPills = useMemo(() => {
+    const safeTitle = pageContext.title || '当前页面';
+    const safePath = pageContext.path || '当前页面';
+    return [
+      {
+        icon: '🔍',
+        label: '这页讲什么？',
+        prompt: `同修，我正在浏览【${safeTitle}】（路径：${safePath}）。请用一句话介绍这页的功能与适用场景。`,
+      },
+      {
+        icon: '🛠',
+        label: '怎么用？',
+        prompt: `同修，我在【${safePath}】页面。请告诉我这个工具/页面的使用步骤，越具体越好。`,
+      },
+      {
+        icon: '💰',
+        label: '怎么收费？',
+        prompt: '同修，灵境阁的付费、订阅、同修币规则是怎样的？哪些是免费体验，哪些需要付费？',
+      },
+    ];
+  }, [pageContext]);
 
   const handleClick = () => {
-    if (isAuthenticated) {
-      setShowBottomChat(true);
-    } else {
-      setShowChat(true);
-    }
+    // 直接开浮层，让 ChatUI 内部的 useFreeTurns 决定 5 轮免费 / 会员免限 / 超限跳注册
+    setShowBottomChat(true);
+  };
+
+  const handleQuickAsk = (prompt: string) => {
+    setPendingMessage(prompt);
+  };
+
+  const handlePendingConsumed = () => {
+    setPendingMessage(undefined);
   };
 
   return (
@@ -65,57 +107,6 @@ export function AcharyaFloatingButton() {
       </div>
 
       <AnimatePresence>
-        {showChat && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-[#121212] rounded-2xl w-full max-w-lg max-h-[80vh] overflow-hidden border border-[#333333]"
-            >
-              <div className="flex items-center justify-between p-4 border-b border-[#333333]">
-                <h3
-                  className="text-lg font-semibold"
-                  style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", color: '#D4AF37' }}
-                >
-                  阿阇梨咨询
-                </h3>
-                <button onClick={() => setShowChat(false)} className="text-[#808080] hover:text-white">
-                  ✕
-                </button>
-              </div>
-              <div className="p-6 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#8B4513] to-[#D4AF37] flex items-center justify-center">
-                  <span className="text-2xl">🧘</span>
-                </div>
-                <h4 className="text-white text-lg font-semibold mb-2">请先登录</h4>
-                <p className="text-[#808080] text-sm mb-6">登录后即可与阿阇梨进行专属对话</p>
-                <div className="flex gap-3 justify-center">
-                  <Link
-                    href="/muxintang/login"
-                    className="px-6 py-2 bg-[#D4AF37] text-black font-semibold rounded-xl hover:opacity-90 transition-all"
-                  >
-                    立即登录
-                  </Link>
-                  <Link
-                    href="/muxintang/register"
-                    className="px-6 py-2 border border-[#D4AF37]/50 text-[#D4AF37] font-semibold rounded-xl hover:bg-[#D4AF37]/10 transition-all"
-                  >
-                    注册账号
-                  </Link>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
         {showBottomChat && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -141,8 +132,24 @@ export function AcharyaFloatingButton() {
                   ✕
                 </button>
               </div>
+              {/* 系统管家 · 3 个快捷咨询胶囊（基于当前 pageContext 预填） */}
+              <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-auto border-b border-[#333333]/40">
+                {quickPills.map((pill) => (
+                  <button
+                    key={pill.label}
+                    type="button"
+                    onClick={() => handleQuickAsk(pill.prompt)}
+                    className="flex-shrink-0 px-3 py-1.5 rounded-full bg-[#1A1A1A] border border-[#D4AF37]/30 text-[#D4AF37] text-xs whitespace-nowrap hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/60 transition-colors"
+                    style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}
+                  >
+                    <span className="mr-1">{pill.icon}</span>
+                    {pill.label}
+                  </button>
+                ))}
+              </div>
               <div className="p-4">
                 <ChatUI
+                  userRole={userRole}
                   config={{
                     title: '阿阇梨',
                     subtitle: '牧心堂阿阇梨',
@@ -151,6 +158,9 @@ export function AcharyaFloatingButton() {
                     welcomeMessage: '同修，今日有何困惑？愿为您开示。',
                     difyType: 'muxintang',
                     requireConsent: true,
+                    pageContext,
+                    pendingMessage,
+                    onMessageSent: handlePendingConsumed,
                   }}
                 />
               </div>

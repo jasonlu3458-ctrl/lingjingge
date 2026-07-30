@@ -9,6 +9,7 @@ import MobileBottomNav from './MobileBottomNav';
 import PushSubscription from './PushSubscription';
 import { buildThemeCSS, type NavItem, type TenantThemeConfig } from '@/lib/tenant-config';
 import { TenantProvider, type TenantContextValue } from '@/contexts/TenantContext';
+import ZenSoundToggle from '@/components/ZenSoundToggle';
 
 const AcharyaFloatingButton = dynamic(
   () => import('./AcharyaFloatingButton').then((mod) => ({ default: mod.AcharyaFloatingButton })),
@@ -81,6 +82,10 @@ export default function MuxintangLayoutShell({ config, children }: MuxintangLayo
         <PushSubscription />
         <MobileBottomNav theme={theme} extraConfig={extraConfig} />
         <AcharyaFloatingButton />
+        {/* 禅音背景音乐开关：左下角浮按，与右侧阿阇梨浮按对称 */}
+        <div className="fixed bottom-20 md:bottom-6 left-6 z-40">
+          <ZenSoundToggle immersive />
+        </div>
         <footer
           className="hidden md:block border-t py-6"
           style={{ backgroundColor: theme.bg_card, borderColor: theme.border_color }}

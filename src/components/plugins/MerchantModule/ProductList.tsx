@@ -9,6 +9,49 @@ interface ProductListProps {
   onAddToCart?: (product: Product) => void;
 }
 
+/**
+ * 单张商品图：自带 onError 兜底
+ * 数据库有路径但 /public 下缺文件时，渲染牧心堂黑金占位符，避免白块。
+ * src 为空时也直接显示占位符。
+ */
+function ProductImage({ src, alt }: { src?: string; alt: string }) {
+  const [errored, setErrored] = useState(false);
+
+  if (!src || errored) {
+    return (
+      <div
+        className="w-full h-full flex flex-col items-center justify-center bg-[#0a0a0a] border border-[#D4AF37]/10 relative overflow-hidden"
+        aria-label="商品图片占位"
+      >
+        {/* 极淡的同心圆纹饰，模拟水印 */}
+        <div className="absolute inset-0 opacity-[0.04]">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 aspect-square rounded-full border border-[#D4AF37]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1/2 aspect-square rounded-full border border-[#D4AF37]" />
+        </div>
+        <span
+          className="relative text-[#D4AF37]/40 text-3xl md:text-4xl font-serif font-bold mb-2 tracking-widest"
+          style={{ fontFamily: "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif" }}
+        >
+          牧心堂
+        </span>
+        <span className="relative text-zinc-600 text-[10px] md:text-xs tracking-widest">
+          商品实拍上传中
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      className="object-cover"
+      onError={() => setErrored(true)}
+    />
+  );
+}
+
 export default function ProductList({ tenantId, onAddToCart }: ProductListProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,18 +128,7 @@ export default function ProductList({ tenantId, onAddToCart }: ProductListProps)
             className="muxintang-card overflow-hidden hover:border-[#D4AF37] transition-all"
           >
             <div className="relative aspect-square overflow-hidden bg-[#1a1a1a]">
-              {product.image ? (
-                <Image
-                  src={product.image}
-                  alt={product.name}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-[#444]">
-                  <span className="text-4xl">📦</span>
-                </div>
-              )}
+              <ProductImage src={product.image} alt={product.name} />
               {product.original_price && (
                 <div className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full">
                   优惠

@@ -41,6 +41,18 @@ export interface PageConfig {
    * - false：不弹（藏经阁原文、术语百科、法脉源流等"非关键"页面）
    */
   requireConsent?: boolean;
+  /**
+   * 当前所在页面上下文。注入到 /api/dify body.page_context，
+   * 由后端拼装"系统管家"提示词子角色 + 喂给 Dify inputs（用于 RAG 检索增强）。
+   * 仅在半屏浮层/浮按场景传；页内 ChatUI 不传。
+   */
+  pageContext?: { path: string; title: string };
+  /**
+   * 由父组件（浮按）设置的待发送消息。一旦变化，ChatUI 自动 handleSend
+   * 并回调 onMessageSent 让父组件清空，避免重复发送。
+   */
+  pendingMessage?: string;
+  onMessageSent?: () => void;
   formConfig?: {
     submitLabel: string;
     fields: FormField[];
@@ -87,6 +99,23 @@ export default function ChatUI({ config, userRole = 'free', acharyaId }: ChatUIP
       setShowConsent(true);
     }
   }, [hydrated, hasConsented, config.requireConsent]);
+  // 浮按胶囊：监听 pendingMessage 变化，触发一次自动发送（去重：相同文本不重复发）
+  const lastSentPendingRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (
+      config.pendingMessage &&
+      config.pendingMessage.trim() &&
+      config.pendingMessage !== lastSentPendingRef.current
+    ) {
+      lastSentPendingRef.current = config.pendingMessage;
+      // 跳过同意弹窗未关闭的情况
+      if (!showConsent) {
+        handleSend(config.pendingMessage.trim(), {});
+        config.onMessageSent?.();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config.pendingMessage, showConsent]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [chatInput, setChatInput] = useState<string>('');
@@ -251,6 +280,7 @@ export default function ChatUI({ config, userRole = 'free', acharyaId }: ChatUIP
             inputs: {},
             user: 'lingjingge-user',
             ...(acharyaId ? { acharya_id: acharyaId } : {}),
+            ...(config.pageContext ? { page_context: config.pageContext } : {}),
           }),
         });
 
@@ -334,6 +364,7 @@ export default function ChatUI({ config, userRole = 'free', acharyaId }: ChatUIP
             inputs: {},
             user: 'lingjingge-user',
             ...(acharyaId ? { acharya_id: acharyaId } : {}),
+            ...(config.pageContext ? { page_context: config.pageContext } : {}),
           }),
         });
 
@@ -405,6 +436,7 @@ export default function ChatUI({ config, userRole = 'free', acharyaId }: ChatUIP
           inputs: inputs,
           user: 'lingjingge-user',
           ...(acharyaId ? { acharya_id: acharyaId } : {}),
+          ...(config.pageContext ? { page_context: config.pageContext } : {}),
         }),
       });
 

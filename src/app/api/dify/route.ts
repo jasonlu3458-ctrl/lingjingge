@@ -22,6 +22,22 @@ const MUXINTANG_ACHARYA_PERSONA = `【牧心堂阿阇梨专属设定】
 
 请称呼用户为"同修"，回答风格沉稳慈悲，留有余地。`;
 
+/**
+ * 系统管家子角色提示词。
+ * 当 body.page_context 存在时，叠加在原 persona 之后——实现"双角色融合"：
+ *   - 原角色（阿阇梨 / 灵境尊者）仍是主理人
+ *   - 当同修问站内功能、付费、跳转、规则时，附加系统管家视角
+ * 这一段先写死在代码里作为兜底；等用户完成 Dify 后台系统提示词配置后，
+ * 可以通过环境变量 SYSTEM_STEWARD_PROMPT_OVERRIDE 覆盖此默认值。
+ */
+const SYSTEM_STEWARD_PROMPT = `【系统管家子角色 · 与主角色共存】
+你同时具备"灵境阁系统管家"能力。当同修在站内浏览遇到功能、付费、跳转、规则类问题时：
+1) 优先调用"灵境阁系统手册"知识库检索答案
+2) 用一段简洁的开示（不超过 80 字）回答，避免长篇大论
+3) 必要时给具体跳转路径（如：去首页 → 同修币 → 签到领币 / 去 /muxintang/pricing 查看订阅）
+4) 不要替代主角色（阿阇梨/灵境尊者），遇到修行/命理/风水/唐密类问题仍以主角色身份开示
+5) 同修问到"这页讲什么 / 怎么用"时，必须结合下方【当前页面】信息回答，不要泛泛而谈`;
+
 // ============================================
 // /api/dify  ——  灵境阁统一的 Dify 聊天代理
 // ============================================
@@ -189,9 +205,10 @@ async function proxyToDify(
   tenantAiPersonaPrefix: string = '',
   acharyaConfig: AcharyaAIConfig | null = null,
   tenantId: string = '',
+  pageContext: { path: string; title: string } | null = null,
 ): Promise<Response> {
   const baseUrl = (process.env.DIFY_BASE_URL || 'https://api.dify.ai').replace(/\/$/, '');
-  return proxyToDifyWithKey(apiKey, baseUrl, type, query, conversationId, inputs, user, tenantAiPersonaPrefix, acharyaConfig, tenantId);
+  return proxyToDifyWithKey(apiKey, baseUrl, type, query, conversationId, inputs, user, tenantAiPersonaPrefix, acharyaConfig, tenantId, pageContext);
 }
 
 async function getTenantShenmiConfig(tenantId: string): Promise<string[] | null> {
@@ -222,6 +239,7 @@ async function proxyToDifyWithKey(
   tenantAiPersonaPrefix: string = '',
   acharyaConfig: AcharyaAIConfig | null = null,
   tenantId: string = '',
+  pageContext: { path: string; title: string } | null = null,
 ): Promise<Response> {
   let persona = UNIFIED_PERSONA;
   
@@ -231,6 +249,17 @@ async function proxyToDifyWithKey(
     persona = `${acharyaConfig.system_prompt}\n\n${UNIFIED_PERSONA}`;
   } else if (tenantAiPersonaPrefix) {
     persona = `${tenantAiPersonaPrefix}\n\n${UNIFIED_PERSONA}`;
+  }
+
+  // —— 系统管家子角色：双角色融合 ——
+  // page_context 存在时，把"系统管家"提示词叠加到 persona 末尾，
+  // 并在 query 里附上【当前页面】信息（让 LLM 必读）。
+  // 注意：persona 拼接顺序是 主角色 → UNIFIED_PERSONA → SYSTEM_STEWARD → 当前页面块
+  // 这样主角色仍是"主理人"，系统管家是"扩展技能"，不互相覆盖。
+  if (pageContext && (pageContext.path || pageContext.title)) {
+    const stewardPrompt = process.env.SYSTEM_STEWARD_PROMPT_OVERRIDE || SYSTEM_STEWARD_PROMPT;
+    const pageBlock = `【当前页面】\n路径：${pageContext.path || '(未知)'}\n标题：${pageContext.title || '(未知)'}\n请结合上述页面上下文回答同修的提问。`;
+    persona = `${persona}\n\n${stewardPrompt}\n\n${pageBlock}`;
   }
 
   let memoryPrompt = '';
@@ -248,8 +277,15 @@ async function proxyToDifyWithKey(
     }
   }
   
+  // 把 page_context 同步到 inputs（用于 Dify 工作流/知识库节点引用）
+  const finalInputs: Record<string, any> = { ...(inputs || {}), user_query: query };
+  if (pageContext && (pageContext.path || pageContext.title)) {
+    finalInputs.page_path = pageContext.path || '';
+    finalInputs.page_title = pageContext.title || '';
+  }
+
   const body: Record<string, any> = {
-    inputs: { ...(inputs || {}), user_query: query },
+    inputs: finalInputs,
     query: `${persona}${memoryPrompt}\n\n【用户现在对你说】\n${query}`,
     response_mode: 'streaming',
     user: user || 'lingjingge-user',
@@ -482,6 +518,13 @@ export async function POST(request: NextRequest) {
     const tenantAiPersonaPrefix = request.cookies.get('tenant_ai_persona_prefix')?.value || '';
     const tenantId = request.headers.get('x-tenant-id') || body.tenant_id || '';
     const acharyaId = request.headers.get('x-acharya-id') || body.acharya_id;
+    // 系统管家上下文：浮按注入的当前页面信息；非空时会触发双角色融合
+    const pageContext = (body.page_context && typeof body.page_context === 'object')
+      ? {
+          path: String(body.page_context.path || ''),
+          title: String(body.page_context.title || ''),
+        }
+      : null;
 
     let apiKey = resolveApiKey(type);
     let acharyaConfig: AcharyaAIConfig | null = null;
@@ -546,5 +589,12 @@ export async function GET() {
   return NextResponse.json({
     typedKeys: Object.fromEntries(Object.entries(TYPED_KEYS).map(([k, v]) => [k, Boolean(v)])),
     hasGlobalFallback: Boolean(GLOBAL_FALLBACK_KEY),
+    systemSteward: {
+      enabled: true, // 功能开关：目前总是启用，未来可加 env 关闭
+      promptOverridable: Boolean(process.env.SYSTEM_STEWARD_PROMPT_OVERRIDE),
+      source: process.env.SYSTEM_STEWARD_PROMPT_OVERRIDE
+        ? 'env:SYSTEM_STEWARD_PROMPT_OVERRIDE'
+        : 'code:route.ts:SYSTEM_STEWARD_PROMPT',
+    },
   });
 }

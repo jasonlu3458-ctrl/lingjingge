@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import type { NavItem, TenantThemeConfig } from '@/lib/tenant-config';
+import { withAlpha } from '@/lib/tenant-config';
 import { useIsAuthenticated } from '@/hooks/useIsAuthenticated';
 
 interface MuxintangNavbarProps {
@@ -37,7 +38,7 @@ export default function MuxintangNavbar({
       `}</style>
       <nav 
         className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b"
-        style={{ backgroundColor: `${bgDark}/95`, borderColor }}
+        style={{ backgroundColor: withAlpha(bgDark, 0.95), borderColor }}
       >
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
