@@ -49,6 +49,15 @@ const nextConfig = {
       { source: '/wen/chan/ai-zen-master', destination: '/wen/zen', permanent: true },
       { source: '/wen/liao/mind',           destination: '/wen/heal', permanent: true },
       { source: '/wen/yi/yili',             destination: '/wen/yili', permanent: true },
+      // ============================================================
+      // /admin 入口重定向到 poster-generator
+      //   2026-08-07 修复 Vercel 部署 ENOENT 错误：
+      //   原 (admin)/page.tsx 是 client component，触发 client-reference-manifest
+      //   在 Vercel 严格环境下偶发找不到 page_client-reference-manifest.js。
+      //   社区验证方案：删除极简 page.tsx，把根入口改写为重定向到真实子页面。
+      //   middleware 仍通过 startsWith('/admin') 守护所有 admin/* 子路径。
+      // ============================================================
+      { source: '/admin', destination: '/poster-generator', permanent: true },
     ];
   },
   async headers() {
