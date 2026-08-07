@@ -11,14 +11,14 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
-  const [redirect, setRedirect] = useState('/muxintang');
-  
+  const [redirect, setRedirect] = useState('/muxintang/me');
+
   const router = useRouter();
-  
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      setRedirect(params.get('redirect') || '/muxintang');
+      setRedirect(params.get('redirect') || '/muxintang/me');
     }
   }, []);
 

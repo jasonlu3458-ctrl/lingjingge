@@ -10,6 +10,8 @@ const USER_MENU = [
   { id: 'profile', icon: '👤', label: '个人资料', href: '/muxintang/me/profile' },
   { id: 'orders', icon: '📋', label: '我的订单', href: '/muxintang/me/orders' },
   { id: 'history', icon: '📜', label: '测算历史', href: '/muxintang/me/history' },
+  { id: 'articles', icon: '✍️', label: '我的创作', href: '/muxintang/me/articles' },
+  { id: 'write', icon: '📖', label: '开始写作', href: '/muxintang/me/write' },
   { id: 'points', icon: '✨', label: '积分商城', href: '/muxintang/me/points' },
   { id: 'settings', icon: '⚙️', label: '账号设置', href: '/muxintang/me/settings' },
 ];

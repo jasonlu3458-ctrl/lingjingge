@@ -1,6 +1,7 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
+import MuxintangToolGuard from '@/components/muxintang/MuxintangToolGuard';
 
 export default function TrendToolPage() {
   const [formData, setFormData] = useState({
@@ -41,6 +42,7 @@ export default function TrendToolPage() {
           <p className="text-[#808080]">把握天时地利，顺势而为</p>
         </div>
 
+        <MuxintangToolGuard toolName="流年大势">
         <div className="muxintang-card p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
@@ -89,6 +91,7 @@ export default function TrendToolPage() {
             </div>
           )}
         </div>
+        </MuxintangToolGuard>
       </div>
     </div>
   );

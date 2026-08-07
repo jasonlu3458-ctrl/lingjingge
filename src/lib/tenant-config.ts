@@ -81,6 +81,7 @@ export const DEFAULT_ENABLED_FEATURES: NavItem[] = [
     icon: '🏮',
     children: [
       { label: '商品列表', href: '/muxintang/jixiangju', icon: '🛍️' },
+      { label: '购物车', href: '/muxintang/jixiangju/cart', icon: '🛒' },
       { label: '我的订单', href: '/muxintang/jixiangju?tab=orders', icon: '📋' },
     ],
   },

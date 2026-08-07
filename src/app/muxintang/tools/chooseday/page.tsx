@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import MuxintangToolGuard from '@/components/muxintang/MuxintangToolGuard';
 
 export default function ChooseDayToolPage() {
   const [formData, setFormData] = useState({
@@ -63,6 +64,7 @@ export default function ChooseDayToolPage() {
           </p>
         </div>
 
+        <MuxintangToolGuard toolName="择日智选">
         <div className="muxintang-card p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -146,6 +148,7 @@ export default function ChooseDayToolPage() {
             </div>
           )}
         </div>
+        </MuxintangToolGuard>
       </div>
     </div>
   );

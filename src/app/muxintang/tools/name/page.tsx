@@ -1,6 +1,7 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
+import MuxintangToolGuard from '@/components/muxintang/MuxintangToolGuard';
 
 export default function NameToolPage() {
   const [formData, setFormData] = useState({
@@ -50,6 +51,7 @@ export default function NameToolPage() {
           <p className="text-[#808080]">赐名吉祥如意，开启美好篇章</p>
         </div>
 
+        <MuxintangToolGuard toolName="姓名心解">
         <div className="muxintang-card p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -131,6 +133,7 @@ export default function NameToolPage() {
             </div>
           )}
         </div>
+        </MuxintangToolGuard>
       </div>
     </div>
   );

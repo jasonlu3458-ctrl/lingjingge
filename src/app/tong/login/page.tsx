@@ -10,14 +10,14 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
-  const [redirect, setRedirect] = useState('/home');
-  
+  const [redirect, setRedirect] = useState('/');
+
   const router = useRouter();
-  
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      setRedirect(params.get('redirect') || '/home');
+      setRedirect(params.get('redirect') || '/');
     }
   }, []);
 
@@ -173,7 +173,7 @@ export default function LoginPage() {
         <p className="text-center text-zen-ink/60 mt-6">
           还没有账户？{' '}
           <a
-            href={redirect !== '/home' ? `/tong/signup?redirect=${encodeURIComponent(redirect)}` : '/tong/signup'}
+            href={redirect !== '/' ? `/tong/signup?redirect=${encodeURIComponent(redirect)}` : '/tong/signup'}
             className="text-zen-ink hover:underline"
           >
             立即注册

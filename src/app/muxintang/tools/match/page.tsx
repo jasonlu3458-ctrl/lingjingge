@@ -1,6 +1,7 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
+import MuxintangToolGuard from '@/components/muxintang/MuxintangToolGuard';
 
 export default function MatchToolPage() {
   const [formData, setFormData] = useState({
@@ -45,6 +46,7 @@ export default function MatchToolPage() {
           <p className="text-[#808080]">测算姻缘匹配，携手幸福人生</p>
         </div>
 
+        <MuxintangToolGuard toolName="情缘合盘">
         <div className="muxintang-card p-8">
           <div className="grid md:grid-cols-2 gap-8">
             <div>
@@ -137,6 +139,7 @@ export default function MatchToolPage() {
             </div>
           )}
         </div>
+        </MuxintangToolGuard>
       </div>
     </div>
   );

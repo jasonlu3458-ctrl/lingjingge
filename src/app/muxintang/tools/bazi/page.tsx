@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { getToolConfig } from '@/lib/tool-configs';
 import XuanReportCard, { type ReportSection } from '@/components/xuan/XuanReportCard';
+import MuxintangToolGuard from '@/components/muxintang/MuxintangToolGuard';
 
 const TOOL_CFG = getToolConfig('bazi');
 
@@ -90,6 +91,7 @@ export default function BaziToolPage() {
         </div>
 
         {!result ? (
+          <MuxintangToolGuard toolName="生命代码">
           <div className="muxintang-card p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
@@ -170,6 +172,7 @@ export default function BaziToolPage() {
               </button>
             </form>
           </div>
+          </MuxintangToolGuard>
         ) : (
           <XuanReportCard
             title="八字命理解读"

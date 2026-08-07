@@ -1,6 +1,7 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
+import MuxintangToolGuard from '@/components/muxintang/MuxintangToolGuard';
 
 export default function HabitatToolPage() {
   const [formData, setFormData] = useState({
@@ -42,6 +43,7 @@ export default function HabitatToolPage() {
           <p className="text-[#808080]">优化空间能量，营造和谐气场</p>
         </div>
 
+        <MuxintangToolGuard toolName="家居环境">
         <div className="muxintang-card p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -111,6 +113,7 @@ export default function HabitatToolPage() {
             </div>
           )}
         </div>
+        </MuxintangToolGuard>
       </div>
     </div>
   );
