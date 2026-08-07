@@ -8,6 +8,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { getArticleBySlug, CLASSIC_PAGES, type Article } from '@/lib/zang-data';
 import ArticleDetailClient from './ArticleDetailClient';
+import RelatedReadings from '@/components/zang/RelatedReadings';
 
 interface PageProps {
   params: { category: string; slug: string };
@@ -63,5 +64,12 @@ export default async function ArticlePage({ params }: PageProps) {
     );
   }
 
-  return <ArticleDetailClient article={article} category={decodedCategory} />;
+  return (
+    <>
+      <ArticleDetailClient article={article} category={decodedCategory} />
+      <div className="max-w-4xl mx-auto px-4 pb-16">
+        <RelatedReadings category={decodedCategory} currentSlug={decodedSlug} count={3} />
+      </div>
+    </>
+  );
 }

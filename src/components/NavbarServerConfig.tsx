@@ -1,7 +1,7 @@
 import { headers } from 'next/headers';
 
 const MUXINTANG_PATH = '/muxintang';
-const IMMERSIVE_PATHS = ['/wen/chan/ai-zen-master'];
+const IMMERSIVE_PATHS = ['/wen/zen'];
 
 export function shouldRenderNavbar(): { render: boolean; immersive: boolean } {
   const pathname = headers().get('x-pathname') || '';

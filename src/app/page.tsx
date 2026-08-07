@@ -17,14 +17,15 @@ export default function SplashPage() {
   const [mounted, setMounted] = useState(false);
   const [showText, setShowText] = useState(false);
   const [showButton, setShowButton] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   // 今日禅机
   const [dailyZen, setDailyZen] = useState<DailyZenData | null>(null);
 
   useEffect(() => {
     setMounted(true);
-    const timer1 = setTimeout(() => setShowText(true), 1200);
-    const timer2 = setTimeout(() => setShowButton(true), 2200);
+    const timer1 = setTimeout(() => setShowText(true), 0);
+    const timer2 = setTimeout(() => setShowButton(true), 600);
 
     // 拉取 /api/daily-zen
     fetch('/api/daily-zen')
@@ -68,9 +69,12 @@ export default function SplashPage() {
     };
   })();
 
-  // 平滑滚动到卡片区域
+  // 点击"开启心智之旅"：压缩第一屏 + 平滑滚动到禅机模块
   const scrollToCards = () => {
-    document.getElementById('card-section')?.scrollIntoView({ behavior: 'smooth' });
+    setExpanded(true);
+    setTimeout(() => {
+      document.getElementById('zen-section')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   // 横幅「体验」按钮：滚动到第一张卡片并触发呼吸动画
@@ -88,8 +92,8 @@ export default function SplashPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f5f0eb] relative overflow-x-hidden">
-      {/* ===== 第一屏：水墨晕染 ===== */}
-      <div className="min-h-screen flex flex-col items-center justify-center relative px-4 text-center">
+      {/* ===== 第一屏：入定入口（点击后压缩为 45vh） ===== */}
+      <div className={`flex flex-col items-center justify-center relative px-4 text-center transition-all duration-500 ease-in-out ${expanded ? 'h-[45vh] py-4' : 'min-h-screen py-12'}`}>
         {/* 宣纸纹理背景 */}
         <div 
           className="absolute inset-0 opacity-[0.04] pointer-events-none"
@@ -231,7 +235,55 @@ export default function SplashPage() {
         `}</style>
       </div>
 
-      {/* ===== 第二屏：四张卡片 + 灵境阁 IP ===== */}
+      {/* ===== 禅机模块（衔接第一屏与四入道门） ===== */}
+      <section
+        id="zen-section"
+        className={`px-4 transition-all duration-500 ${expanded ? 'py-8' : 'py-16'}`}
+        style={{ background: 'linear-gradient(180deg, #f5f0eb 0%, #faf8f5 100%)' }}
+      >
+        <div className="max-w-3xl mx-auto text-center">
+          <FadeIn>
+            <div className="text-xs tracking-[6px] text-[#8a8a8a] mb-4" style={{ fontFamily: "'Ma Shan Zheng', serif" }}>
+              {lunarLabel} · 灵境阁言
+            </div>
+            <div className="w-16 h-px bg-gradient-to-r from-transparent via-[#2c2c2c] to-transparent mx-auto mb-8 opacity-40" />
+            <blockquote
+              className="text-2xl md:text-3xl text-[#2c2c2c] leading-loose font-light italic mb-6"
+              style={{ fontFamily: "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif", letterSpacing: '2px' }}
+            >
+              「{parsedZen.text}」
+            </blockquote>
+            <p className="text-sm text-[#7a7a7a] mb-10" style={{ fontFamily: "'Ma Shan Zheng', serif" }}>
+              —— {parsedZen.source}
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3 text-xs">
+              <Link
+                href="/wen/tuibei"
+                className="px-5 py-2 rounded-full bg-amber-50 border border-amber-300 text-amber-800 hover:bg-amber-100 transition-colors"
+                style={{ fontFamily: "'Ma Shan Zheng', serif", letterSpacing: '1px' }}
+              >
+                📜 今日抽一签 →
+              </Link>
+              <Link
+                href="/zang/library"
+                className="px-5 py-2 rounded-full border border-[#2c2c2c] text-[#2c2c2c] hover:bg-[#2c2c2c] hover:text-white transition-colors"
+                style={{ fontFamily: "'Ma Shan Zheng', serif", letterSpacing: '1px' }}
+              >
+                📖 参读藏经
+              </Link>
+              <button
+                onClick={() => document.getElementById('card-section')?.scrollIntoView({ behavior: 'smooth' })}
+                className="px-5 py-2 rounded-full bg-[#2c2c2c] text-white hover:bg-[#3a3a3a] transition-colors"
+                style={{ fontFamily: "'Ma Shan Zheng', serif", letterSpacing: '1px' }}
+              >
+                🧘 开启对话 →
+              </button>
+            </div>
+          </FadeIn>
+        </div>
+      </section>
+
+      {/* ===== 四张卡片：四入道门 ===== */}
       <section id="card-section" className="min-h-screen bg-[#faf8f5] py-20 flex flex-col justify-center">
         <div className="max-w-6xl mx-auto px-4">
           <FadeIn>
@@ -293,7 +345,7 @@ export default function SplashPage() {
                     title="澄心问道"
                     description="AI陪你静心，共同问道，解开灵性困惑"
                     buttonText="去体验 →"
-                    href="/wen/chan/ai-zen-master"
+                    href="/wen/zen"
                   />
                 </HoverScale>
               </StaggerItem>
@@ -335,46 +387,6 @@ export default function SplashPage() {
         </div>
       </section>
 
-      {/* ===== 第三屏：今日禅机 ===== */}
-      <section
-        id="daily-zen-section"
-        className="py-20 px-4"
-        style={{ background: 'linear-gradient(180deg, #faf8f5 0%, #f5f0eb 100%)' }}
-      >
-        <div className="max-w-3xl mx-auto text-center">
-          <FadeIn>
-            <div className="text-xs tracking-[6px] text-[#8a8a8a] mb-4" style={{ fontFamily: "'Ma Shan Zheng', serif" }}>
-              {lunarLabel} · 灵境阁言
-            </div>
-            <div className="w-16 h-px bg-gradient-to-r from-transparent via-[#2c2c2c] to-transparent mx-auto mb-8 opacity-40" />
-            <blockquote
-              className="text-2xl md:text-3xl text-[#2c2c2c] leading-loose font-light italic mb-6"
-              style={{ fontFamily: "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif", letterSpacing: '2px' }}
-            >
-              「{parsedZen.text}」
-            </blockquote>
-            <p className="text-sm text-[#7a7a7a] mb-10" style={{ fontFamily: "'Ma Shan Zheng', serif" }}>
-              —— {parsedZen.source}
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-3 text-xs">
-              <Link
-                href="/zang/library"
-                className="px-5 py-2 rounded-full border border-[#2c2c2c] text-[#2c2c2c] hover:bg-[#2c2c2c] hover:text-white transition-colors"
-                style={{ fontFamily: "'Ma Shan Zheng', serif", letterSpacing: '1px' }}
-              >
-                📖 参读藏经
-              </Link>
-              <button
-                onClick={() => document.getElementById('card-section')?.scrollIntoView({ behavior: 'smooth' })}
-                className="px-5 py-2 rounded-full bg-[#2c2c2c] text-white hover:bg-[#3a3a3a] transition-colors"
-                style={{ fontFamily: "'Ma Shan Zheng', serif", letterSpacing: '1px' }}
-              >
-                🧘 开启对话 →
-              </button>
-            </div>
-          </FadeIn>
-        </div>
-      </section>
     </div>
   );
 }

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import NavbarWrapper from "@/components/NavbarWrapper";
-import MockBootstrap from "@/components/MockBootstrap";
 
 const maShanZhengVariable = "--font-ma-shan-zheng";
 
@@ -19,8 +18,7 @@ export default function RootLayout({
     <html lang="zh-CN" style={{ [maShanZhengVariable]: "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif" } as React.CSSProperties}>
       <body className="flex flex-col min-h-screen">
         <NavbarWrapper />
-        <div className="flex-1">{children}</div>
-        <MockBootstrap />
+        <div className="flex-1 pb-16 md:pb-0">{children}</div>
         <footer className="text-xs text-gray-400 text-center py-2 border-t border-gray-100">
           <div>
             ⚠️ 本平台内容仅供传统文化交流与娱乐参考，不构成专业建议。

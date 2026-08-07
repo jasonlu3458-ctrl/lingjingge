@@ -111,7 +111,7 @@ export default async function GuanPage() {
               {c.title}
             </h3>
             <p className="text-xs text-gray-500 leading-relaxed mb-3">{c.tagline}</p>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1.5 mb-3">
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                 免费 5 次体验
               </span>
@@ -119,6 +119,13 @@ export default async function GuanPage() {
                 深度报告 ¥9.9
               </span>
             </div>
+            <span
+              className="inline-flex items-center text-xs text-amber-700 group-hover:text-amber-900 transition-colors"
+              style={{ fontFamily: "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif" }}
+            >
+              开始解读
+              <span className="ml-1 transition-transform group-hover:translate-x-1">→</span>
+            </span>
           </Link>
         ))}
       </div>

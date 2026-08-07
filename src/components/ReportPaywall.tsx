@@ -20,6 +20,12 @@ export interface ReportPaywallProps {
   reportKey: string;
   /** 完整版主题色，默认琥珀色 */
   accentClass?: string;
+  /**
+   * 预览内容：付费墙出现时在「免费注册/解锁」按钮上方展示一段
+   * 经截断的 AI 报告预览（通常取完整报告前 3 句 / 150 字）。
+   * 命中后用户能先看到深度，再决定是否付费 → 提升转化。
+   */
+  previewContent?: string;
 }
 
 /**
@@ -37,6 +43,7 @@ export default function ReportPaywall({
   premiumSections,
   reportKey,
   accentClass = 'text-amber-300',
+  previewContent,
 }: ReportPaywallProps) {
   const isAuthenticated = useIsAuthenticated();
   const { hasConsented, giveConsent, hydrated } = useConsent();
@@ -92,6 +99,20 @@ export default function ReportPaywall({
       {premiumPart && (
         <div className="mt-4 p-4 border border-dashed border-gray-400 rounded bg-gray-50">
           <div className={`text-sm font-medium mb-3 ${accentClass}`}>🔒 完整报告仅对会员开放</div>
+
+          {/* 预览内容：先让用户感受到"这份报告真的很有深度"再决定付费 */}
+          {previewContent && (
+            <div className="mb-4 p-3 rounded-md bg-gradient-to-br from-amber-50/80 to-white border border-amber-200/60">
+              <div className="text-[10px] tracking-widest text-amber-700 mb-1.5 uppercase">✦ 报告预览</div>
+              <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap italic line-clamp-6">
+                {previewContent}
+              </div>
+              <div className="mt-2 text-[10px] text-gray-400 text-right">
+                以上为预览内容 · 解锁后获取完整深度报告
+              </div>
+            </div>
+          )}
+
           <div className="text-sm text-gray-600 mb-3">
             会员可查看：{premiumSections.join('、')}
           </div>

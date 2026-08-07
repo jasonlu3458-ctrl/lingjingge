@@ -2,121 +2,266 @@
 
 import { useState } from 'react';
 
-const DIET_TIPS = [
-  { title: '犬类饮食', content: '犬属戌土，宜多食黄色食物如玉米、南瓜，忌过量喂食生冷食物。五行喜火的狗狗可适当喂食辣椒、生姜等温热食材。' },
-  { title: '猫类饮食', content: '猫属寅木，宜多食绿色食物如蔬菜、猫草，忌喂食过多肝脏类食物。五行喜水的猫咪可适当喂食鱼类。' },
-  { title: '鸟类饮食', content: '鸟类属火，宜多食红色食物如胡萝卜、樱桃，忌喂食油腻食物。注意保持饮水清洁。' },
-  { title: '鱼类饮食', content: '鱼类属水，宜多食清淡食物，忌喂食油性过大的饲料。保持水质清洁是关键。' },
+// —— 三张知识卡片：饮食 / 作息 / 护理 ——
+const CARE_GUIDES = [
+  {
+    id: 'diet',
+    icon: '🥣',
+    title: '饮食',
+    subtitle: '科学喂养，五行调和',
+    points: [
+      '定时定量：每日两餐，辰时与申时为佳，避免戌时后喂食',
+      '因宠而异：犬宜杂食、猫需高蛋白、鸟类少油脂、鱼类忌浊水',
+      '忌食清单：巧克力、洋葱、葡萄、过量盐分与生蛋',
+      '饮水要勤：每日换水两次，水温与室温相近为宜',
+    ],
+  },
+  {
+    id: 'routine',
+    icon: '🌙',
+    title: '作息',
+    subtitle: '顺应天时，安神养性',
+    points: [
+      '日间活动：保证每日 30–60 分钟陪伴互动，消耗过剩精力',
+      '夜眠环境：窝垫避开通风直吹与镜面反射，宜静宜暗',
+      '生物钟规律：固定起床、喂食、散步时间，减少焦虑',
+      '季节调整：春夏早起活动、秋冬晚起保暖，顺应四时',
+    ],
+  },
+  {
+    id: 'care',
+    icon: '🪮',
+    title: '护理',
+    subtitle: '洁净身心，气血通畅',
+    points: [
+      '梳毛通络：每日梳理 5 分钟，既能去浮毛，又能通气血',
+      '洗浴有度：犬猫每月 1–2 次，水温 38℃ 左右，避开耳朵眼睛',
+      '爪牙检查：每周修剪指甲一次，定期清洁牙齿与耳道',
+      '情志关怀：观察眼神与食欲，及时发现情绪波动并安抚',
+    ],
+  },
 ];
 
-const FEEDING_SCHEDULE = [
-  { time: '辰时 (7-9点)', desc: '喂食早餐，此时脾胃运化最佳' },
-  { time: '午时 (11-13点)', desc: '可少量加餐，补充能量' },
-  { time: '申时 (15-17点)', desc: '喂食晚餐，量宜适中' },
-  { time: '戌时 (19-21点)', desc: '不宜喂食，以免影响消化' },
+// —— 测一测养宠习惯：5 道单选题 ——
+const QUIZ_QUESTIONS = [
+  {
+    q: '你通常在什么时间为爱宠喂食早餐？',
+    options: [
+      { text: '辰时（7–9 点）', score: 2 },
+      { text: '中午前后', score: 1 },
+      { text: '想什么时候就什么时候', score: 0 },
+    ],
+  },
+  {
+    q: '爱宠的饮水习惯是？',
+    options: [
+      { text: '每日换水 1–2 次，干净新鲜', score: 2 },
+      { text: '看到水少了再添', score: 1 },
+      { text: '很久才换一次', score: 0 },
+    ],
+  },
+  {
+    q: '你多久为爱宠梳一次毛？',
+    options: [
+      { text: '每日一次', score: 2 },
+      { text: '每周一次', score: 1 },
+      { text: '几乎不梳', score: 0 },
+    ],
+  },
+  {
+    q: '爱宠的睡眠窝垫位置如何？',
+    options: [
+      { text: '安静避风，远离镜子与门口', score: 2 },
+      { text: '随意放置，方便就好', score: 1 },
+      { text: '靠门口或镜子旁', score: 0 },
+    ],
+  },
+  {
+    q: '当你发现爱宠情绪低落时，你会？',
+    options: [
+      { text: '陪伴安抚，观察食欲与精神状态', score: 2 },
+      { text: '给点零食逗一逗', score: 1 },
+      { text: '等它自己好起来', score: 0 },
+    ],
+  },
 ];
+
+// —— 根据总分返回评估结果 ——
+function getQuizResult(score: number) {
+  if (score >= 8) {
+    return {
+      level: '🪷 上善之主',
+      desc: '你与爱宠心意相通，起居有度，福泽相依。继续保持这份温柔与细致，家宅气场亦因你而安。',
+    };
+  }
+  if (score >= 4) {
+    return {
+      level: '🌿 渐入佳境',
+      desc: '你已具备良好的养宠基础，再稍加用心于细节，便能让爱宠的身心更加舒展自在。',
+    };
+  }
+  return {
+    level: '🌱 初心可期',
+    desc: '养宠之路在于点滴积累。建议从定时喂食、每日梳毛开始，慢慢培养与爱宠的默契。',
+  };
+}
 
 export default function PetDietPage() {
-  const [petType, setPetType] = useState('dog');
+  const [answers, setAnswers] = useState<(number | null)[]>(Array(QUIZ_QUESTIONS.length).fill(null));
+  const [showResult, setShowResult] = useState(false);
 
-  const petTypes = [
-    { value: 'dog', label: '🐕 犬类' },
-    { value: 'cat', label: '🐱 猫类' },
-    { value: 'bird', label: '🐦 鸟类' },
-    { value: 'fish', label: '🐟 鱼类' },
-    { value: 'other', label: '🐢 其他' },
-  ];
+  const totalScore = answers.reduce<number>((sum, s) => sum + (s ?? 0), 0);
+  const result = getQuizResult(totalScore);
+  const allAnswered = answers.every((a) => a !== null);
+
+  const handleSelect = (qIdx: number, optIdx: number) => {
+    setAnswers((prev) => {
+      const next = [...prev];
+      next[qIdx] = optIdx;
+      return next;
+    });
+    setShowResult(false);
+  };
+
+  const handleSubmit = () => {
+    if (allAnswered) setShowResult(true);
+  };
+
+  const handleReset = () => {
+    setAnswers(Array(QUIZ_QUESTIONS.length).fill(null));
+    setShowResult(false);
+  };
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] py-12">
-      <div className="max-w-6xl mx-auto px-4">
+      <div className="max-w-5xl mx-auto px-4">
+        {/* —— 页头 —— */}
         <div className="text-center mb-12">
-          <h1 
+          <h1
             className="text-3xl font-bold mb-4"
             style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", color: '#D4AF37' }}
           >
-            饮食调理
+            衣食住行
           </h1>
-          <p className="text-[#808080]">科学喂养，健康成长，根据五行命理调理宠物饮食</p>
+          <p className="text-[#808080]">起居有度，健康相随 · 一份给爱宠的日常照护指南</p>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-3 mb-8">
-          {petTypes.map((type) => (
-            <button
-              key={type.value}
-              onClick={() => setPetType(type.value)}
-              className={`px-6 py-2 rounded-full border transition-all ${
-                petType === type.value
-                  ? 'border-[#D4AF37] bg-[#8B4513] text-[#D4AF37]'
-                  : 'border-[#333333] text-[#808080] hover:border-[#D4AF37]'
-              }`}
+        {/* —— 三张知识卡片 —— */}
+        <div className="grid md:grid-cols-3 gap-6 mb-12">
+          {CARE_GUIDES.map((guide) => (
+            <div
+              key={guide.id}
+              className="muxintang-card p-6 hover:border-[#D4AF37] transition-all"
             >
-              {type.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          {DIET_TIPS.map((tip) => (
-            <div key={tip.title} className="muxintang-card p-6">
-              <h3 
-                className="text-lg font-semibold mb-3"
-                style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", color: '#D4AF37' }}
-              >
-                {tip.title}
-              </h3>
-              <p className="text-[#C0C0C0] text-sm leading-relaxed">
-                {tip.content}
-              </p>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-3xl">{guide.icon}</span>
+                <div>
+                  <h3
+                    className="text-lg font-semibold"
+                    style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", color: '#D4AF37' }}
+                  >
+                    {guide.title}
+                  </h3>
+                  <p className="text-xs text-[#808080] mt-0.5">{guide.subtitle}</p>
+                </div>
+              </div>
+              <ul className="space-y-2.5">
+                {guide.points.map((point, i) => (
+                  <li key={i} className="text-sm text-[#C0C0C0] leading-relaxed flex gap-2">
+                    <span className="text-[#D4AF37] mt-0.5">✦</span>
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
         </div>
 
+        {/* —— 测一测养宠习惯 —— */}
         <div className="muxintang-card p-8">
-          <h2 
-            className="text-xl font-semibold mb-6"
-            style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", color: '#D4AF37' }}
-          >
-            ⏰ 时辰喂食法
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {FEEDING_SCHEDULE.map((item) => (
-              <div key={item.time} className="bg-[#242424] rounded-lg p-4 text-center">
-                <p className="text-[#D4AF37] font-semibold text-sm">{item.time}</p>
-                <p className="text-xs text-[#808080] mt-2">{item.desc}</p>
+          <div className="text-center mb-8">
+            <h2
+              className="text-xl font-semibold mb-2"
+              style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", color: '#D4AF37' }}
+            >
+              🔮 测一测养宠习惯
+            </h2>
+            <p className="text-sm text-[#808080]">五道小题，看看你与爱宠的日常默契如何</p>
+          </div>
+
+          <div className="space-y-8">
+            {QUIZ_QUESTIONS.map((item, qIdx) => (
+              <div key={qIdx}>
+                <p className="text-base font-medium text-[#C0C0C0] mb-3">
+                  <span className="text-[#D4AF37] mr-2">{qIdx + 1}.</span>
+                  {item.q}
+                </p>
+                <div className="grid md:grid-cols-3 gap-3">
+                  {item.options.map((opt, oIdx) => {
+                    const selected = answers[qIdx] === oIdx;
+                    return (
+                      <button
+                        key={oIdx}
+                        type="button"
+                        onClick={() => handleSelect(qIdx, oIdx)}
+                        className={`px-4 py-3 rounded-lg border text-sm text-left transition-all ${
+                          selected
+                            ? 'border-[#D4AF37] bg-[#8B4513]/30 text-[#D4AF37]'
+                            : 'border-[#333333] bg-[#242424] text-[#C0C0C0] hover:border-[#8B4513]'
+                        }`}
+                      >
+                        {opt.text}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             ))}
           </div>
-        </div>
 
-        <div className="mt-8 muxintang-card p-8">
-          <h2 
-            className="text-xl font-semibold mb-4"
-            style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", color: '#D4AF37' }}
-          >
-            🧪 饮食宜忌
-          </h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="text-[#D4AF37] font-medium mb-3">✅ 宜食</h3>
-              <ul className="space-y-2">
-                {['新鲜肉类', '蔬菜杂粮', '适量水果', '干净饮水'].map((item) => (
-                  <li key={item} className="text-[#C0C0C0] text-sm flex items-center gap-2">
-                    <span>✓</span> {item}
-                  </li>
-                ))}
-              </ul>
+          {/* —— 提交与结果 —— */}
+          <div className="mt-8 flex flex-col items-center gap-4">
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={!allAnswered}
+                className={`px-8 py-3 rounded-full text-sm font-medium transition-all ${
+                  allAnswered
+                    ? 'muxintang-btn'
+                    : 'bg-[#242424] text-[#606060] border border-[#333333] cursor-not-allowed'
+                }`}
+                style={allAnswered ? { fontFamily: "'Ma Shan Zheng', cursive, serif" } : undefined}
+              >
+                查看结果
+              </button>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="px-6 py-3 rounded-full text-sm border border-[#333333] text-[#808080] hover:bg-[#242424] transition-all"
+              >
+                重置
+              </button>
             </div>
-            <div>
-              <h3 className="text-red-400 font-medium mb-3">❌ 忌食</h3>
-              <ul className="space-y-2">
-                {['巧克力', '洋葱大蒜', '葡萄葡萄干', '过量盐分', '生肉生蛋'].map((item) => (
-                  <li key={item} className="text-[#C0C0C0] text-sm flex items-center gap-2">
-                    <span>✕</span> {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
+
+            {!allAnswered && (
+              <p className="text-xs text-[#808080]">请完成全部 5 道题后查看结果</p>
+            )}
+
+            {showResult && (
+              <div className="w-full mt-4 p-6 rounded-xl bg-[#242424] border border-[#8B4513] text-center">
+                <p
+                  className="text-2xl font-semibold mb-2"
+                  style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", color: '#D4AF37' }}
+                >
+                  {result.level}
+                </p>
+                <p className="text-sm text-[#808080] mb-4">总分：{totalScore} / 10</p>
+                <p className="text-sm text-[#C0C0C0] leading-relaxed max-w-xl mx-auto">
+                  {result.desc}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

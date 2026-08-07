@@ -11,23 +11,28 @@ export function MandalaHero() {
   return (
     <div
       aria-hidden
-      className="fixed inset-0 pointer-events-none -z-10 flex items-center justify-center overflow-hidden"
+      className="fixed inset-0 pointer-events-none flex items-center justify-center overflow-hidden"
+      style={{ zIndex: -1 }}
     >
       <motion.div
         className="absolute w-[120%] h-[120%] rounded-full bg-[#D4AF37]/5 blur-[80px]"
         animate={{
-          scale: [1, 1.05, 1],
+          scale: [0.98, 1.02, 0.98],
           opacity: [0.3, 0.5, 0.3],
         }}
         transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <div className="relative w-[600px] h-[600px] md:w-[800px] md:h-[800px] opacity-[0.15]">
-        
+      <motion.div
+        className="relative w-[600px] h-[600px] md:w-[800px] md:h-[800px] opacity-[0.25]"
+        animate={{ scale: [0.98, 1.02, 0.98] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+      >
+
         <motion.div
           {...ringCommon}
           animate={{ rotate: 360 }}
-          transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+          transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
         >
           <svg viewBox="0 0 100 100" className="w-full h-full fill-none stroke-[#D4AF37] stroke-[0.5]">
             <circle cx="50" cy="50" r="48" />
@@ -80,7 +85,7 @@ export function MandalaHero() {
         >
           <div className="w-4 h-4 rounded-full bg-[#D4AF37]/60 blur-[2px]" />
         </motion.div>
-      </div>
+      </motion.div>
     </div>
   );
 }

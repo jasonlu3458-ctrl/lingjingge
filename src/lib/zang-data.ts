@@ -51,3 +51,32 @@ export const CLASSIC_PAGES: ClassicPageRef[] = [
   { category: 'huineng', slug: 'liu-zu-tan-jing' },
   { category: 'zhouwenwang', slug: 'yi-jing-overview' },
 ];
+
+/**
+ * 根据 category 列出该分类下的所有文章（仅做轻量映射：URL slug -> 中文作者名 -> mock 数据）。
+ * 用于详情页底部 RelatedReadings 推荐阅读。
+ */
+export function getArticlesByCategory(category: string): Article[] {
+  const slugToAuthor: Record<string, string> = {
+    laozi: '老子',
+    huineng: '慧能',
+    shijiamouni: '释迦牟尼',
+    zhouwenwang: '周文王',
+  };
+  const author = slugToAuthor[category];
+  if (!author) return [];
+
+  if (category === 'laozi') {
+    return mockDaoDeJing;
+  }
+  // 其他分类的 mock 兜底（与 [category]/page.tsx 保持一致）
+  const others: Record<string, Article[]> = {
+    huineng: [{ id: 'lztj1', slug: 'liu-zu-tan-jing', title: '六祖坛经', content: '六祖坛经是禅宗六祖慧能所说，由弟子法海集录，是禅宗根本经典之一。', source: '慧能', category: 'classics', created_at: '2024-02-01T00:00:00Z' }],
+    shijiamouni: [
+      { id: 'jgj1', slug: 'jin-gang-jing', title: '金刚经', content: '《金刚般若波罗蜜经》是大乘佛教般若系统的重要经典。', source: '释迦牟尼', category: 'classics', created_at: '2024-03-01T00:00:00Z' },
+      { id: 'xj1', slug: 'xin-jing', title: '心经', content: '《般若波罗蜜多心经》是般若经系列中极为简短的经典。', source: '释迦牟尼', category: 'classics', created_at: '2024-03-15T00:00:00Z' },
+    ],
+    zhouwenwang: [{ id: 'yj1', slug: 'yi-jing-overview', title: '易经·总述', content: '《易经》是阐述天地万物变化的古老经典，是群经之首。', source: '周文王', category: 'classics', created_at: '2024-04-01T00:00:00Z' }],
+  };
+  return others[category] ?? [];
+}

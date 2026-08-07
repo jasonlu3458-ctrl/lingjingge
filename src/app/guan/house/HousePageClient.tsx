@@ -270,7 +270,7 @@ function HouseReportView({
 }) {
   // 5 张免费卡的元数据
   const freeMeta = [
-    { key: 'gua',      meta: { icon: '☯',  subtitle: '命理总览',     tone: THEME_SECONDARY } },
+    { key: 'gua',      meta: { icon: '☯',  subtitle: '能量总览',     tone: THEME_SECONDARY } },
     { key: 'goodDir',  meta: { icon: '✨', subtitle: '4 大吉方',     tone: '#16a34a' } },
     { key: 'badDir',   meta: { icon: '⚠️', subtitle: '4 大凶方',     tone: '#b91c1c' } },
     { key: 'door',     meta: { icon: '🚪', subtitle: '大门方位诊断', tone: THEME_PRIMARY } },

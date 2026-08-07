@@ -81,6 +81,11 @@ const TYPED_KEYS: Record<string, string | undefined> = {
   'meditation':     key('DIFY_MEDITATION_API_KEY',     'NEXT_PUBLIC_DIFY_MEDITATION_API_KEY'),
   'healing':        key('DIFY_HEALING_API_KEY',        'NEXT_PUBLIC_DIFY_HEALING_API_KEY'),
   'light-solution': key('DIFY_LIGHT_SOLUTION_API_KEY', 'NEXT_PUBLIC_DIFY_LIGHT_SOLUTION_API_KEY'),
+  // 问道新增 5 项 (wen/ 9 宫格第三批)
+  'tuibei':         key('DIFY_TUIBEI_API_KEY',         'NEXT_PUBLIC_DIFY_TUIBEI_API_KEY'),
+  'astrology':      key('DIFY_ASTROLOGY_API_KEY',      'NEXT_PUBLIC_DIFY_ASTROLOGY_API_KEY'),
+  'zodiac':         key('DIFY_ZODIAC_API_KEY',         'NEXT_PUBLIC_DIFY_ZODIAC_API_KEY'),
+  'dream':          key('DIFY_DREAM_API_KEY',          'NEXT_PUBLIC_DIFY_DREAM_API_KEY'),
   // 观心 (guan/)
   'health':         key('DIFY_HEALTH_API_KEY',         'NEXT_PUBLIC_DIFY_HEALTH_API_KEY'),
   'mingli':         key('DIFY_MINGLI_API_KEY',         'NEXT_PUBLIC_DIFY_MINGLI_API_KEY'),
@@ -102,6 +107,11 @@ const TYPED_KEYS: Record<string, string | undefined> = {
   'community':         key('DIFY_COMMUNITY_API_KEY',         'NEXT_PUBLIC_DIFY_COMMUNITY_API_KEY'),
   // 牧心堂专属 (muxintang)
   'muxintang':         key('DIFY_MUXINTANG_API_KEY',         'NEXT_PUBLIC_DIFY_MUXINTANG_API_KEY'),
+  // 牧心堂 6 工具（无专属 key 时回落到 GLOBAL_FALLBACK_KEY）
+  'chooseday':         key('DIFY_CHOOSEDAY_API_KEY',         'NEXT_PUBLIC_DIFY_CHOOSEDAY_API_KEY'),
+  'trend':             key('DIFY_TREND_API_KEY',             'NEXT_PUBLIC_DIFY_TREND_API_KEY'),
+  'match':             key('DIFY_MATCH_API_KEY',             'NEXT_PUBLIC_DIFY_MATCH_API_KEY'),
+  'habitat':           key('DIFY_HABITAT_API_KEY',           'NEXT_PUBLIC_DIFY_HABITAT_API_KEY'),
 };
 
 const GLOBAL_FALLBACK_KEY =

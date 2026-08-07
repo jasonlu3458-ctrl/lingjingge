@@ -15,20 +15,56 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  */
 
 const STORAGE_KEY = 'zen:ambient:enabled';
-const SRC = '/audio/zen-ambient.mp3';
+const STORAGE_TENANT_KEY = 'zen:ambient:tenant';
+
+/** 不同租户加载不同禅音源（听觉体验随站点切换） */
+const AUDIO_SRC: Record<string, string> = {
+  lingjingge: '/audio/zen-ambient.mp3',        // 主站：古琴 + 流水
+  muxintang: '/audio/zen-muxintang.mp3',      // 牧心堂：颂钵 + 唐密底噪
+};
+const DEFAULT_SRC = '/audio/zen-ambient.mp3';
 const VOLUME = 0.35;
+
+/** 根据路径或 cookie 推算租户 */
+function detectTenant(): 'muxintang' | 'lingjingge' {
+  if (typeof window === 'undefined') return 'lingjingge';
+  const path = window.location.pathname;
+  if (path.startsWith('/muxintang')) return 'muxintang';
+  // cookie 兜底（中间件写入）
+  const cookieTenant = document.cookie
+    .split(';')
+    .map((s) => s.trim())
+    .find((s) => s.startsWith('tenant_id='))
+    ?.split('=')[1];
+  if (cookieTenant === 'muxintang') return 'muxintang';
+  return 'lingjingge';
+}
 
 // 模块级共享 <audio>：路由切换不中断播放
 let _audio: HTMLAudioElement | null = null;
+let _audioTenant: string | null = null;
 function getAudio(): HTMLAudioElement {
   if (typeof window === 'undefined') {
     return { pause() {}, play() {}, src: '' } as any;
   }
+  const tenant = detectTenant();
+  const src = AUDIO_SRC[tenant] || DEFAULT_SRC;
   if (!_audio) {
-    _audio = new Audio(SRC);
+    _audio = new Audio(src);
     _audio.loop = true;
     _audio.preload = 'auto';
     _audio.volume = VOLUME;
+    _audioTenant = tenant;
+  } else if (_audioTenant !== tenant) {
+    // 跨站点切换：换音源
+    const wasPaused = _audio.paused;
+    _audio.pause();
+    _audio.src = src;
+    _audio.load();
+    _audioTenant = tenant;
+    if (!wasPaused) {
+      _audio.play().catch(() => undefined);
+    }
   }
   return _audio;
 }

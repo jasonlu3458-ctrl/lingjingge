@@ -160,7 +160,7 @@ export default function HomePage() {
               </p>
             </div>
             <Link
-              href="/wen/chan/ai-zen-master"
+              href="/wen/zen"
               className="flex-shrink-0 h-10 px-5 inline-flex items-center justify-center bg-[#1a1a1a] text-white rounded-full text-sm font-medium hover:bg-[#2c2c2c] transition-colors"
               style={{ fontFamily: "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif", letterSpacing: '1px' }}
             >
@@ -171,7 +171,7 @@ export default function HomePage() {
           {/* ③ 四张卡片：解惑 / 内观 / 藏经 / 同修 —— 移动 1 列，md 2 列，lg 4 列 */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             {/* 解惑 · AI 禅师 */}
-            <Link href="/wen/chan/ai-zen-master" className="group">
+            <Link href="/wen/zen" className="group">
               <div className="h-full w-full bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 flex flex-col">
                 <div className="flex justify-center mb-3">
                   <ZenAvatar size={48} opacity={0.25} />

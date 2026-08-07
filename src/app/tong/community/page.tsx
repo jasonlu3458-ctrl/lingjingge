@@ -93,14 +93,51 @@ export default function CommunityPage() {
     setLoading(true);
     setError(null);
 
+    // 兜底：把 mock 种子数据映射成 DisplayPost[] 供 catch 兜底用
+    const buildFromMockTopics = (mockTopics: Array<{
+      id: number; user_id: string | null; title: string; content: string;
+      tag: string | null; is_pinned: boolean | null; is_daily: boolean | null;
+      is_weekly: boolean | null; is_guide: boolean | null;
+      parent_topic_id: number | null; is_ai_reply: boolean | null; created_at: string;
+    }>): DisplayPost[] => {
+      // 子回帖统计
+      const childMap = new Map<number, number>();
+      for (const t of mockTopics) {
+        if (t.parent_topic_id != null) {
+          childMap.set(t.parent_topic_id, (childMap.get(t.parent_topic_id) || 0) + 1);
+        }
+      }
+      const result: DisplayPost[] = [];
+      let daily: DisplayPost | null = null;
+      let weekly: DisplayPost | null = null;
+      let guide: DisplayPost | null = null;
+      for (const row of mockTopics) {
+        if (row.parent_topic_id != null) continue; // 只取主帖
+        const dp = mapToDisplayPost(row as TopicRow, childMap.get(row.id) || 0);
+        if (row.is_daily && !daily) daily = dp;
+        else if (row.is_weekly && !weekly) weekly = dp;
+        else if (row.is_guide && !guide) guide = dp;
+        else result.push(dp);
+      }
+      setDailyPost(daily);
+      setWeeklyPost(weekly);
+      setGuidePost(guide);
+      return result;
+    };
+
+    // 1) 浏览器未配置 Supabase：直接走 mock 兜底（避免空白页）
     if (!isSupabaseConfigured()) {
+      console.warn('[community] Supabase 未配置，使用本地 mock 数据兜底');
+      const seed = seedTopics();
+      setPosts(buildFromMockTopics(seed.topics));
       setError('Supabase 未配置，正在显示示例数据。');
       setLoading(false);
       return;
     }
 
+    // 2) 已配置但 fetch 失败：catch 中用 seedTopics 兜底 + 友好 console.error
     try {
-      // 1) 拉所有主帖（parent_topic_id is null）
+      // 2.1) 拉所有主帖（parent_topic_id is null）
       const { data: rows, error: qErr } = await supabase
         .from('topics')
         .select('id,user_id,title,content,tag,is_pinned,is_daily,is_weekly,is_guide,parent_topic_id,is_ai_reply,created_at')
@@ -114,9 +151,9 @@ export default function CommunityPage() {
         return;
       }
 
-      // 2) 拉每条主帖的回帖数
+      // 2.2) 拉每条主帖的回帖数
       const ids = rows.map((r: TopicRow) => r.id);
-      let childCountMap = new Map<number, number>();
+      const childCountMap = new Map<number, number>();
       if (ids.length > 0) {
         const { data: children, error: cErr } = await supabase
           .from('topics')
@@ -131,7 +168,7 @@ export default function CommunityPage() {
         }
       }
 
-      // 3) 分类
+      // 2.3) 分类
       let daily: DisplayPost | null = null;
       let weekly: DisplayPost | null = null;
       let guide: DisplayPost | null = null;
@@ -139,7 +176,6 @@ export default function CommunityPage() {
 
       for (const row of rows as TopicRow[]) {
         const dp = mapToDisplayPost(row, childCountMap.get(row.id) || 0);
-        // 优先取最新一条
         if (row.is_daily && !daily) daily = dp;
         else if (row.is_weekly && !weekly) weekly = dp;
         else if (row.is_guide && !guide) guide = dp;
@@ -151,7 +187,22 @@ export default function CommunityPage() {
       setGuidePost(guide);
       setPosts(normal);
     } catch (e) {
-      setError(e instanceof Error ? e.message : '加载失败');
+      // 兜底：fetch 失败时回退到 seedTopics 数据 + 友好日志
+      const msg = e instanceof Error ? e.message : '加载失败';
+      console.error('[community] 数据获取失败，已回退到本地示例数据:', msg);
+      try {
+        const seed = seedTopics();
+        setPosts(buildFromMockTopics(seed.topics));
+        setError(`网络异常（${msg}），已显示本地示例数据。`);
+      } catch (mockErr) {
+        // 极端兜底：mock 失败时返回空数组
+        console.error('[community] 连 mock 数据也加载失败，返回空数组:', mockErr);
+        setDailyPost(null);
+        setWeeklyPost(null);
+        setGuidePost(null);
+        setPosts([]);
+        setError(`网络异常（${msg}），暂无数据。`);
+      }
     } finally {
       setLoading(false);
     }

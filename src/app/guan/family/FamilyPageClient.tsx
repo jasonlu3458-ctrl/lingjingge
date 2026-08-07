@@ -450,7 +450,7 @@ export default function FamilyPageClient({ userRole }: FamilyPageClientProps) {
               </h2>
               {isSingle ? (
                 <p className="text-sm text-gray-500 mt-1" style={{ fontFamily: FONT_KAI }}>
-                  八字：<span className="text-rose-700">{report.selfBazi.yearGanzhi} {report.selfBazi.monthGanzhi} {report.selfBazi.dayGanzhi}</span>
+                  天赋画像：<span className="text-rose-700">{report.selfBazi.yearGanzhi} {report.selfBazi.monthGanzhi} {report.selfBazi.dayGanzhi}</span>
                   <span className="ml-2 text-gray-400">（{report.selfBazi.fiveElement}）</span>
                   {report.personal && (
                     <span className="ml-2 px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-xs">

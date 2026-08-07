@@ -16,6 +16,10 @@
  */
 
 import { Solar } from 'lunar-javascript';
+import {
+  STEM_TO_ELEMENT as STEM_ELEMENTS,
+  BRANCH_TO_ELEMENT as BRANCH_ELEMENTS,
+} from '@/lib/engines/bazi-core';
 
 export interface BaziInput {
   year: number;
@@ -52,22 +56,6 @@ const DEITY_MAP: Record<string, string> = {
   辛: '普贤菩萨',
   壬: '地藏菩萨',
   癸: '观世音菩萨',
-};
-
-const STEM_ELEMENTS: Record<string, string> = {
-  甲: '木', 乙: '木',
-  丙: '火', 丁: '火',
-  戊: '土', 己: '土',
-  庚: '金', 辛: '金',
-  壬: '水', 癸: '水',
-};
-
-const BRANCH_ELEMENTS: Record<string, string> = {
-  子: '水', 亥: '水',
-  寅: '木', 卯: '木',
-  巳: '火', 午: '火',
-  申: '金', 酉: '金',
-  辰: '土', 戌: '土', 丑: '土', 未: '土',
 };
 
 const STEM_GODS: Record<string, Record<string, string>> = {

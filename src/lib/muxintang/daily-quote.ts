@@ -8,7 +8,7 @@
  *   - 每句有 source 引用：阿阇梨 / 经典 / 弟子感悟
  *
  * 复用：
- *   - /api/cron/daily-digest 用 getDailyQuote(date) 拿当天的句子
+ *   - 推送服务 / 晨间定时任务可调用 getDailyQuote(date) 拿当天的句子
  *   - 后续可扩展为 Dify 实时生成（当前用静态词库零成本）
  */
 

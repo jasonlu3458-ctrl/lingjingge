@@ -6,6 +6,7 @@
 // ============================================================
 
 import { Solar } from 'lunar-javascript';
+import { STEM_TO_ELEMENT, ELEMENT_COLOR } from '@/lib/engines/bazi-core';
 
 export type Gender = 'female' | 'male';
 
@@ -17,22 +18,8 @@ export interface LifeCodeInput {
   calendarType: 'solar' | 'lunar';
 }
 
-// ---------- 五行基础数据 ----------
-const STEM_TO_ELEMENT: Record<string, '木' | '火' | '土' | '金' | '水'> = {
-  甲: '木', 乙: '木',
-  丙: '火', 丁: '火',
-  戊: '土', 己: '土',
-  庚: '金', 辛: '金',
-  壬: '水', 癸: '水',
-};
-
-const ELEMENT_COLOR: Record<string, string> = {
-  木: '青、绿',
-  火: '红、紫',
-  土: '黄、咖',
-  金: '白、银、金',
-  水: '黑、蓝',
-};
+// ---------- 五行基础数据（已抽到 src/lib/engines/bazi-core.ts 共享） ----------
+// STEM_TO_ELEMENT 与 ELEMENT_COLOR 复用跨租户共享层，避免与牧心堂 bazi-engine 重复定义
 
 // ---------- 10 种核心人格（日干 → 人格映射） ----------
 const STEM_TO_PERSONALITY: Record<string, {

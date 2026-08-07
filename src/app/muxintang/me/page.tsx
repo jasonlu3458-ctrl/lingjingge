@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useUserRole } from '@/hooks/useUserRole';
 import AcharyaDashboard from '@/components/muxintang/AcharyaDashboard';
+import AchievementBadges from '@/components/shared/AchievementBadges';
 import Link from 'next/link';
 
 const USER_MENU = [
@@ -104,6 +105,10 @@ export default function MePage() {
           </div>
         </div>
 
+        <div className="mb-8">
+          <AchievementBadges theme="muxintang" />
+        </div>
+
         <div className="muxintang-card p-6 mb-8">
           <div className="flex items-center justify-between mb-4">
             <h3 
@@ -120,7 +125,11 @@ export default function MePage() {
             onClick={async () => {
               setGeneratingYearbook(true);
               try {
-                const res = await fetch('/api/yimi/generate-chronicle', { method: 'POST' });
+                const res = await fetch('/api/yimi/generate-chronicle', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ type: 'yearly' }),
+                });
                 const data = await res.json();
                 if (data.success) {
                   setYearbookContent(data.chronicle || '年度修行报告生成成功');
@@ -138,27 +147,52 @@ export default function MePage() {
             {generatingYearbook ? (
               <>⏳ 生成中...</>
             ) : (
-              <>📅 生成我的修行年鉴</>
+              <>📖 生成我的修行年鉴</>
             )}
           </button>
-          
+
           {yearbookContent && (
-            <div className="mt-6 p-4 bg-[#1a1a1a] rounded-xl border border-[#D4AF37]/30">
+            <div className="mt-6 p-5 bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] rounded-xl border border-[#D4AF37]/30">
+              <div className="text-xs tracking-widest text-[#D4AF37]/80 mb-2">✦ {new Date().getFullYear()} 年度觉知报告</div>
               <p className="text-[#C0C0C0] text-sm leading-relaxed whitespace-pre-wrap">{yearbookContent}</p>
-              <button
-                onClick={() => {
-                  const blob = new Blob([yearbookContent], { type: 'text/html' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `牧心堂_修行年鉴_${new Date().getFullYear()}.txt`;
-                  a.click();
-                  URL.revokeObjectURL(url);
-                }}
-                className="mt-4 text-[#D4AF37] text-sm hover:underline"
-              >
-                📥 下载报告
-              </button>
+              <div className="mt-4 flex gap-3 flex-wrap">
+                <button
+                  onClick={() => {
+                    const blob = new Blob([yearbookContent], { type: 'text/html' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `牧心堂_修行年鉴_${new Date().getFullYear()}.txt`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="text-[#D4AF37] text-sm hover:underline"
+                >
+                  📥 下载 .txt
+                </button>
+                <button
+                  onClick={() => {
+                    // 简单打印到 PDF：使用 window.print() 触发浏览器原生 PDF 导出
+                    const printWin = window.open('', '_blank');
+                    if (!printWin) return;
+                    const html = `<!doctype html><html><head><meta charset="utf-8"><title>修行年鉴</title><style>
+                      body { font-family: 'Ma Shan Zheng', 'STKaiti', serif; padding: 40px; line-height: 1.8; color: #2c2c2c; max-width: 720px; margin: 0 auto; }
+                      h1 { color: #b88a4a; border-bottom: 2px solid #b88a4a; padding-bottom: 12px; }
+                      .footer { margin-top: 40px; text-align: center; color: #888; font-size: 12px; }
+                    </style></head><body>
+                      <h1>牧心堂 · ${new Date().getFullYear()} 修行年鉴</h1>
+                      <pre style="white-space: pre-wrap; font-family: inherit;">${yearbookContent.replace(/</g, '&lt;')}</pre>
+                      <div class="footer">— 心之所向，牧之以道 —</div>
+                    </body></html>`;
+                    printWin.document.write(html);
+                    printWin.document.close();
+                    setTimeout(() => printWin.print(), 300);
+                  }}
+                  className="text-[#D4AF37] text-sm hover:underline"
+                >
+                  🖨 导出 PDF
+                </button>
+              </div>
             </div>
           )}
         </div>

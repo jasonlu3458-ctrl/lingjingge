@@ -28,16 +28,6 @@ const CARDS: Card[] = [
     accent: 'text-blue-700',
   },
   {
-    title: '每日话题',
-    href: '/tong/daily-topic',
-    icon: '☀️',
-    tagline: '今天的话头、当下的一念。',
-    border: 'border-amber-200',
-    iconBg: 'bg-amber-100',
-    accent: 'text-amber-700',
-    badge: '每日更新',
-  },
-  {
     title: '个人中心',
     href: '/tong/profile',
     icon: '🏠',

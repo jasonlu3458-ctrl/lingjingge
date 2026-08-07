@@ -30,11 +30,27 @@ const nextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128],
     minimumCacheTTL: 60,
-    domains: ['trae-api-cn.mchost.guru'],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'trae-api-cn.mchost.guru' },
+    ],
   },
   compress: true,
   poweredByHeader: false,
   generateEtags: true,
+  async redirects() {
+    // ============================================================
+    // /wen/ 扁平化路由的 301 永久重定向
+    //   2026-07-30 重构：将 wen/chan/ai-zen-master → wen/zen 等
+    //   改 next.config.js 的 redirects()，发真正的 HTTP 301；
+    //   改 rewrites() 不会发 301，只做内部 rewrite（URL 栏不变），
+    //   搜索索引不会更新，反而对 SEO 有害。
+    // ============================================================
+    return [
+      { source: '/wen/chan/ai-zen-master', destination: '/wen/zen', permanent: true },
+      { source: '/wen/liao/mind',           destination: '/wen/heal', permanent: true },
+      { source: '/wen/yi/yili',             destination: '/wen/yili', permanent: true },
+    ];
+  },
   async headers() {
     // dev 模式禁用 _next/static 强缓存
     // 因为 NEXT_PUBLIC_* 变量会随 .env.local 变化而变化，

@@ -73,6 +73,32 @@ export interface PageConfig {
       premium: string[];
     };
   };
+  /**
+   * 新手引导快捷提问：进入对话时在欢迎语下方显示 3 张可点击卡片。
+   * 适用纯对话模式（无 formConfig）且消息列表为空时。
+   */
+  initialSuggestions?: string[];
+  /**
+   * 交互模式（P0 · 2026-08-05）：
+   *  - 'chat-only'      纯陪伴：维持现状（极简单聊）
+   *  - 'click-to-reveal' 盲盒触达：进入即大按钮，点击后动画 + 结果，再展开对话
+   *  - 'form-first'      深度咨询：先填表，提交后展示报告卡，底部才出现对话
+   * 未配置默认 'chat-only'，向后兼容现有页面
+   */
+  interactionMode?: 'chat-only' | 'click-to-reveal' | 'form-first';
+  /**
+   * 盲盒触达模式下的视觉资源（仅当 interactionMode === 'click-to-reveal' 时使用）
+   */
+  blindBoxConfig?: {
+    /** 动画类型 */
+    type: 'shake' | 'flip' | 'spin' | 'glow';
+    /** 入口按钮文案 */
+    buttonLabel: string;
+    /** 按钮下的小字提示 */
+    hint?: string;
+    /** 居中占位图（点击前） */
+    placeholderImage?: string;
+  };
 }
 
 interface Message {
@@ -85,9 +111,15 @@ interface ChatUIProps {
   config: PageConfig;
   userRole?: UserRole;
   acharyaId?: string;
+  /**
+   * 初始消息列表（用于盲盒/填表模式给 AI 提前一个"触发语"）。
+   * 如果提供：会作为历史消息显示在聊天区，模拟"已经聊过"。
+   * 默认 undefined：走正常的欢迎语逻辑。
+   */
+  initialMessages?: Array<{ role: 'user' | 'assistant'; content: string }>;
 }
 
-export default function ChatUI({ config, userRole = 'free', acharyaId }: ChatUIProps) {
+export default function ChatUI({ config, userRole = 'free', acharyaId, initialMessages }: ChatUIProps) {
   const { used, limit, remaining, isExempt, canSend, trySend, mounted } = useFreeTurns(config.difyType, userRole);
   // 同意弹窗：未同意时开屏显示，同意后写 localStorage 不再弹
   // - requireConsent !== false 才弹（默认 true），藏经阁原文等非关键页面跳过
@@ -116,7 +148,17 @@ export default function ChatUI({ config, userRole = 'free', acharyaId }: ChatUIP
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config.pendingMessage, showConsent]);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    // 优先用 initialMessages（盲盒/填表模式注入历史消息，模拟"已经聊过"）
+    if (initialMessages && initialMessages.length > 0) {
+      return initialMessages.map((m, i) => ({
+        id: Date.now() + i,
+        role: m.role,
+        content: m.content,
+      }));
+    }
+    return [];
+  });
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [chatInput, setChatInput] = useState<string>('');
   const [isTyping, setIsTyping] = useState(false);
@@ -650,6 +692,19 @@ export default function ChatUI({ config, userRole = 'free', acharyaId }: ChatUIP
     await handleSend(userMessage, {});
   };
 
+  /**
+   * 新手引导快捷提问：点击预设卡片后填入输入框并立即发送（模拟回车）。
+   * 仅在纯对话模式 + 消息列表为空时有效。
+   */
+  const handleSuggestionClick = async (text: string) => {
+    if (isTyping || messages.length > 0) return;
+    setChatInput(text);
+    setShowForm(false);
+    // 等 setState 生效后再发送（与手动回车保持一致）
+    await new Promise((r) => setTimeout(r, 0));
+    await handleSend(text, {});
+  };
+
   // 如果有 meditationConfig，渲染状态选择界面
   if (config.meditationConfig && !guideText) {
     return (
@@ -768,6 +823,29 @@ export default function ChatUI({ config, userRole = 'free', acharyaId }: ChatUIP
             {config.welcomeMessage}
           </p>
         </div>
+
+        {/* 新手引导快捷提问卡片：仅纯对话模式 + 首次进入时显示 */}
+        {isPureChatMode && showForm && messages.length === 0 && config.initialSuggestions && config.initialSuggestions.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+            {config.initialSuggestions.slice(0, 3).map((s, idx) => {
+              const icons = ['🌱', '🔮', '✨', '🪷', '🧘'];
+              return (
+                <button
+                  key={`${s}-${idx}`}
+                  type="button"
+                  onClick={() => handleSuggestionClick(s)}
+                  disabled={isTyping}
+                  className="group flex flex-col items-start gap-2 p-4 bg-white bg-opacity-80 backdrop-blur-sm rounded-lg border border-gray-200 hover:border-amber-400 hover:shadow-md transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}
+                >
+                  <span className="text-xl" aria-hidden>{icons[idx % icons.length]}</span>
+                  <span className="text-sm text-gray-800 leading-relaxed">{s}</span>
+                  <span className="text-[10px] text-amber-600 group-hover:text-amber-800 transition-colors">点击提问 →</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* 错误提示 */}
         {error && (

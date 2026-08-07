@@ -1,138 +1,190 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 export default function PetLiberationPage() {
   const [formData, setFormData] = useState({
-    type: 'fish',
-    quantity: 1,
-    location: '',
+    ownerName: '',
+    petName: '',
     wish: '',
   });
   const [submitted, setSubmitted] = useState(false);
 
-  const liberationTypes = [
-    { value: 'fish', label: '鱼类放生', icon: '🐟', desc: '放生鱼类，积善积德' },
-    { value: 'bird', label: '鸟类放生', icon: '🕊️', desc: '放生鸟类，祈福平安' },
-    { value: 'turtle', label: '龟类放生', icon: '🐢', desc: '放生灵龟，延年益寿' },
-    { value: 'other', label: '其他', icon: '🦜', desc: '其他生灵放生' },
-  ];
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.ownerName.trim() || !formData.petName.trim()) return;
     setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
+  };
+
+  const handleReset = () => {
+    setSubmitted(false);
+    setFormData({ ownerName: '', petName: '', wish: '' });
   };
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] py-12">
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-3xl mx-auto px-4">
+        {/* —— 页头 —— */}
         <div className="text-center mb-12">
-          <h1 
+          <h1
             className="text-3xl font-bold mb-4"
             style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", color: '#D4AF37' }}
           >
-            积德行善
+            爱宠超度
           </h1>
-          <p className="text-[#808080]">放生祈福，积累福报，为您和家人带来好运</p>
+          <p className="text-[#808080]">慈悲为怀 · 愿逝去的小灵魂安息往生</p>
         </div>
 
+        {/* —— 祈福文 —— */}
         <div className="muxintang-card p-8 mb-8">
-          <h2 
-            className="text-xl font-semibold mb-4"
+          <h2
+            className="text-xl font-semibold mb-4 text-center"
             style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", color: '#D4AF37' }}
           >
-            📜 放生功德
+            🪷 祈 福 文
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { label: '延寿', desc: '放生可延寿三年' },
-              { label: '消灾', desc: '消除宿世业障' },
-              { label: '招财', desc: '积累财富福报' },
-              { label: '平安', desc: '家人平安健康' },
-            ].map((item) => (
-              <div key={item.label} className="bg-[#242424] rounded-lg p-4 text-center">
-                <p className="text-[#D4AF37] font-semibold">{item.label}</p>
-                <p className="text-xs text-[#808080] mt-1">{item.desc}</p>
-              </div>
-            ))}
+          <div className="text-[#C0C0C0] leading-loose text-center space-y-3">
+            <p>
+              天地有常，生亦有涯。
+              <br />
+              曾伴我左右，温热柔软，
+              <br />
+              今归太虚，愿往生净土，离苦得乐。
+            </p>
+            <p>
+              一灯一香一念心，
+              <br />
+              回向于此小灵魂，
+              <br />
+              愿三宝加持，永离轮回，得生善道。
+            </p>
+            <p className="text-sm text-[#808080] pt-2">
+              —— 牧心堂 · 为爱宠祈福
+            </p>
           </div>
         </div>
 
-        <div className="muxintang-card p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm text-[#C0C0C0] mb-3">放生类型</label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {liberationTypes.map((type) => (
-                  <button
-                    key={type.value}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, type: type.value })}
-                    className={`p-4 rounded-lg border transition-all text-center ${
-                      formData.type === type.value
-                        ? 'border-[#D4AF37] bg-[#242424]'
-                        : 'border-[#333333] bg-[#1a1a1a]'
-                    }`}
-                  >
-                    <span className="text-2xl mb-2 block">{type.icon}</span>
-                    <p className="text-[#D4AF37] font-medium text-sm">{type.label}</p>
-                    <p className="text-xs text-[#808080] mt-1">{type.desc}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
+        {/* —— 登记表单 / 已提交回执 —— */}
+        {!submitted ? (
+          <div className="muxintang-card p-8">
+            <h2
+              className="text-lg font-semibold mb-2"
+              style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", color: '#D4AF37' }}
+            >
+              📝 祈福登记
+            </h2>
+            <p className="text-sm text-[#808080] mb-6">
+              请填写善信与爱宠信息，我们将为您在心中点亮一盏回向之灯
+            </p>
 
-            <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-sm text-[#C0C0C0] mb-2">放生数量</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={999}
-                  value={formData.quantity}
-                  onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })}
-                  className="w-full bg-[#242424] border border-[#333333] rounded-lg px-4 py-3 text-white focus:border-[#D4AF37] focus:outline-none transition-colors"
-                  placeholder="请输入数量"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-[#C0C0C0] mb-2">放生地点</label>
+                <label className="block text-sm text-[#C0C0C0] mb-2">
+                  善信姓名 <span className="text-red-400">*</span>
+                </label>
                 <input
                   type="text"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  required
+                  value={formData.ownerName}
+                  onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
                   className="w-full bg-[#242424] border border-[#333333] rounded-lg px-4 py-3 text-white focus:border-[#D4AF37] focus:outline-none transition-colors"
-                  placeholder="如：西湖、太湖、当地寺庙"
+                  placeholder="请输入您的姓名"
                 />
               </div>
+
+              <div>
+                <label className="block text-sm text-[#C0C0C0] mb-2">
+                  爱宠姓名 <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.petName}
+                  onChange={(e) => setFormData({ ...formData, petName: e.target.value })}
+                  className="w-full bg-[#242424] border border-[#333333] rounded-lg px-4 py-3 text-white focus:border-[#D4AF37] focus:outline-none transition-colors"
+                  placeholder="请输入爱宠的名字"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-[#C0C0C0] mb-2">祈福寄语</label>
+                <textarea
+                  value={formData.wish}
+                  onChange={(e) => setFormData({ ...formData, wish: e.target.value })}
+                  rows={4}
+                  className="w-full bg-[#242424] border border-[#333333] rounded-lg px-4 py-3 text-white focus:border-[#D4AF37] focus:outline-none transition-colors resize-none"
+                  placeholder="写下您对爱宠的思念与祝福（可选）"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="muxintang-btn w-full py-4 text-lg"
+                style={{ letterSpacing: '2px' }}
+              >
+                确认登记祈福
+              </button>
+            </form>
+          </div>
+        ) : (
+          <div className="muxintang-card p-8">
+            <div className="text-center mb-6">
+              <div className="text-5xl mb-4">🪷</div>
+              <h2
+                className="text-2xl font-semibold mb-2"
+                style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", color: '#D4AF37' }}
+              >
+                祈福已登记
+              </h2>
+              <p className="text-sm text-[#808080]">
+                愿 <span className="text-[#D4AF37] font-medium">{formData.petName}</span> 往生善道，永离轮回
+              </p>
             </div>
 
-            <div>
-              <label className="block text-sm text-[#C0C0C0] mb-2">祈福心愿</label>
-              <textarea
-                value={formData.wish}
-                onChange={(e) => setFormData({ ...formData, wish: e.target.value })}
-                rows={3}
-                className="w-full bg-[#242424] border border-[#333333] rounded-lg px-4 py-3 text-white focus:border-[#D4AF37] focus:outline-none transition-colors resize-none"
-                placeholder="请输入您的祈福心愿（可选）"
-              />
+            <div className="bg-[#242424] rounded-lg p-5 mb-6 space-y-2 text-sm text-[#C0C0C0]">
+              <p>
+                <span className="text-[#808080]">善信：</span>
+                {formData.ownerName}
+              </p>
+              <p>
+                <span className="text-[#808080]">爱宠：</span>
+                {formData.petName}
+              </p>
+              {formData.wish && (
+                <p>
+                  <span className="text-[#808080]">寄语：</span>
+                  {formData.wish}
+                </p>
+              )}
             </div>
 
-            <button
-              type="submit"
-              className="muxintang-btn w-full py-4 text-lg"
-            >
-              {submitted ? '功德已积累' : '确认放生'}
-            </button>
-          </form>
-
-          {submitted && (
-            <div className="mt-4 p-4 bg-green-900/30 border border-green-700/50 rounded-lg text-center">
-              <p className="text-green-400">🙏 放生功德已记录！愿您福寿安康，万事顺遂</p>
+            <div className="text-center mb-6">
+              <p className="text-sm text-[#C0C0C0] leading-relaxed">
+                若您希望为爱宠正式请奉往生牌位，
+                <br />
+                可前往吉祥馆，由专人协助安置供奉。
+              </p>
             </div>
-          )}
-        </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/muxintang/jixiangju?category=祈福超度"
+                className="flex-1 py-4 rounded-full bg-[#D4AF37] text-[#1a1a1a] text-center text-base hover:bg-[#E5C158] transition-colors"
+                style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", letterSpacing: '2px' }}
+              >
+                前往吉祥馆请奉往生牌位
+              </Link>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="px-6 py-4 rounded-full border border-[#333333] text-[#808080] text-sm hover:bg-[#242424] transition-all"
+              >
+                重新登记
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

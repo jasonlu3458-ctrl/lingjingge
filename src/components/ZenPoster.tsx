@@ -11,7 +11,7 @@ import { QRCodeSVG } from 'qrcode.react';
  *  - 留白 60px 四边，水墨晕染圆点装饰
  *  - 中部金句竖排大字号
  *  - 落款：今日日期 + 出处
- *  - 用户名 / 八字摘要 / 邀请数（昵称可选）
+ *  - 用户名 / 天赋画像 / 邀请数（昵称可选）
  *  - 底部二维码：扫码即跳灵境阁首页，携带 ?ref=当前用户ID
  *  - 仅作"被 html2canvas 截图"的纯展示组件，无交互按钮
  */
@@ -22,7 +22,7 @@ export interface ZenPosterProps {
   source?: string;
   /** 用户昵称（已登录时显示） */
   nickname?: string | null;
-  /** 八字摘要（可选，文案如"戊子年·戊午月·丙辰日"） */
+  /** 天赋画像（可选，文案如"戊子年·戊午月·丙辰日"） */
   baziSummary?: string | null;
   /** 已邀请人数 */
   inviteCount?: number;
@@ -213,7 +213,7 @@ const ZenPoster = forwardRef<HTMLDivElement, ZenPosterProps>(function ZenPoster(
         </div>
       </div>
 
-      {/* 落款:用户信息 / 八字摘要 */}
+      {/* 落款:用户信息 / 天赋画像 */}
       <div
         style={{
           position: 'absolute',

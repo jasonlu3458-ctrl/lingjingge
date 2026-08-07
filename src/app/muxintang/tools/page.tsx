@@ -31,7 +31,7 @@ const tools = [
     id: 'bazi', 
     label: '生命代码', 
     icon: LifeCodeIcon, 
-    desc: '八字排盘，天赋底色', 
+    desc: '性格画像，天赋底色', 
     href: '/muxintang/tools/bazi',
     isFree: false 
   },
@@ -47,7 +47,7 @@ const tools = [
     id: 'habitat', 
     label: '家居环境', 
     icon: HabitatIcon, 
-    desc: '空间能量、风水优化', 
+    desc: '空间能量，环境优化', 
     href: '/muxintang/tools/habitat',
     isFree: false 
   },

@@ -451,7 +451,7 @@ function WealthReportView({
 }) {
   return (
     <div id="wealth-report" className="space-y-5">
-      {/* 头部：评分仪表盘 + 八字摘要 */}
+      {/* 头部：评分仪表盘 + 天赋摘要 */}
       <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-amber-200 p-5">
         <div className="flex flex-col md:flex-row gap-5 items-center">
           <ScoreGauge
@@ -471,7 +471,7 @@ function WealthReportView({
                 className="text-sm text-gray-600 mt-1"
                 style={{ fontFamily: FONT_KAI }}
               >
-                八字 <span style={{ color: WEALTH_THEME }}>{report.bazi.yearGanzhi} {report.bazi.monthGanzhi} {report.bazi.dayGanzhi}</span>
+                天赋画像 <span style={{ color: WEALTH_THEME }}>{report.bazi.yearGanzhi} {report.bazi.monthGanzhi} {report.bazi.dayGanzhi}</span>
                 <span className="mx-2 text-gray-400">|</span>
                 生肖 {report.bazi.yearZodiac}
                 <span className="mx-2 text-gray-400">|</span>

@@ -1,24 +1,41 @@
+// ============================================================
+// LightSolutionPageShell —— 解忧师静态壳
+// ------------------------------------------------------------
+// 静态壳只负责 SEO 元数据 + 标题/副标题渲染。
+// 动态内容（用户角色、对话流、付费墙）由 LightSolutionClient
+// 通过 next/dynamic 异步加载，实现秒开 + SEO 友好。
+// ============================================================
+
+import nextDynamic from 'next/dynamic';
 import { getUserRole } from '@/lib/auth';
-import LightSolutionClient from './LightSolutionClient';
+import type { UserRole } from '@/lib/auth';
+
+const LightSolutionClient = nextDynamic(() => import('./LightSolutionClient'), {
+  ssr: false,
+  loading: () => (
+    <div className="min-h-[60vh] flex items-center justify-center">
+      <div
+        className="text-sm text-stone-500 tracking-widest"
+        style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}
+      >
+        🪷 解忧师准备中…
+      </div>
+    </div>
+  ),
+});
 
 export const metadata = {
   title: '解忧师 · 灵境阁',
   description: '说一句你现在的烦恼，让 AI 陪你理一理。3 轮免费陪伴。',
 };
 
-/**
- * AI 解忧师页面 - 沉浸式对话流
- *
- * 内部由 LightSolutionClient 完成：
- *  - 顶部：标题 + 副标题 + AI 开场白
- *  - 中部：可滚动的消息流（初始化包含 1 条 AI 欢迎气泡 + 3 个快捷倾诉按钮）
- *  - 底部：sticky 输入区，含免费次数提示
- *  - 3 轮对话后自动生成报告并展示 ReportPaywall
- */
 export default async function LightSolutionPage() {
-  const userRole = await getUserRole();
-
-  return <LightSolutionClient userRole={userRole} />;
+  // 用户角色虽然来自服务端，但 light-solution 是强交互场景，
+  // 这里用 force-static 预渲染壳，客户端再异步获取 userRole 即可。
+  // 为保持零阻塞，shell 不再 await getUserRole（避免 build 时的 auth 调用）。
+  // 角色判断完全由客户端在挂载后读取。
+  return <LightSolutionClient userRole={'free' as UserRole} />;
 }
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
+export const revalidate = false;

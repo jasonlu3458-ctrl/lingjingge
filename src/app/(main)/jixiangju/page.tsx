@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
 import { getProductsByTenant, type Product } from '@/lib/merchant-engine';
 
 const categories = [
@@ -136,9 +137,36 @@ const MOCK_DATA: Product[] = [
 ];
 
 export default function JixiangjuPage() {
+  // 外层仅做 Suspense 包裹（避免 useSearchParams 在 SSG 时的 Bail-out 警告）
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <JixiangjuPageContent />
+    </Suspense>
+  );
+}
+
+function JixiangjuPageContent() {
+  // 读取 URL ?category=xxx 参数（如爱宠屋跳转 ?category=爱宠配饰）
+  const searchParams = useSearchParams();
+  const initialCategory = searchParams.get('category') || 'all';
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  // 用 URL 参数初始化分类状态（带 sync 兜底，防止 hydration 后用户切换后又跳回初始值）
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+
+  // 当 URL 参数变化时（如 SPA 内导航切换 ?category=xxx）也同步更新
+  // 仅依赖 initialCategory（selectedCategory 是被赋值方，否则会形成 setState → 重新渲染 → 又触发 effect 的循环）
+  useEffect(() => {
+    if (initialCategory) {
+      setSelectedCategory((prev) => (prev === initialCategory ? prev : initialCategory));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialCategory]);
 
   useEffect(() => {
     fetchProducts();
@@ -162,11 +190,22 @@ export default function JixiangjuPage() {
 
   return (
     <div className="min-h-screen bg-[#1a1a1a]">
-      <div className="relative h-64 md:h-80 overflow-hidden">
+      <div className="relative h-44 md:h-52 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#8B4513]/30 to-[#1a1a1a]" />
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-3xl md:text-5xl font-serif text-gray-800 tracking-widest mb-2">吉祥馆</h1>
+          <div className="text-center px-4">
+            <h1
+              className="text-3xl md:text-4xl text-[#D4AF37] tracking-widest mb-2"
+              style={{ fontFamily: "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif" }}
+            >
+              吉祥馆
+            </h1>
+            <p
+              className="text-sm md:text-base text-[#C0C0C0]/80"
+              style={{ fontFamily: "'Ma Shan Zheng', 'STKaiti', 'KaiTi', serif" }}
+            >
+              一物一缘，奉请皆因心诚
+            </p>
           </div>
         </div>
       </div>

@@ -62,3 +62,8 @@ next-env.d.ts
 /marriage-sample.json
 /test-*.json
 /vercel-env-paste.txt
+
+# root-level temporary debug artifacts
+/check_requests.ps1
+/extract_urls.ps1
+/muxintang.html

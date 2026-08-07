@@ -10,8 +10,8 @@ const ORDERS = [
 ];
 
 const COMMENTS = [
-  { id: 1, user: '缘主小李', content: '阿阇梨的风水建议非常实用，家里的气场明显改善了！', status: 'pending', created_at: '2024-01-01 10:00' },
-  { id: 2, user: '缘主王芳', content: '八字排盘很准，大运流年的分析让我对未来更有信心了。', status: 'approved', created_at: '2024-01-02 15:30' },
+  { id: 1, user: '缘主小李', content: '阿阇梨的空间建议非常实用，家里的气场明显改善了！', status: 'pending', created_at: '2024-01-01 10:00' },
+  { id: 2, user: '缘主王芳', content: '性格画像很准，节律分析让我对未来更有信心了。', status: 'approved', created_at: '2024-01-02 15:30' },
   { id: 3, user: '缘主刘八', content: '感谢阿阇梨的指点，生意越来越好了！', status: 'pending', created_at: '2024-01-03 08:00' },
 ];
 
@@ -186,7 +186,7 @@ export default function AcharyaDashboard() {
           <div className="space-y-4">
             {[
               { id: 'CON001', client: '缘主张三', question: '想了解2024年运势', status: 'pending', time: '2024-01-01 10:00' },
-              { id: 'CON002', client: '缘主李四', question: '家中风水布局建议', status: 'in_progress', time: '2024-01-02 15:30' },
+              { id: 'CON002', client: '缘主李四', question: '家中空间布局建议', status: 'in_progress', time: '2024-01-02 15:30' },
             ].map((consult) => (
               <div key={consult.id} className="bg-[#242424] rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">

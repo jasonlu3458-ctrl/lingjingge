@@ -3,7 +3,7 @@
 // 主题：深棕金（主 #8a6a4a + 辅 #b08551）
 // 复用：ScoreGauge / FreeCard / LockedCard / ReportPaywall
 //
-// 区别于 wealth 的是：career 不依赖八字规则引擎，直接调
+// 区别于 wealth 的是：career 不依赖天赋画像规则引擎，直接调
 // /api/dify?type=career 走 SSE 流式，输出整段 polished 报告。
 // ============================================================
 
@@ -235,7 +235,7 @@ export default function CareerPageClient({ userRole }: CareerPageClientProps) {
   // 拼装 Dify 端要用的 query：把表单结构化转成自然语言
   const buildQuery = (f: typeof form) => {
     const stageLabel = STAGE_OPTIONS.find(o => o.value === f.careerStage)?.label || f.careerStage;
-    return `我是 ${f.name || '（未填）'}，当前在【${f.industry}】行业，处于【${stageLabel}】。\n\n我现在的卡点是：${f.concern || '（未填）'}\n\n请基于以上信息，写一份 500-800 字的事业财富观察报告，要求：\n1) 先给一个总分（0-100）+ 一句话点题；\n2) 拆 3-5 个 ## 小节（如 ## 优势、## 风险、## 突破点、## 节奏、## 一句点题），每节 80-150 字；\n3) 语气要像一位懂命理又懂现代职场的顺势顾问，不堆砌古籍术语，给出可执行建议。`;
+    return `我是 ${f.name || '（未填）'}，当前在【${f.industry}】行业，处于【${stageLabel}】。\n\n我现在的卡点是：${f.concern || '（未填）'}\n\n请基于以上信息，写一份 500-800 字的事业财富观察报告，要求：\n1) 先给一个总分（0-100）+ 一句话点题；\n2) 拆 3-5 个 ## 小节（如 ## 优势、## 风险、## 突破点、## 节奏、## 一句点题），每节 80-150 字；\n3) 语气要像一位懂人性又懂现代职场的顺势顾问，不堆砌古籍术语，给出可执行建议。`;
   };
 
   // 本地模板兜底（Dify 返回过短时使用）
@@ -495,7 +495,7 @@ export default function CareerPageClient({ userRole }: CareerPageClientProps) {
         </div>
       )}
 
-      {/* ============ 评分卡（无八字，用 polished 长度 + 一个固定等级）============ */}
+      {/* ============ 评分卡（无天赋画像，用 polished 长度 + 一个固定等级）============ */}
       {polished && !streaming && (
         <div
           className="rounded-2xl shadow-md border p-5 mb-6 bg-white"

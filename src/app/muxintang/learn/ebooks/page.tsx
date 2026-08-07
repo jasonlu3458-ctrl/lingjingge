@@ -22,8 +22,8 @@ const mockEbooks: Ebook[] = [
   },
   {
     id: '2',
-    title: '命理智慧与人生感悟',
-    preview: '命由天定，运在人为。读懂八字密码，掌握人生航向...',
+    title: '性格智慧与人生感悟',
+    preview: '性格由心塑，节律由人调。读懂自己，掌握人生航向...',
     created_at: '2024-01-10',
     is_paid: true,
   },

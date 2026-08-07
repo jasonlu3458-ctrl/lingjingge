@@ -48,6 +48,16 @@ const CARDS: Card[] = [
     iconBg: 'bg-orange-100',
     accent: 'text-orange-700',
   },
+  {
+    title: '每日话题',
+    href: '/tong/daily-topic',
+    icon: '☀️',
+    tagline: '今天的话头、当下的一念，每日一参。',
+    free: '每日更新',
+    border: 'border-rose-200',
+    iconBg: 'bg-rose-100',
+    accent: 'text-rose-700',
+  },
 ];
 
 export default async function ZangPage() {
@@ -92,6 +102,8 @@ export default async function ZangPage() {
               className={`inline-block text-[10px] px-2 py-0.5 rounded-full border ${
                 c.free === '完全免费'
                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : c.free === '每日更新'
+                  ? 'bg-rose-50 text-rose-700 border-rose-200'
                   : 'bg-amber-50 text-amber-700 border-amber-200'
               }`}
             >

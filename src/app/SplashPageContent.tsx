@@ -145,7 +145,7 @@ export default function Page() {
               title="澄心问道"
               description="AI陪你静心，共同问道"
               buttonText="去体验 →"
-              href="/wen/chan/ai-zen-master"
+              href="/wen/zen"
             />
             <SplashCard
               icon="🔮"
@@ -178,7 +178,7 @@ export default function Page() {
             {[
               { icon: '🧘', title: '正念冥想', desc: '静坐观察呼吸', href: '/wen/meditation' },
               { icon: '☯️', title: '禅意开悟', desc: '一问一答，明心见性', href: '/wen/chan/awakening' },
-              { icon: '🔮', title: 'AI 禅师', desc: '与古德对话', href: '/wen/chan/ai-zen-master' },
+              { icon: '🔮', title: 'AI 禅师', desc: '与古德对话', href: '/wen/zen' },
               { icon: '🍃', title: '体质观察', desc: '了解自己的能量场', href: '/guan/body' },
               { icon: '📚', title: '玄学经典', desc: '在典籍中寻找答案', href: '/zang/library' },
               { icon: '💬', title: '同修社区', desc: '与同修共参', href: '/tong/community' },

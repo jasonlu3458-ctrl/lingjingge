@@ -2,6 +2,7 @@ export interface NavItem {
   label: string;
   href: string;
   icon?: string;
+  children?: NavItem[];
 }
 
 export interface TenantThemeConfig {
@@ -43,12 +44,62 @@ export const DEFAULT_THEME_CONFIG: TenantThemeConfig = {
 };
 
 export const DEFAULT_ENABLED_FEATURES: NavItem[] = [
-  { label: '智测AI', href: '/muxintang/tools' },
-  { label: '密法灵学', href: '/muxintang/channel' },
-  { label: '行者故事', href: '/muxintang/learn' },
-  { label: '吉祥馆', href: '/muxintang/jixiangju' },
-  { label: '爱宠屋', href: '/muxintang/pet' },
-  { label: '关于我', href: '/muxintang/about' },
+  {
+    label: '智测AI',
+    href: '/muxintang/tools',
+    icon: '🔮',
+    children: [
+      { label: '生命代码', href: '/muxintang/tools/bazi', icon: '☯️' },
+      { label: '择日智选', href: '/muxintang/tools/chooseday', icon: '🕰️' },
+      { label: '流年大势', href: '/muxintang/tools/trend', icon: '⭐' },
+      { label: '姓名心解', href: '/muxintang/tools/name', icon: '✍️' },
+      { label: '情缘合盘', href: '/muxintang/tools/match', icon: '💕' },
+      { label: '家居环境', href: '/muxintang/tools/habitat', icon: '🏠' },
+    ],
+  },
+  {
+    label: '密法灵学',
+    href: '/muxintang/channel',
+    icon: '📚',
+    children: [
+      { label: '灵学专栏', href: '/muxintang/channel', icon: '📖' },
+      { label: '吉祥日历', href: '/muxintang/auspicious', icon: '🗓️' },
+    ],
+  },
+  {
+    label: '行者故事',
+    href: '/muxintang/learn',
+    icon: '📖',
+    children: [
+      { label: '修行笔记', href: '/muxintang/learn', icon: '📝' },
+      { label: '电子书单', href: '/muxintang/learn/ebooks', icon: '📚' },
+    ],
+  },
+  {
+    label: '吉祥馆',
+    href: '/muxintang/jixiangju',
+    icon: '🏮',
+    children: [
+      { label: '商品列表', href: '/muxintang/jixiangju', icon: '🛍️' },
+      { label: '我的订单', href: '/muxintang/jixiangju?tab=orders', icon: '📋' },
+    ],
+  },
+  {
+    label: '爱宠屋',
+    href: '/muxintang/pet',
+    icon: '🐾',
+    children: [
+      { label: '爱宠起名', href: '/muxintang/pet/naming', icon: '🐾' },
+      { label: '吉祥配饰', href: '/muxintang/pet/accessories', icon: '💎' },
+      { label: '衣食住行', href: '/muxintang/pet/diet', icon: '🥣' },
+      { label: '爱宠超度', href: '/muxintang/pet/liberation', icon: '🪷' },
+    ],
+  },
+  {
+    label: '关于我',
+    href: '/muxintang/about',
+    icon: '👤',
+  },
 ];
 
 export const DEFAULT_TENANT_CONFIG: TenantConfig = {
@@ -91,11 +142,30 @@ export function parseEnabledFeatures(features: unknown): NavItem[] {
     if (item && typeof item === 'object') {
       const i = item as Record<string, unknown>;
       if (typeof i.label === 'string' && typeof i.href === 'string') {
-        validFeatures.push({
+        const navItem: NavItem = {
           label: i.label,
           href: i.href,
           icon: typeof i.icon === 'string' ? i.icon : undefined,
-        });
+        };
+        if (Array.isArray(i.children)) {
+          const children: NavItem[] = [];
+          for (const child of i.children) {
+            if (child && typeof child === 'object') {
+              const c = child as Record<string, unknown>;
+              if (typeof c.label === 'string' && typeof c.href === 'string') {
+                children.push({
+                  label: c.label,
+                  href: c.href,
+                  icon: typeof c.icon === 'string' ? c.icon : undefined,
+                });
+              }
+            }
+          }
+          if (children.length > 0) {
+            navItem.children = children;
+          }
+        }
+        validFeatures.push(navItem);
       }
     }
   }

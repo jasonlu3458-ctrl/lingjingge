@@ -1,87 +1,91 @@
 'use client';
 
-import { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { MOCK_DATA, type Product } from '@/lib/muxintang-products';
 
-const ACCESSORIES = [
-  { id: 'collar', name: '吉祥项圈', icon: '🐕', price: 88, desc: '刻有吉祥图案的宠物项圈，可辟邪保平安' },
-  { id: 'tag', name: '身份牌', icon: '🏷️', price: 58, desc: '刻有宠物名字和主人联系方式的金属身份牌' },
-  { id: 'bed', name: '风水窝垫', icon: '🛏️', price: 168, desc: '根据五行命理设计的宠物窝垫，助宠物健康成长' },
-  { id: 'toy', name: '益智玩具', icon: '🎾', price: 38, desc: '帮助宠物锻炼智力的益智玩具' },
-  { id: 'clothing', name: '吉祥服饰', icon: '👕', price: 98, desc: '印有吉祥图案的宠物服饰' },
-  { id: 'bowl', name: '招财食盆', icon: '🥣', price: 68, desc: '聚宝盆造型的宠物食盆，寓意招财进宝' },
-];
+// 仅展示「爱宠配饰」分类商品，与主站 /jixiangju?category=爱宠配饰 行为一致
+const ACCESSORY_PRODUCTS = MOCK_DATA.filter((p) => p.category === '爱宠配饰');
 
 export default function PetAccessoriesPage() {
-  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-
-  const toggleItem = (id: string) => {
-    const newSet = new Set(selectedItems);
-    if (newSet.has(id)) {
-      newSet.delete(id);
-    } else {
-      newSet.add(id);
-    }
-    setSelectedItems(newSet);
-  };
-
-  const totalPrice = Array.from(selectedItems).reduce((sum, id) => {
-    const item = ACCESSORIES.find((a) => a.id === id);
-    return sum + (item?.price || 0);
-  }, 0);
-
   return (
     <div className="min-h-screen bg-[#0a0a0a] py-12">
       <div className="max-w-6xl mx-auto px-4">
+        {/* —— 页头 —— */}
         <div className="text-center mb-12">
-          <h1 
+          <h1
             className="text-3xl font-bold mb-4"
             style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", color: '#D4AF37' }}
           >
-            吉祥饰品
+            吉祥配饰
           </h1>
-          <p className="text-[#808080]">为您的爱宠佩戴祥瑞，平安喜乐常相伴</p>
+          <p className="text-[#808080]">为爱宠佩戴祥瑞，平安喜乐常相伴</p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-          {ACCESSORIES.map((item) => (
-            <div
-              key={item.id}
-              className={`muxintang-card p-6 cursor-pointer transition-all ${
-                selectedItems.has(item.id) ? 'border-[#D4AF37] bg-[#242424]' : 'hover:border-[#D4AF37]'
-              }`}
-              onClick={() => toggleItem(item.id)}
-            >
-              <div className="flex items-start justify-between mb-4">
-                <span className="text-4xl">{item.icon}</span>
-                {selectedItems.has(item.id) && (
-                  <span className="text-[#D4AF37]">✓</span>
-                )}
-              </div>
-              <h3 
-                className="text-lg font-semibold mb-2"
-                style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", color: '#D4AF37' }}
+        {/* —— 商品网格 —— */}
+        {ACCESSORY_PRODUCTS.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-4xl mb-4">📦</p>
+            <p className="text-[#808080]">暂无商品</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {ACCESSORY_PRODUCTS.map((product: Product) => (
+              <Link
+                key={product.id}
+                href={`/muxintang/jixiangju/${product.id}`}
+                className="group bg-[#242424] rounded-xl overflow-hidden border border-[#333333] hover:border-[#D4AF37] transition-all"
               >
-                {item.name}
-              </h3>
-              <p className="text-sm text-[#808080] mb-4">{item.desc}</p>
-              <p className="text-[#D4AF37] font-bold">¥{item.price}</p>
-            </div>
-          ))}
-        </div>
-
-        {selectedItems.size > 0 && (
-          <div className="mt-8 fixed bottom-20 left-0 right-0 md:static md:max-w-6xl md:mx-auto px-4">
-            <div className="bg-[#1a1a1a] border border-[#333333] rounded-lg p-4 flex items-center justify-between">
-              <div>
-                <p className="text-[#C0C0C0]">已选 {selectedItems.size} 件商品</p>
-                <p className="text-[#D4AF37] text-xl font-bold">总计 ¥{totalPrice}</p>
-              </div>
-              <button className="muxintang-btn px-8 py-3">
-                立即购买
-              </button>
-            </div>
+                <div className="relative aspect-square bg-[#1a1a1a] overflow-hidden">
+                  {product.image ? (
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="text-5xl opacity-30">📦</span>
+                    </div>
+                  )}
+                  {product.is_active && (
+                    <span className="absolute top-2 right-2 bg-[#8B4513] text-[#D4AF37] text-xs px-2 py-1 rounded-full">
+                      在售
+                    </span>
+                  )}
+                </div>
+                <div className="p-4">
+                  <h3 className="text-[#C0C0C0] font-medium mb-2 line-clamp-2 group-hover:text-[#D4AF37] transition-colors">
+                    {product.name}
+                  </h3>
+                  <p className="text-[#606060] text-xs mb-3 line-clamp-2">
+                    {product.description}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#D4AF37] font-bold">
+                      ¥{product.price.toFixed(2)}
+                    </span>
+                    <span className="text-[#808080] text-xs group-hover:text-[#D4AF37] transition-colors">
+                      查看详情 →
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
           </div>
         )}
+
+        {/* —— 前往吉祥馆入口 —— */}
+        <div className="mt-12 text-center">
+          <Link
+            href="/muxintang/jixiangju"
+            className="inline-block px-8 py-3 rounded-full border border-[#8B4513] text-[#D4AF37] hover:bg-[#242424] transition-all"
+            style={{ fontFamily: "'Ma Shan Zheng', cursive, serif" }}
+          >
+            前往吉祥馆查看全部好物 →
+          </Link>
+        </div>
       </div>
     </div>
   );

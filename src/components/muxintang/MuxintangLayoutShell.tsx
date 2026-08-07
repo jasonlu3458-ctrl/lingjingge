@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,9 +11,9 @@ import { buildThemeCSS, type NavItem, type TenantThemeConfig } from '@/lib/tenan
 import { TenantProvider, type TenantContextValue } from '@/contexts/TenantContext';
 import ZenSoundToggle from '@/components/ZenSoundToggle';
 
-const AcharyaFloatingButton = dynamic(
-  () => import('./AcharyaFloatingButton').then((mod) => ({ default: mod.AcharyaFloatingButton })),
-  { ssr: false }
+const UniversalAIHelper = dynamic(
+  () => import('@/components/shared/UniversalAIHelper'),
+  { ssr: false, loading: () => null }
 );
 
 export interface MuxintangLayoutConfig {
@@ -32,14 +32,18 @@ interface MuxintangLayoutShellProps {
 
 export default function MuxintangLayoutShell({ config, children }: MuxintangLayoutShellProps) {
   const pathname = usePathname();
-  const isHydrated = useRef(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    isHydrated.current = true;
+    setIsHydrated(true);
   }, []);
 
   const { name: tenantName, theme, menuItems, extraConfig, aiPersonaPrefix } = config;
   const themeCSS = buildThemeCSS(theme);
+
+  // ✨ 首页背景透明，让星空显示；其他页面使用主题背景色
+  // 不依赖 isHydrated，避免 SSR 和客户端首次渲染不一致
+  const isHomePage = pathname === '/muxintang';
 
   // 喂给 Context：shape 与历史 /api/admin/tenant-config 响应保持一致
   const tenantValue: TenantContextValue = {
@@ -54,7 +58,10 @@ export default function MuxintangLayoutShell({ config, children }: MuxintangLayo
 
   return (
     <TenantProvider value={tenantValue}>
-      <div className="min-h-screen flex flex-col" style={{ backgroundColor: theme.bg_dark }}>
+      <div 
+        className="min-h-screen flex flex-col transition-colors duration-300"
+        style={{ backgroundColor: isHomePage ? 'transparent' : theme.bg_dark }}
+      >
         <style>{themeCSS}</style>
         <MuxintangNavbar
           menuItems={menuItems}
@@ -63,7 +70,7 @@ export default function MuxintangLayoutShell({ config, children }: MuxintangLayo
           extraConfig={extraConfig}
         />
         <main className="flex-1 pt-16 pb-20">
-          {isHydrated.current ? (
+          {isHydrated ? (
             <AnimatePresence mode="wait">
               <motion.div
                 key={pathname}
@@ -80,8 +87,8 @@ export default function MuxintangLayoutShell({ config, children }: MuxintangLayo
           )}
         </main>
         <PushSubscription />
-        <MobileBottomNav theme={theme} extraConfig={extraConfig} />
-        <AcharyaFloatingButton />
+        <MobileBottomNav theme={theme} extraConfig={extraConfig} menuItems={menuItems} />
+        <UniversalAIHelper role="muxintang" />
         {/* 禅音背景音乐开关：左下角浮按，与右侧阿阇梨浮按对称 */}
         <div className="fixed bottom-20 md:bottom-6 left-6 z-40">
           <ZenSoundToggle immersive />
@@ -93,9 +100,6 @@ export default function MuxintangLayoutShell({ config, children }: MuxintangLayo
           <div className="max-w-6xl mx-auto px-4 text-center">
             <p className="text-sm" style={{ color: theme.text_muted }}>
               {tenantName} · 心之所向，牧之以道
-            </p>
-            <p className="text-xs mt-2" style={{ color: theme.text_muted }}>
-              本平台内容仅供传统文化交流与娱乐参考
             </p>
           </div>
         </footer>

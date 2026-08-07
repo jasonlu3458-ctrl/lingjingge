@@ -14,6 +14,7 @@ export const pageConfigs: Record<string, PageConfig> = {
     theme: '#5a8a6a',
     welcomeMessage: '回来了。觉察此刻你的心，是躁动的，还是疲惫的？',
     difyType: 'meditation',
+    interactionMode: 'chat-only',
     meditationConfig: {
       stateOptions: [
         { label: '🌪️ 心绪不宁，杂念纷飞', value: 'restless', recommendation: '安那般那念', duration: 20 },
@@ -33,6 +34,7 @@ export const pageConfigs: Record<string, PageConfig> = {
     theme: '#7a9a7a',
     welcomeMessage: '🌸 这里是你的专属心灵港湾。不必拘束，想说什么就说什么。我们可以从"今天你过得怎么样？"开始聊起。',
     difyType: 'mind',
+    interactionMode: 'chat-only',
     conversationConfig: {
       roundsForReport: 4,
       promptStart: '你是一位拥有30年经验的资深疗愈师。用户正处在情绪需要倾诉的阶段。你的核心任务是：共情、深度聆听、温和提问、逐步引导用户深度探索内心。',
@@ -50,6 +52,7 @@ export const pageConfigs: Record<string, PageConfig> = {
     theme: '#2c2c2c',
     welcomeMessage: '闲坐茶亭，与君共话禅机。',
     difyType: 'ai-zen-master',
+    interactionMode: 'chat-only',
     // 纯对话无表单
   },
 
@@ -60,12 +63,120 @@ export const pageConfigs: Record<string, PageConfig> = {
     theme: '#a8c4d4',
     welcomeMessage: '说一句你现在的烦恼，让我陪你理一理。',
     difyType: 'light-solution',
+    interactionMode: 'chat-only',
     conversationConfig: {
       roundsForReport: 3,
       promptStart: '你是一位温柔耐心、善于倾听的陪伴者。用户正经历一些生活困扰，希望被理解、被看见。你的任务是共情、复述情绪、提出 1-2 个开放式问题帮用户理清思路。',
       reportStructure: {
         free: ['情绪标签', '困扰简析', '可尝试的一步'],
         premium: ['深层模式识别', '专属建议清单', '7 天自我照护计划'],
+      },
+    },
+  },
+
+  // ===== 问道系列新增 5 项 (wen/ 9 宫格第三批) =====
+
+  'tuibei': {
+    title: 'AI 推背师',
+    subtitle: '推背图演绎，回望已逝，前瞻未至',
+    icon: '📜',
+    theme: '#8B4513',
+    welcomeMessage: '同修，我是推背师。请告诉我你的生辰（年月日时），我为你翻一卷推背图。',
+    difyType: 'tuibei',
+    interactionMode: 'click-to-reveal',
+    blindBoxConfig: {
+      type: 'shake',
+      buttonLabel: '🎲 今日摇签',
+      hint: '（六十签 · 一日一签）',
+    },
+    conversationConfig: {
+      roundsForReport: 3,
+      promptStart: '你是一位精通推背图与时序洞察的宗师。回望已逝，前瞻未至；用一图一卷，解同修心中所念。',
+      reportStructure: {
+        free: ['今生命格主线', '近三年大势', '可把握的关键节点'],
+        premium: ['推背图全卷逐象解读', '前世因缘回溯', '十年流年精解', '顺势趋避全攻略'],
+      },
+    },
+  },
+
+  'astrology': {
+    title: 'AI 星座师',
+    subtitle: '仰望星空，十二宫位为你读心',
+    icon: '⭐',
+    theme: '#1e3a5f',
+    welcomeMessage: '同修好，我是你的星座师。告诉我你的太阳/月亮/上升星座，或出生日期和时间。',
+    difyType: 'astrology',
+    interactionMode: 'click-to-reveal',
+    blindBoxConfig: {
+      type: 'flip',
+      buttonLabel: '🃏 翻你的星卡',
+      hint: '（12 星座 · 今日启示）',
+    },
+    conversationConfig: {
+      roundsForReport: 3,
+      promptStart: '你是一位专业的西方占星师，熟悉本命盘、行运、关系盘。回答时结合十二宫位、行星相位，让同修看到星图里的讯息。',
+      reportStructure: {
+        free: ['太阳星座核心特质', '本月运势速览', '感情/事业提示'],
+        premium: ['本命盘全宫解读', '行运星象深度分析', '关系配对精解', '未来一年星象日历'],
+      },
+    },
+  },
+
+  'zodiac': {
+    title: 'AI 生肖师',
+    subtitle: '十二生肖，十二种人生智慧',
+    icon: '🐉',
+    theme: '#a83838',
+    welcomeMessage: '同修好，我是你的生肖师。告诉我你的属相与出生年份，我为你点一盏生肖灯。',
+    difyType: 'zodiac',
+    interactionMode: 'click-to-reveal',
+    blindBoxConfig: {
+      type: 'spin',
+      buttonLabel: '🎡 转你的生肖轮',
+      hint: '（12 生肖 · 轮转启示）',
+    },
+    conversationConfig: {
+      roundsForReport: 3,
+      promptStart: '你是一位深谙十二生肖与流年冲合的性格分析导师。结合属相性格、合局冲局，解读同修的人生脉络。',
+      reportStructure: {
+        free: ['生肖核心性格', '今年流年简评', '事业/感情提示'],
+        premium: ['生肖与流年深度冲合', '十二生肖配对全解', '每月运势精解', '十年大运详批'],
+      },
+    },
+  },
+
+  'name': {
+    title: 'AI 取名师',
+    subtitle: '名以载德，字以寄情',
+    icon: '✍️',
+    theme: '#d4a574',
+    welcomeMessage: '同修好，我是取名师。请告诉我姓氏、生辰、你的期待。',
+    difyType: 'name',
+    interactionMode: 'form-first',
+    conversationConfig: {
+      roundsForReport: 3,
+      promptStart: '你是一位深谙姓名学的取名师。结合性格画像、汉字音律美学，给同修几组有深意的好名字。',
+      reportStructure: {
+        free: ['5 组候选名', '字义简析', '音韵评分'],
+        premium: ['10 组深度候选', '完整性格画像分析', '三才五格详批', '终身改名建议', '英文名/小名配套'],
+      },
+    },
+  },
+
+  'dream': {
+    title: 'AI 解梦师',
+    subtitle: '夜有所梦，日有所思',
+    icon: '🌙',
+    theme: '#5d4e8c',
+    welcomeMessage: '同修好，我是解梦师。把你印象深的梦细细说给我听。',
+    difyType: 'dream',
+    interactionMode: 'form-first',
+    conversationConfig: {
+      roundsForReport: 3,
+      promptStart: '你是一位兼具东方周公解梦智慧与西方心理学（弗洛伊德/荣格）训练的解梦师。结合梦境象征、潜意识动力、原型阴影，为同修解开梦的密信。',
+      reportStructure: {
+        free: ['梦境象征解读', '近期情绪提示', '可尝试的一步'],
+        premium: ['周公解梦 + 心理学双维解读', '梦的潜意识动力分析', '原型与阴影探索', '30 天梦日记模板'],
       },
     },
   },
@@ -193,7 +304,7 @@ export const pageConfigs: Record<string, PageConfig> = {
   //   页面： src/app/guan/family/FamilyPageClient.tsx
   //   规则： src/lib/marriage-rules.ts
   //   API：  src/app/api/marriage/route.ts + src/app/api/marriage/polish/route.ts
-  // 原因：family 需要「双八字比对 + 关系状态/痛点 + 流年付费差异化」，
+  // 原因：family 需要「双性格画像比对 + 关系状态/痛点 + 流年付费差异化」，
   // 通用 ChatUI 模板撑不起双列表单和复杂报告结构。保留占位以避免类型报错。
   'family': null as unknown as PageConfig,
 

@@ -10,6 +10,7 @@ export default function ChooseDayToolPage() {
     day: '',
   });
   const [result, setResult] = useState<string | null>(null);
+  const [summarized, setSummarized] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,9 +23,16 @@ export default function ChooseDayToolPage() {
         body: JSON.stringify(formData),
       });
       const data = await res.json();
-      setResult(data.success ? data.result : '择日失败，请稍后重试');
+      if (data.success) {
+        setResult(data.result);
+        setSummarized(!!data.summarized);
+      } else {
+        setResult('择日失败，请稍后重试');
+        setSummarized(false);
+      }
     } catch {
       setResult('网络异常，请稍后重试');
+      setSummarized(false);
     } finally {
       setLoading(false);
     }
@@ -121,7 +129,12 @@ export default function ChooseDayToolPage() {
 
           {result && (
             <div className="mt-8 p-6 bg-[#242424] rounded-lg border border-[#333333]">
-              <h3 
+              {summarized && (
+                <p className="text-[11px] text-[#7a7a7a] tracking-wide mb-3 italic">
+                  ✦ 基于本地黄历摘要进行 AI 解析
+                </p>
+              )}
+              <h3
                 className="text-lg font-semibold mb-4"
                 style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", color: '#D4AF37' }}
               >

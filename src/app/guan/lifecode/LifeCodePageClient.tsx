@@ -527,7 +527,7 @@ function LifeCodePaywall({
           </div>
           <div>
             <div className="text-base">🔒</div>
-            <div style={{ fontFamily: FONT_KAI }}>八字数据本地计算</div>
+            <div style={{ fontFamily: FONT_KAI }}>性格画像本地计算</div>
           </div>
           <div>
             <div className="text-base">↩️</div>

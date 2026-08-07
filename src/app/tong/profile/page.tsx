@@ -9,6 +9,7 @@ import PointsSignIn from '@/components/PointsSignIn'
 import SubscriptionStatusCard from '@/components/SubscriptionStatusCard'
 import CoinsCard from '@/components/CoinsCard'
 import CalendarHeatmap from '@/components/CalendarHeatmap'
+import AchievementBadges from '@/components/shared/AchievementBadges'
 
 interface UserProfile {
   id: string
@@ -215,6 +216,9 @@ export default async function ProfilePage() {
           )}
 
           <div className="space-y-6">
+            {/* 修行成就徽章：连续签到 3/7/30 天解锁 */}
+            <AchievementBadges theme="lingjingge" />
+
             <div>
               <h3 className="text-lg font-semibold text-zen-ink mb-4">会员权益</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -1,11 +1,9 @@
 ﻿'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 
 export default function PetNamingPage() {
   const [formData, setFormData] = useState({
-    petName: '',
     petType: 'dog',
     gender: 'male',
     birthDate: '',
@@ -13,10 +11,13 @@ export default function PetNamingPage() {
   });
   const [result, setResult] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
+    setResult(null);
     try {
       const res = await fetch('/muxintang/api/pet/naming', {
         method: 'POST',
@@ -27,10 +28,10 @@ export default function PetNamingPage() {
       if (data.success) {
         setResult(data.result);
       } else {
-        setResult('起名失败，请稍后重试');
+        setError(data.error || '起名失败，请稍后重试');
       }
     } catch {
-      setResult('网络异常，请稍后重试');
+      setError('网络异常，请稍后重试');
     } finally {
       setLoading(false);
     }
@@ -39,16 +40,18 @@ export default function PetNamingPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] py-12">
       <div className="max-w-4xl mx-auto px-4">
+        {/* —— 页头 —— */}
         <div className="text-center mb-12">
-          <h1 
+          <h1
             className="text-3xl font-bold mb-4"
             style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", color: '#D4AF37' }}
           >
-            宠物起名
+            爱宠起名
           </h1>
-          <p className="text-[#808080]">为萌宠赐名，福泽相伴</p>
+          <p className="text-[#808080]">为萌宠赐名 · 福泽相伴，名正则运顺</p>
         </div>
 
+        {/* —— 起名表单 —— */}
         <div className="muxintang-card p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
@@ -101,22 +104,31 @@ export default function PetNamingPage() {
               />
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={loading}
-              className="muxintang-btn w-full py-4 text-lg"
+              className="muxintang-btn w-full py-4 text-base disabled:opacity-60 disabled:cursor-not-allowed"
+              style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", letterSpacing: '2px' }}
             >
-              {loading ? '起名中...' : '为宠物赐名'}
+              {loading ? '起名中...' : '为爱宠赐名'}
             </button>
           </form>
 
+          {/* —— 错误提示 —— */}
+          {error && (
+            <div className="mt-6 p-4 rounded-lg bg-red-950/40 border border-red-800 text-center text-sm text-red-400">
+              {error}
+            </div>
+          )}
+
+          {/* —— 起名结果 —— */}
           {result && (
-            <div className="mt-8 p-6 bg-[#242424] rounded-lg border border-[#333333]">
-              <h3 
+            <div className="mt-8 p-6 rounded-lg bg-[#242424] border border-[#8B4513]">
+              <h3
                 className="text-lg font-semibold mb-4"
                 style={{ fontFamily: "'Ma Shan Zheng', cursive, serif", color: '#D4AF37' }}
               >
-                推荐名字
+                ✦ 推荐名字
               </h3>
               <div className="text-[#C0C0C0] whitespace-pre-wrap leading-relaxed">
                 {result}

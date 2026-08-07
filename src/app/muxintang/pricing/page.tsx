@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import Link from 'next/link';
 
@@ -9,7 +9,7 @@ const PLANS = [
     period: '',
     features: [
       '每日免费测算 1 次',
-      '基础八字分析',
+      '基础性格画像分析',
       '简单起名推荐',
       '社区基础功能',
     ],
@@ -21,7 +21,7 @@ const PLANS = [
     period: '/月',
     features: [
       '每日免费测算 5 次',
-      '完整八字分析报告',
+      '完整性格画像分析报告',
       '专业起名推荐',
       '择日吉时查询',
       '家居环境分析',

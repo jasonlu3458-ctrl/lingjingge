@@ -5,26 +5,26 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
 const COLUMNS = [
-  { id: 'lifecode', name: '生命格局', icon: '☰', desc: '从八字到数字命理，认识自己。', articles: 2 },
-  { id: 'habitat', name: '家居环境', icon: '☯', desc: '风水堪舆与现代居住的和解。', articles: 2 },
+  { id: 'lifecode', name: '生命格局', icon: '☰', desc: '从性格画像到天赋图谱，认识自己。', articles: 2 },
+  { id: 'habitat', name: '家居环境', icon: '☯', desc: '空间能量与现代居住的融合。', articles: 2 },
   { id: 'name', name: '姓名心解', icon: '✍️', desc: '一个字，便是一生的回响。', articles: 2 },
   { id: 'acharya', name: '阿阇梨开示', icon: '🧘', desc: '根本上师的当机说法。', articles: 2 },
 ];
 
 const ARTICLES = [
-  { id: 1, title: '八字排盘入门指南', category: 'lifecode', author: '任书颖阿阇梨', reads: 1250, likes: 89, date: '2024-01-15' },
-  { id: 2, title: '生命密码中的五行平衡', category: 'lifecode', author: '任书颖阿阇梨', reads: 890, likes: 67, date: '2024-01-14' },
-  { id: 3, title: '玄空风水九星飞泊详解', category: 'habitat', author: '王师傅', reads: 650, likes: 45, date: '2024-01-13' },
+  { id: 1, title: '性格画像入门指南', category: 'lifecode', author: '任书颖阿阇梨', reads: 1250, likes: 89, date: '2024-01-15' },
+  { id: 2, title: '生命能量中的平衡之道', category: 'lifecode', author: '任书颖阿阇梨', reads: 890, likes: 67, date: '2024-01-14' },
+  { id: 3, title: '空间能量九星飞泊详解', category: 'habitat', author: '王师傅', reads: 650, likes: 45, date: '2024-01-13' },
   { id: 4, title: '家居气场优化指南', category: 'habitat', author: '王师傅', reads: 780, likes: 56, date: '2024-01-12' },
-  { id: 5, title: '姓名学中的五行配置', category: 'name', author: '李相师', reads: 920, likes: 72, date: '2024-01-11' },
+  { id: 5, title: '姓名学中的能量配置', category: 'name', author: '李相师', reads: 920, likes: 72, date: '2024-01-11' },
   { id: 6, title: '起名改名的艺术', category: 'name', author: '李相师', reads: 1100, likes: 88, date: '2024-01-10' },
   { id: 7, title: '唐密传承与现代修行', category: 'acharya', author: '阿阇梨', reads: 1300, likes: 95, date: '2024-01-09' },
   { id: 8, title: '根本上师的当机说法', category: 'acharya', author: '阿阇梨', reads: 1500, likes: 110, date: '2024-01-08' },
 ];
 
 const CHECKIN_RECORDS = [
-  { id: 1, user: '缘主小李', date: '2024-01-15', progress: '阅读《八字排盘入门》第3章', points: '+20' },
-  { id: 2, user: '缘主王芳', date: '2024-01-15', progress: '完成《风水探秘》研读', points: '+50' },
+  { id: 1, user: '缘主小李', date: '2024-01-15', progress: '阅读《性格画像入门》第3章', points: '+20' },
+  { id: 2, user: '缘主王芳', date: '2024-01-15', progress: '完成《空间能量探秘》研读', points: '+50' },
   { id: 3, user: '缘主刘八', date: '2024-01-14', progress: '学习《择日通论》', points: '+30' },
   { id: 4, user: '缘主赵六', date: '2024-01-14', progress: '打卡《姓名学》', points: '+10' },
 ];
